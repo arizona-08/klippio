@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo-Plan Chantier</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Masquer l'input de fichier photo par défaut */
+        #photo-input {
+            display: none;
+        }
+        /* Style pour les repères sur le plan */
+        .marker {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background-color: #ef4444; /* Rouge */
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            cursor: pointer;
+            transform: translate(-50%, -50%);
+            transition: transform 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .marker:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+        }
+        /* Style pour le conteneur du plan pour que l'image de fond le couvre entièrement */
+        #plan-container {
+            width: 100%;
+            height: 0;
+            padding-bottom: 75%; /* Ratio 4:3, peut être ajusté */
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 flex flex-col items-center p-4 lg:p-8">
+
+    <div class="w-full max-w-6xl">
+        <header class="text-center mb-6">
+            <h1 class="text-3xl lg:text-4xl font-bold text-gray-900">Photo-Plan Chantier</h1>
+            <p class="text-gray-600 mt-2">Chargez un plan, puis cliquez dessus pour ajouter une photo à un emplacement précis.</p>
+        </header>
+
+        <!-- Section de chargement du plan -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <label for="plan-upload" class="block text-lg font-medium mb-2">1. Chargez votre plan de chantier</label>
+            <input type="file" id="plan-upload" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+        </div>
+
+        <!-- Zone d'affichage du plan et des repères -->
+        <div id="plan-section" class="bg-white p-4 rounded-lg shadow-md hidden">
+             <h2 class="text-lg font-medium mb-4">2. Cliquez sur le plan pour ajouter un repère photo</h2>
+            <div id="plan-container" class="border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+                <!-- Les repères seront ajoutés ici par JavaScript -->
+            </div>
+        </div>
+
+        <!-- Input caché pour le chargement des photos -->
+        <input type="file" id="photo-input" accept="image/*">
+
+        <!-- Modale pour afficher la photo -->
+        <div id="photo-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
+            <div class="bg-white rounded-lg shadow-2xl max-w-4xl max-h-full overflow-auto">
+                 <div class="flex justify-between items-center p-4 border-b">
+                     <h3 class="text-lg font-semibold">Photo du chantier</h3>
+                     <button id="close-modal-btn" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+                 </div>
+                 <div class="p-4">
+                    <img id="modal-image" src="" alt="Photo de chantier" class="w-full h-auto rounded">
+                 </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const planUpload = document.getElementById('plan-upload');
+        const planSection = document.getElementById('plan-section');
+        const planContainer = document.getElementById('plan-container');
+        const photoInput = document.getElementById('photo-input');
+        const photoModal = document.getElementById('photo-modal');
+        const modalImage = document.getElementById('modal-image');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+
+        let markers = [];
+        let currentClickCoords = { x: 0, y: 0 };
+        let nextMarkerId = 1;
+
+        // 1. Gérer le chargement du plan
+        planUpload.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    planContainer.style.backgroundImage = `url('${e.target.result}')`;
+                    planSection.classList.remove('hidden');
+                    // Réinitialiser les anciens repères si un nouveau plan est chargé
+                    markers = [];
+                    renderMarkers();
+                    nextMarkerId = 1;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 2. Gérer le clic sur le plan pour ajouter un repère
+        planContainer.addEventListener('click', (event) => {
+            // Empêche l'ajout de repère si on clique sur un repère existant
+            if (event.target.classList.contains('marker')) {
+                return;
+            }
+        
+            const rect = planContainer.getBoundingClientRect();
+            // Calcule les coordonnées en pourcentage pour la responsivité
+            const x = ((event.clientX - rect.left) / rect.width) * 100;
+            const y = ((event.clientY - rect.top) / rect.height) * 100;
+            
+            currentClickCoords = { x, y };
+            
+            // Déclenche l'input de fichier photo
+            photoInput.click();
+        });
+
+        // 3. Gérer le chargement de la photo associée au repère
+        photoInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const newMarker = {
+                        id: nextMarkerId++,
+                        x: currentClickCoords.x,
+                        y: currentClickCoords.y,
+                        photoUrl: e.target.result
+                    };
+                    markers.push(newMarker);
+                    renderMarkers();
+                };
+                reader.readAsDataURL(file);
+                // Réinitialiser l'input pour permettre de charger la même photo plusieurs fois
+                photoInput.value = '';
+            }
+        });
+
+        // 4. Afficher tous les repères sur le plan
+        function renderMarkers() {
+            // Vider les repères existants
+            planContainer.innerHTML = '';
+            
+            markers.forEach(marker => {
+                const markerEl = document.createElement('div');
+                markerEl.className = 'marker';
+                markerEl.style.left = `${marker.x}%`;
+                markerEl.style.top = `${marker.y}%`;
+                markerEl.textContent = marker.id;
+                markerEl.dataset.photoUrl = marker.photoUrl;
+
+                markerEl.addEventListener('click', () => {
+                    modalImage.src = marker.photoUrl;
+                    photoModal.classList.remove('hidden');
+                });
+
+                planContainer.appendChild(markerEl);
+            });
+        }
+
+        // 5. Gérer la fermeture de la modale
+        closeModalBtn.addEventListener('click', () => {
+            photoModal.classList.add('hidden');
+        });
+        
+        // Fermer la modale en cliquant en dehors de l'image
+        photoModal.addEventListener('click', (event) => {
+            if (event.target === photoModal) {
+                 photoModal.classList.add('hidden');
+            }
+        });
+
+    </script>
+
+</body>
+</html>
