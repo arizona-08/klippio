@@ -1,6 +1,6 @@
 import React from "react";
-import AppHeader from "./components/AppHeader";
-import AppFooter from "./components/AppFooter";
+import AppHeader from "./components/layouts/AppHeader";
+import AppFooter from "./components/layouts/AppFooter";
 
 export default function AppLayout({
   children
