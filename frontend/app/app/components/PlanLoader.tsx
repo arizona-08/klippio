@@ -2,10 +2,12 @@
 import React from 'react'
 import PicModal from './PicModal'
 
-type MarkerType = {
+export type MarkerType = {
   id: number,
   x: number,
   y: number,
+  title: string,
+  comment: string
   photoUrl: string | ArrayBuffer | null
 }
 
@@ -15,7 +17,7 @@ function PlanLoader() {
   const currentClickCoords = React.useRef({x: 0, y: 0})
   const [nextMarkerId, setNextMarkerId] = React.useState<number>(1);
   const [isModalActive, setIsModalActive] = React.useState<boolean>(false)
-  const [modalSrc, setModalSrc] = React.useState<string | ArrayBuffer | null>(null)
+  const [modalCurrentMarker, setModalCurrentMarker] = React.useState<MarkerType | undefined>(undefined)
 
   const planSectionRef = React.useRef<HTMLDivElement | null>(null);
   const planContainerRef = React.useRef<HTMLDivElement | null>(null)
@@ -70,19 +72,22 @@ function PlanLoader() {
         const reader = new FileReader();
         reader.onload = (e) => {
           if(!e.target) return;
-
           
-
           const newMarker: MarkerType = {
               id: nextMarkerId,
               x: currentClickCoords.current.x,
               y: currentClickCoords.current.y,
+              title: '',
+              comment: '',
               photoUrl: e.target.result
           };
 
-          console.log(nextMarkerId);
-
           setMarkers([...markers, newMarker]);
+
+          //permettre d'ajouter un titre et des commentaires dès l'ajout du marqueur
+          setIsModalActive(true);
+          setModalCurrentMarker(newMarker)
+
           setNextMarkerId(prevId => prevId + 1);
         };
         reader.readAsDataURL(file);
@@ -95,12 +100,25 @@ function PlanLoader() {
 
   function handleMarkerClick(event: React.MouseEvent, marker: MarkerType) {
     event.stopPropagation();
-    setModalSrc(marker.photoUrl);
+    setModalCurrentMarker(marker)
     setIsModalActive(true);
   }
 
   function handleCloseModal(){
     setIsModalActive(false)
+  }
+
+  function handleSetText(e: React.ChangeEvent, marker: MarkerType){
+    const { name, value } = e.target as HTMLInputElement;
+
+    const updatedMarker  = { ...marker, [name === 'pic-title' ? 'title' : 'comment']: value };
+    setMarkers(prevMarkers => 
+      prevMarkers.map(markerItem => 
+        markerItem.id === marker.id ? { ...updatedMarker } : markerItem
+      )
+    );
+
+    setModalCurrentMarker(updatedMarker); 
   }
 
   return (
@@ -148,7 +166,7 @@ function PlanLoader() {
         onChange={chooseMarkerPic}
       />
 
-      <PicModal isActive={isModalActive} imgSrc={modalSrc} handleClose={handleCloseModal}/>
+      <PicModal isActive={isModalActive} marker={modalCurrentMarker} handleSetText={handleSetText} handleClose={handleCloseModal}/>
     </>
   )
 }
