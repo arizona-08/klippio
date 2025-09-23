@@ -7,9 +7,10 @@ interface PicModalInterface{
   marker: MarkerType | undefined
   handleClose: () => void;
   handleSetText: (e: React.ChangeEvent, marker: MarkerType) => void;
+  handleDeleteMarker: (marker: MarkerType) => void;
 }
 
-function PicModal({isActive, marker, handleClose, handleSetText}: PicModalInterface) {
+function PicModal({isActive, marker, handleClose, handleSetText, handleDeleteMarker}: PicModalInterface) {
   return (
     <>
       {isActive && (  
@@ -41,6 +42,10 @@ function PicModal({isActive, marker, handleClose, handleSetText}: PicModalInterf
                 value={marker?.comment || ''} 
                 onChange={(e) => handleSetText(e, marker as MarkerType)}
               ></textarea>
+            </div>
+            <div id="actions" className="flex justify-between p-4 border-t">
+              <button className='px-4 py-2 bg-red-500 text-white font-medium rounded-md cursor-pointer' onClick={() => handleDeleteMarker(marker as MarkerType)}>Supprimer</button>
+              <button className='px-4 py-2 bg-green-500 text-white font-medium rounded-md cursor-pointer' onClick={handleClose}>Valider</button>
             </div>
           </div>
         </div>

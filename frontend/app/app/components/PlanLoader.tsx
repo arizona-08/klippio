@@ -72,7 +72,7 @@ function PlanLoader() {
         const reader = new FileReader();
         reader.onload = (e) => {
           if(!e.target) return;
-          
+
           const newMarker: MarkerType = {
               id: nextMarkerId,
               x: currentClickCoords.current.x,
@@ -89,6 +89,7 @@ function PlanLoader() {
           setModalCurrentMarker(newMarker)
 
           setNextMarkerId(prevId => prevId + 1);
+          console.log(nextMarkerId)
         };
         reader.readAsDataURL(file);
 
@@ -121,6 +122,12 @@ function PlanLoader() {
     setModalCurrentMarker(updatedMarker); 
   }
 
+  function handleDeleteMarker(marker: MarkerType){
+    setMarkers(prevMarkers => prevMarkers.filter(m => m.id !== marker.id));
+    setIsModalActive(false);
+    setModalCurrentMarker(undefined);
+  }
+
   return (
     <>
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
@@ -143,9 +150,9 @@ function PlanLoader() {
           ref={planContainerRef}
           onClick={handlePlanClick}
         >
-          {markers.map((marker) => (
+          {markers.map((marker, index) => (
             <div
-              key={marker.id}
+              key={index}
               className="marker absolute w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-sm cursor-pointer border-2 border-white shadow-lg transform -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform"
               style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
               onClick={(e) => handleMarkerClick(e, marker)}
@@ -166,7 +173,13 @@ function PlanLoader() {
         onChange={chooseMarkerPic}
       />
 
-      <PicModal isActive={isModalActive} marker={modalCurrentMarker} handleSetText={handleSetText} handleClose={handleCloseModal}/>
+      <PicModal
+        isActive={isModalActive}
+        marker={modalCurrentMarker}
+        handleSetText={handleSetText}
+        handleDeleteMarker={handleDeleteMarker}
+        handleClose={handleCloseModal}
+      />
     </>
   )
 }
