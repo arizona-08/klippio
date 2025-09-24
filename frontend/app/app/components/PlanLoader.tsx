@@ -2,20 +2,26 @@
 import React from 'react'
 import PicModal from './PicModal'
 
-type MarkerType = {
+export type MarkerType = {
   id: number,
   x: number,
   y: number,
+  title: string,
+  comment: string
   photoUrl: string | ArrayBuffer | null
 }
 
-function PlanLoader() {
+interface PlanLoaderProps {
+  planId?: string
+}
+
+function PlanLoader({planId}: PlanLoaderProps) {
 
   const [markers, setMarkers] = React.useState<MarkerType[]>([]);
   const currentClickCoords = React.useRef({x: 0, y: 0})
   const [nextMarkerId, setNextMarkerId] = React.useState<number>(1);
   const [isModalActive, setIsModalActive] = React.useState<boolean>(false)
-  const [modalSrc, setModalSrc] = React.useState<string | ArrayBuffer | null>(null)
+  const [modalCurrentMarker, setModalCurrentMarker] = React.useState<MarkerType | undefined>(undefined)
 
   const planSectionRef = React.useRef<HTMLDivElement | null>(null);
   const planContainerRef = React.useRef<HTMLDivElement | null>(null)
@@ -71,19 +77,23 @@ function PlanLoader() {
         reader.onload = (e) => {
           if(!e.target) return;
 
-          
-
           const newMarker: MarkerType = {
               id: nextMarkerId,
               x: currentClickCoords.current.x,
               y: currentClickCoords.current.y,
+              title: '',
+              comment: '',
               photoUrl: e.target.result
           };
 
-          console.log(nextMarkerId);
-
           setMarkers([...markers, newMarker]);
+
+          //permettre d'ajouter un titre et des commentaires dès l'ajout du marqueur
+          setIsModalActive(true);
+          setModalCurrentMarker(newMarker)
+
           setNextMarkerId(prevId => prevId + 1);
+          console.log(nextMarkerId)
         };
         reader.readAsDataURL(file);
 
@@ -95,12 +105,31 @@ function PlanLoader() {
 
   function handleMarkerClick(event: React.MouseEvent, marker: MarkerType) {
     event.stopPropagation();
-    setModalSrc(marker.photoUrl);
+    setModalCurrentMarker(marker)
     setIsModalActive(true);
   }
 
   function handleCloseModal(){
     setIsModalActive(false)
+  }
+
+  function handleSetText(e: React.ChangeEvent, marker: MarkerType){
+    const { name, value } = e.target as HTMLInputElement;
+
+    const updatedMarker  = { ...marker, [name === 'pic-title' ? 'title' : 'comment']: value };
+    setMarkers(prevMarkers => 
+      prevMarkers.map(markerItem => 
+        markerItem.id === marker.id ? { ...updatedMarker } : markerItem
+      )
+    );
+
+    setModalCurrentMarker(updatedMarker); 
+  }
+
+  function handleDeleteMarker(marker: MarkerType){
+    setMarkers(prevMarkers => prevMarkers.filter(m => m.id !== marker.id));
+    setIsModalActive(false);
+    setModalCurrentMarker(undefined);
   }
 
   return (
@@ -114,6 +143,9 @@ function PlanLoader() {
           className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
           onChange={uploadPlan}
         />
+        {planId && (
+          <p className="text-sm text-gray-500 mt-2">Plan ID: {planId}</p>
+        )}
       </div>
 
       {/* Container qui va accueillir le plan */}
@@ -125,9 +157,9 @@ function PlanLoader() {
           ref={planContainerRef}
           onClick={handlePlanClick}
         >
-          {markers.map((marker) => (
+          {markers.map((marker, index) => (
             <div
-              key={marker.id}
+              key={index}
               className="marker absolute w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-sm cursor-pointer border-2 border-white shadow-lg transform -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform"
               style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
               onClick={(e) => handleMarkerClick(e, marker)}
@@ -148,7 +180,13 @@ function PlanLoader() {
         onChange={chooseMarkerPic}
       />
 
-      <PicModal isActive={isModalActive} imgSrc={modalSrc} handleClose={handleCloseModal}/>
+      <PicModal
+        isActive={isModalActive}
+        marker={modalCurrentMarker}
+        handleSetText={handleSetText}
+        handleDeleteMarker={handleDeleteMarker}
+        handleClose={handleCloseModal}
+      />
     </>
   )
 }
