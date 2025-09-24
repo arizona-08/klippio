@@ -1,0 +1,37 @@
+services:
+
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+      target: dev
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - /app/dist
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    networks:
+      - klippio-network
+    
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - klippio-network
+
+volumes:
+  db_data:
+
+networks:
+  klippio-network:
+    driver: bridge
