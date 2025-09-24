@@ -1,6 +1,7 @@
 services:
 
   backend:
+    container_name: backend
     build: 
       context: ./backend
       dockerfile: Dockerfile
@@ -8,7 +9,6 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
-      - /app/dist
     ports:
       - "8000:8000"
     depends_on:
@@ -17,6 +17,7 @@ services:
       - klippio-network
     
   db:
+    container_name: db
     image: postgres:latest
     environment:
       - POSTGRES_USER=${DB_USER}
