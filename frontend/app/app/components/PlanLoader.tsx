@@ -11,7 +11,11 @@ export type MarkerType = {
   photoUrl: string | ArrayBuffer | null
 }
 
-function PlanLoader() {
+interface PlanLoaderProps {
+  planId?: string
+}
+
+function PlanLoader({planId}: PlanLoaderProps) {
 
   const [markers, setMarkers] = React.useState<MarkerType[]>([]);
   const currentClickCoords = React.useRef({x: 0, y: 0})
@@ -139,6 +143,9 @@ function PlanLoader() {
           className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
           onChange={uploadPlan}
         />
+        {planId && (
+          <p className="text-sm text-gray-500 mt-2">Plan ID: {planId}</p>
+        )}
       </div>
 
       {/* Container qui va accueillir le plan */}
