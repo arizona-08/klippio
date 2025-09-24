@@ -7,8 +7,8 @@ export default function page() {
     { id: 'vdzgta-23y', name: 'Plan C' }
   ]
   return (
-    <main className='w-full grow-1 max-w-7xl mx-auto py-4'>
-      <section>
+    <main className='w-full grow-1 bg-blue-200'>
+      <section className='max-w-7xl mx-auto py-4'>
         <h1 className='text-2xl font-semibold'>Bienvenue dans la partie application de Klippio</h1>
 
         <p className='mb-4'>Sélectionnez un plan pour commencer à ajouter des photos :</p>
