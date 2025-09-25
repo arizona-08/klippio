@@ -8,3 +8,10 @@ export interface User{
   password: string;
   role: $Enums.Role
 }
+
+export type UserFilter = 'id' | 'email' | 'firstname' | 'lastname' | 'role';
+
+export interface UserQuery{
+  filter: UserFilter;
+  value: string | number;
+}
