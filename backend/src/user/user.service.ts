@@ -2,7 +2,9 @@ import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateUserDTO } from "./dto/create-user.dto";
 import bcrypt from 'bcrypt';
-import { UserFilter } from "./interfaces/user.interface";
+import { User, UserFilter } from "./interfaces/user.interface";
+import { UserNotFoundError } from "src/Error/UserError";
+import { err, ok, Result } from "src/Error/Result";
 
 @Injectable()
 export class UserService{
@@ -19,13 +21,17 @@ export class UserService{
     )
   }
 
-  async findOneBy(filter: UserFilter, value: string | number){
+  async findOneBy(filter: UserFilter, value: string | number): Promise<Result<User, UserNotFoundError>>{
+
     const user = await this.prisma.user.findFirst({
       where: {
         [filter]: value
       }
     });
-    return user
+    
+    if(!user) return err(new UserNotFoundError(`Utilisateur avec ${filter}: ${value} non trouvé.`));
+
+    return ok(user)
   }
 
   async hashPassword(password: string): Promise<string>{

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from "@nestjs/common";
+import { Body, Controller, Get, HttpStatus, Param, Post } from "@nestjs/common";
 import { UserService } from "./user.service";
 import type { CreateUserDTO } from "./dto/create-user.dto";
 import { User } from "./interfaces/user.interface";
@@ -10,6 +10,15 @@ export class UserController{
   @Get()
   async findAll(): Promise<User[]>{
     return await this.userService.findAllUsers();
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id: string){
+    const user = await this.userService.findOneBy('id', parseInt(id));
+
+    if(user.ok) return user.value;
+
+    return {error: user.error.message, status: HttpStatus.NOT_FOUND}; //plutôt créer des filtres d'exceptions
   }
 
   @Post()

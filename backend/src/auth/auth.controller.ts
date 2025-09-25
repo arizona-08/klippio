@@ -11,8 +11,11 @@ export class AuthController{
   @Post('login')
   async login(@Body() loginDto: LoginDTO, @Session() session: Record<string, any>){
     const connectedUser = await this.authService.login(loginDto.email, loginDto.password);
-    session.userId = connectedUser.id;
-    session.role = connectedUser.role;
+    if(!connectedUser.ok) return {error: connectedUser.error}; //plutôt créer des filtres d'exceptions
+
+    session.userId = connectedUser.value.id;
+    session.role = connectedUser.value.role;
+
     return {message: 'Connexion réussie', user: connectedUser};
   }
 
