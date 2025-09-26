@@ -32,3 +32,10 @@ export class CouldNotCreateUserError extends Error{
     this.name = "CouldNotCreateUserError";
   }
 }
+
+export class CouldNotUpdateUserError extends Error{
+  constructor(message: string) {
+    super(message);
+    this.name = "CouldNotUpdateUserError";
+  }
+}

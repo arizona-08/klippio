@@ -3,7 +3,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { CreateUserDTO } from "./dto/create-user.dto";
 import bcrypt from 'bcrypt';
 import { User, UserFilter } from "./interfaces/user.interface";
-import { UserCreationError, UserNotFoundError } from "src/Error/UserError";
+import { CouldNotUpdateUserError, UserCreationError, UserNotFoundError } from "src/Error/UserError";
 import { err, ok, Result } from "src/Error/Result";
 
 @Injectable()
@@ -28,6 +28,11 @@ export class UserService{
     
   }
 
+  async hashPassword(password: string): Promise<string>{
+    const hashedPassword = await bcrypt.hash(password, 10);
+    return hashedPassword;
+  }
+
   async findOneBy(filter: UserFilter, value: string | number): Promise<Result<User, UserNotFoundError>>{
 
     const user = await this.prisma.user.findFirst({
@@ -41,8 +46,48 @@ export class UserService{
     return ok(user)
   }
 
-  async hashPassword(password: string): Promise<string>{
-    const hashedPassword = await bcrypt.hash(password, 10);
-    return hashedPassword;
+  async updateUser(id: number, updateData: Partial<User>): Promise<Result<User, UserNotFoundError | CouldNotUpdateUserError>>{
+    const user = await this.findOneBy('id', id);
+    if(!user.ok) return err(user.error); //user.error est de type UserNotFoundError
+
+    if(updateData.password){
+      updateData.password = await this.hashPassword(updateData.password);
+    }
+
+    if(updateData.email){
+      const emailExists = await this.prisma.user.findFirst({
+        where: {
+          email: updateData.email,
+          NOT: { id } // Exclude the current user from the check
+        }
+      });
+
+      if(emailExists){
+        return err(new CouldNotUpdateUserError("Email déja utilisé par un autre utilisateur."));
+      }
+    }
+
+    try{
+      const updatedUser = await this.prisma.user.update({
+        where: { id },
+        data: updateData
+      });
+
+      return ok(updatedUser);
+    } catch(error){
+      return err(new CouldNotUpdateUserError(`Erreur lors de la mise à jour de l'utilisateur: ${error.message}`));
+    }
   }
+
+  async deleteUser(id: number): Promise<Result<User, UserNotFoundError>>{
+    const user = await this.findOneBy('id', id);
+    if(!user.ok) return err(user.error);
+
+    const deletedUser = await this.prisma.user.delete({
+      where: {id}
+    });
+
+    return ok(deletedUser);
+  }
+
 }
