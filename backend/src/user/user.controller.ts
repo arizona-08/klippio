@@ -1,4 +1,4 @@
-import { Body, Controller, Get, NotFoundException, Param, ParseIntPipe, Post } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, NotFoundException, Param, ParseIntPipe, Post } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { CreateUserDTO } from "./dto/create-user.dto";
 import { User } from "./interfaces/user.interface";
@@ -22,7 +22,13 @@ export class UserController{
   }
 
   @Post()
-  async create(@Body() createUserDto: CreateUserDTO): Promise<User>{
-    return await this.userService.createUser(createUserDto);
+  async create(@Body() createUserDto: CreateUserDTO): Promise<Partial<User>>{
+    const createdUser = await this.userService.createUser(createUserDto);
+    if(!createdUser.ok){
+      throw new BadRequestException(createdUser.error.message);
+    }
+
+    const {password, ...result} = createdUser.value;
+    return result
   }
 }

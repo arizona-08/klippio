@@ -3,7 +3,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { CreateUserDTO } from "./dto/create-user.dto";
 import bcrypt from 'bcrypt';
 import { User, UserFilter } from "./interfaces/user.interface";
-import { UserNotFoundError } from "src/Error/UserError";
+import { UserCreationError, UserNotFoundError } from "src/Error/UserError";
 import { err, ok, Result } from "src/Error/Result";
 
 @Injectable()
@@ -15,10 +15,17 @@ export class UserService{
     return users;
   }
 
-  async createUser(createUserDto: CreateUserDTO){
-    return await this.prisma.user.create(
-      {data: {...createUserDto, password: await this.hashPassword(createUserDto.password)}}
-    )
+  async createUser(createUserDto: CreateUserDTO): Promise<Result<User, UserCreationError>>{
+    try{
+      const createdUser = await this.prisma.user.create(
+        {data: {...createUserDto, password: await this.hashPassword(createUserDto.password)}}
+      )
+
+      return ok(createdUser);
+    } catch(error){
+      return err(new UserCreationError(`Erreur lors de la création de l'utilisateur: ${error.message}`));
+    }
+    
   }
 
   async findOneBy(filter: UserFilter, value: string | number): Promise<Result<User, UserNotFoundError>>{
