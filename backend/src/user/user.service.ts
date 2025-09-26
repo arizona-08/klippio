@@ -29,7 +29,7 @@ export class UserService{
       }
     });
     
-    if(!user) return err(new UserNotFoundError(`Utilisateur avec ${filter}: ${value} non trouvé.`));
+    if(!user) return err(new UserNotFoundError(`Utilisateur avec ${filter}: ${value} introuvable.`));
 
     return ok(user)
   }

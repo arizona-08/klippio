@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Post, Session, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Post, Session, UnauthorizedException, UseGuards } from "@nestjs/common";
 import type { LoginDTO } from "./dto/login.dto";
 import { AuthService } from "./auth.service";
 import { AuthenticatedGuard } from "./authenticated.guard";
@@ -11,7 +11,9 @@ export class AuthController{
   @Post('login')
   async login(@Body() loginDto: LoginDTO, @Session() session: Record<string, any>){
     const connectedUser = await this.authService.login(loginDto.email, loginDto.password);
-    if(!connectedUser.ok) return {error: connectedUser.error}; //plutôt créer des filtres d'exceptions
+    if(!connectedUser.ok){
+      throw new UnauthorizedException(connectedUser.error.message);
+    }
 
     session.userId = connectedUser.value.id;
     session.role = connectedUser.value.role;

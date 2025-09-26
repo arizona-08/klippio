@@ -3,12 +3,12 @@ import { AppModule } from './app.module';
 import session from 'express-session';
 import { PrismaSessionStore } from '@quixo3/prisma-session-store';
 import { PrismaClient } from '@prisma/client';
+import { ValidationPipe } from '@nestjs/common';
 
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.use(
-    session({
+  const sessionMiddleware = session({
        // ⚠️ Mettez cette clé secrète dans vos variables d'environnement !
       secret: process.env.SESSION_SECRET || 'a-very-strong-and-long-secret-key',
       resave: false,
@@ -25,7 +25,15 @@ async function bootstrap() {
         dbRecordIdIsSessionId: true,
       }),
     })
+
+  app.use(
+    sessionMiddleware
   )
+
+  app.useGlobalPipes(new ValidationPipe({
+    skipMissingProperties: false,
+    skipNullProperties: false,
+  }));
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
