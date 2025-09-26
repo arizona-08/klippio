@@ -12,10 +12,10 @@ export class UserCreationError extends Error{
   }
 }
 
-export class PasswordDoNotMathError extends Error{
+export class PasswordDoNotMatchError extends Error{
   constructor(message: string) {
     super(message);
-    this.name = "PasswordDoNotMathError";
+    this.name = "PasswordDoNotMatchError";
   }
 }
 

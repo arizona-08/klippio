@@ -1,9 +1,11 @@
-import { Body, Controller, Delete, InternalServerErrorException, Post, Session, UnauthorizedException, UseGuards } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Delete, InternalServerErrorException, NotFoundException, Patch, Post, Query, Session, UnauthorizedException, UseGuards } from "@nestjs/common";
 import type { LoginDTO } from "./dto/login.dto";
 import { AuthService } from "./auth.service";
 import { AuthenticatedGuard } from "./authenticated.guard";
 import { RegisterDTO } from "./dto/register.dto";
-import { CouldNotCreateUserError } from "src/Error/UserError";
+import { CouldNotCreateUserError, PasswordDoNotMatchError } from "src/Error/UserError";
+import { ForgetPasswordDTO } from "./dto/forget-password.dto";
+import { ResetPasswordDTO } from "./dto/reset-password.dto";
 
 
 @Controller('api/auth')
@@ -46,5 +48,37 @@ export class AuthController{
   logout(@Session() session: Record<string, any>) {
     session.destroy(); // Détruit la session
     return { message: 'Déconnexion réussie' };
+  }
+
+  @Post('forgot-password')
+  async forgetPassword(@Body() { email }: ForgetPasswordDTO) {
+    const result = await this.authService.forgetPassword(email);
+    if(!result.ok){
+      throw new NotFoundException(result.error.message);
+    }
+
+    return { 
+      message: 'Si un compte avec cet email existe, un email de réinitialisation a été envoyé.',
+      email: email,
+      token: result.value
+    };
+  }
+
+  @Patch('reset-password')
+  async resetPassword(@Query('token') token: string, @Query('email') email: string, @Body() {newPassword, confirmNewPassword}: ResetPasswordDTO){
+    const result = await this.authService.resetPassword(email, token, newPassword, confirmNewPassword);
+    if(!result.ok){
+      if(result.error instanceof PasswordDoNotMatchError){
+        throw new BadRequestException(result.error.message);
+      }
+
+      throw new NotFoundException(result.error.message);
+    }
+
+    const {password, ...userWithoutPassword} = result.value;
+    return {
+      message: 'Mot de passe réinitialisé avec succès.',
+      user: userWithoutPassword
+    }
   }
 }

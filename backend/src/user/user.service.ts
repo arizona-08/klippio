@@ -2,9 +2,10 @@ import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateUserDTO } from "./dto/create-user.dto";
 import bcrypt from 'bcrypt';
-import { User, UserFilter } from "./interfaces/user.interface";
+import { ForgotPasswordTokens, User, UserFilter } from "./interfaces/user.interface";
 import { CouldNotUpdateUserError, UserCreationError, UserNotFoundError } from "src/Error/UserError";
 import { err, ok, Result } from "src/Error/Result";
+import * as crypto from 'crypto';
 
 @Injectable()
 export class UserService{
@@ -21,7 +22,7 @@ export class UserService{
         {data: {...createUserDto, password: await this.hashPassword(createUserDto.password)}}
       )
 
-      return ok(createdUser);
+      return ok<User>(createdUser);
     } catch(error){
       return err(new UserCreationError(`Erreur lors de la création de l'utilisateur: ${error.message}`));
     }
@@ -88,6 +89,19 @@ export class UserService{
     });
 
     return ok(deletedUser);
+  }
+
+  async getForgotPasswordToken(email: string): Promise<Result<ForgotPasswordTokens, UserNotFoundError>>{
+    const user = await this.findOneBy('email', email);
+    if(!user.ok){
+      return err(user.error);
+    };
+
+    return ok({
+      userId: user.value.id,
+      forgotPasswordToken: user.value.forgotPasswordToken,
+      forgotPasswordTokenExpiry: user.value.forgotPasswordTokenExpiry
+    });
   }
 
 }
