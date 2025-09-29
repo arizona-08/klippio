@@ -48,16 +48,17 @@ export class AuthService {
     return ok(result);
   }
 
-  async forgetPassword(email: string){
+  async forgetPassword(email: string): Promise<Result<string, UserNotFoundError | CouldNotUpdateUserError >>{
     const user = await this.userService.findOneBy('email', email);
     if(!user.ok){
       return err(new UserNotFoundError('Aucun utilisateur trouvé avec cet email.'));
     }
 
-    const { token, hashedToken } = this.generateToken();
+    const { tokenSelector, hashedToken } = this.generateToken();
     const expiry = new Date(Date.now() + 3600000); // 1 heure
 
     const updatedUser = await this.userService.updateUser(user.value.id, {
+      forgotPasswordTokenSelector: tokenSelector,
       forgotPasswordToken: hashedToken,
       forgotPasswordTokenExpiry: expiry
     });
@@ -66,13 +67,17 @@ export class AuthService {
       return err(new CouldNotUpdateUserError(updatedUser.error.message))
     }
 
-    return ok(token)
+    const tokenString = tokenSelector + hashedToken;
+    const resetLink = `http://localhost:8000/api/auth/reset-password?token=${tokenString}`;
+    return ok(resetLink) 
   }
 
-  async resetPassword(email: string, token: string, newPassword: string, confirmNewPassword: string): Promise<Result<Partial<User>, CouldNotUpdateUserError | PasswordDoNotMatchError>>{
-    const storedPasswordToken = await this.userService.getForgotPasswordToken(email);
+  async resetPassword(tokenString: string, newPassword: string, confirmNewPassword: string): Promise<Result<Partial<User>, CouldNotUpdateUserError | PasswordDoNotMatchError>>{
+    const tokenSelector = tokenString.slice(0, 32)
+    const hashedToken = tokenString.slice(32, 96)
+    const storedPasswordToken = await this.userService.getForgotPasswordToken(tokenSelector);
     if(!storedPasswordToken.ok){
-      return err(new UserNotFoundError('Utilisateur non trouvé.'));
+      return err(new UserNotFoundError(`Token de réinitialisation invalide.`));
     }
 
     if(!storedPasswordToken.value){
@@ -83,9 +88,8 @@ export class AuthService {
       return err(new CouldNotUpdateUserError('Token de réinitialisation expiré. Veuillez générer un nouveau token.'));
     }
 
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
     if(hashedToken !== storedPasswordToken.value.forgotPasswordToken){
-      return err(new CouldNotUpdateUserError('Token de réinitialisation invalide. Veuillez générer un nouveau token.'));
+      return err(new CouldNotUpdateUserError(`Token de réinitialisation invalide. Veuillez générer un nouveau token.`));
     }
 
     if(newPassword !== confirmNewPassword){
@@ -94,6 +98,7 @@ export class AuthService {
 
     const updatedUser = await this.userService.updateUser(storedPasswordToken.value.userId, {
       password: newPassword,
+      forgotPasswordTokenSelector: null,
       forgotPasswordToken: null,
       forgotPasswordTokenExpiry: null
     });
@@ -109,7 +114,8 @@ export class AuthService {
 
   generateToken(){
     const token = crypto.randomBytes(32).toString('hex');
+    const tokenSelector = crypto.randomBytes(16).toString('hex');
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-    return { token, hashedToken };
+    return { tokenSelector, hashedToken };
   }
 }

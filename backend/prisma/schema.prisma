@@ -20,6 +20,7 @@ model User {
   firstname                   String
   lastname                    String
   password                    String
+  forgotPasswordTokenSelector String?
   forgotPasswordToken         String?
   forgotPasswordTokenExpiry   DateTime?
   role                        Role      @default(STANDARD)

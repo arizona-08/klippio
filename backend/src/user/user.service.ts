@@ -91,14 +91,15 @@ export class UserService{
     return ok(deletedUser);
   }
 
-  async getForgotPasswordToken(email: string): Promise<Result<ForgotPasswordTokens, UserNotFoundError>>{
-    const user = await this.findOneBy('email', email);
+  async getForgotPasswordToken(forgotPasswordTokenSelector: string): Promise<Result<ForgotPasswordTokens, UserNotFoundError>>{
+    const user = await this.findOneBy('forgotPasswordTokenSelector', forgotPasswordTokenSelector);
     if(!user.ok){
       return err(user.error);
     };
 
     return ok({
       userId: user.value.id,
+      forgotPasswordTokenSelector: user.value.forgotPasswordTokenSelector,
       forgotPasswordToken: user.value.forgotPasswordToken,
       forgotPasswordTokenExpiry: user.value.forgotPasswordTokenExpiry
     });

@@ -65,8 +65,8 @@ export class AuthController{
   }
 
   @Patch('reset-password')
-  async resetPassword(@Query('token') token: string, @Query('email') email: string, @Body() {newPassword, confirmNewPassword}: ResetPasswordDTO){
-    const result = await this.authService.resetPassword(email, token, newPassword, confirmNewPassword);
+  async resetPassword(@Query('token') token: string, @Body() {newPassword, confirmNewPassword}: ResetPasswordDTO){
+    const result = await this.authService.resetPassword(token, newPassword, confirmNewPassword);
     if(!result.ok){
       if(result.error instanceof PasswordDoNotMatchError){
         throw new BadRequestException(result.error.message);
