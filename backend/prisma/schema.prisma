@@ -6,7 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  // output   = "../generated/prisma"
 }
 
 datasource db {
@@ -15,12 +15,17 @@ datasource db {
 }
 
 model User {
-  id            Int     @id @default(autoincrement())
-  email         String  @unique
-  firstname     String
-  lastname      String
-  password      String
-  role          Role    @default(STANDARD)
+  id                          Int       @id @default(autoincrement())
+  email                       String    @unique
+  firstname                   String
+  lastname                    String
+  password                    String
+  forgotPasswordTokenSelector String?
+  forgotPasswordToken         String?
+  forgotPasswordTokenExpiry   DateTime?
+  role                        Role      @default(STANDARD)
+  createdAt                   DateTime  @default(now())
+  updatedAt                   DateTime  @default(now())
 }
 
 
@@ -28,4 +33,11 @@ enum Role {
   ADMIN
   STANDARD
   PREMIUM
+}
+
+model Session {
+  id        String   @id
+  sid       String   @unique
+  data      String   
+  expiresAt   DateTime
 }
