@@ -17,7 +17,8 @@ export class AppService {
 
   async createAdmin(){
     const existingAdmin = await this.userService.findOneBy('role', process.env.ADMIN_ROLE as string);
-    if(existingAdmin){
+    if(existingAdmin.ok){
+      console.log(existingAdmin);
       console.log("Admin user already exists. Skipping creation.");
       return;
     }

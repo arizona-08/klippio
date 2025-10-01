@@ -2,6 +2,7 @@
 import { RegisterDTO } from '@/proxy/auth/dto/register.dto';
 import { RegisterErrors } from '@/proxy/auth/errors/register.error';
 import { register } from '@/proxy/auth/register';
+import { useRouter } from 'next/navigation';
 import React from 'react'
 
 function RegisterForm() {
@@ -19,17 +20,20 @@ function RegisterForm() {
   }
 
   const [errorMessages, setErrorMessages] = React.useState<RegisterErrors | null>(null)
+  const [unauthorizedError, setUnauthorizedError] = React.useState<string | null>(null);
+
+  const router = useRouter();
 
   function createErrorObject(errors: string[]){
     let errorObj: Record<string, string[]> = {};
-    for(const error of errors){
-      const firstErrorWord = error.split(' ')[0]
-      if(!errorObj[firstErrorWord]){
-        errorObj[firstErrorWord] = []
-        errorObj[firstErrorWord].push(error)
+    for(const errorKey in errors){
+      if(!errorObj[errorKey]){
+        errorObj[errorKey] = []
+        errorObj[errorKey].push(errors[errorKey])
+      } else{
+        errorObj[errorKey].push(errors[errorKey])
       }
 
-      errorObj[firstErrorWord].push(error)
     }
 
     return errorObj;
@@ -37,19 +41,30 @@ function RegisterForm() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>){
     e.preventDefault();
+    setErrorMessages(null);
+    setUnauthorizedError(null);
 
     const response = await register(registerCredentials);
     const result = await response.json();
     console.log(result);
     if(result.statusCode === 400){
-      const errorObj = createErrorObject(result.message);
-      // setErrorMessages(errorObj);
+      const errorObj = createErrorObject(result.errors);
+      setErrorMessages(errorObj);
+    }
+
+    if(result.statusCode === 401){
+      setUnauthorizedError(result.message)
+    }
+
+    if(response.status === 201){
+      router.push('/app/auth/login');
     }
   }
 
   return (
     <>
       <form method="post" onSubmit={handleSubmit}>
+        {unauthorizedError && <p className="text-red-500 mb-4">{unauthorizedError}</p>}
         <div className='flex flex-col gap-2 items-start mb-3'>
           <label htmlFor="firstname">Prénom:</label>
           <input
