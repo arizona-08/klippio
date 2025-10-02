@@ -2,6 +2,7 @@
 import { RegisterDTO } from '@/proxy/auth/dto/register.dto';
 import { RegisterErrors } from '@/proxy/auth/errors/register.error';
 import { register } from '@/proxy/auth/register';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React from 'react'
 
@@ -156,6 +157,7 @@ function RegisterForm() {
           )}
         </div>
         <button type="submit">Envoyer</button>
+        <p className="mt-4">Déja un compte ? <Link href="/app/auth/login" className='hover:underline hover:text-blue-500'>Me connecter</Link></p>
       </form>
     </>
   )
