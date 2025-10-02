@@ -4,9 +4,11 @@ import { login } from '@/proxy/auth/login';
 import Link from 'next/link'
 import { useRouter } from 'next/navigation';
 import React from 'react'
+import { useUser } from '../../Context/AuthUserProvider';
 
 function LoginForm() {
 
+  const {setUser} = useUser();
   const [loginCredentials, setLoginCredentials] = React.useState<LoginDTO>({
     email: "",
     password: ""
@@ -25,7 +27,8 @@ function LoginForm() {
     const response = await login(loginCredentials);
     const result = await response.json();
 
-    if(result.statusCode === 200){
+    if(response.ok){
+      setUser(result.user)
       router.push('/app')
     } else {
       setErrorMessage(result.message);
