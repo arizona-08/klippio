@@ -62,13 +62,13 @@ export class AuthController{
   async forgetPassword(@Body() { email }: ForgetPasswordDTO) {
     const result = await this.authService.forgetPassword(email);
     if(!result.ok){
-      throw new NotFoundException(result.error.message);
+      // throw new NotFoundException(result.error.message);
+      return {message: 'Si un compte avec cet email existe, un email de réinitialisation a été envoyé.'}
     }
 
     return { 
       message: 'Si un compte avec cet email existe, un email de réinitialisation a été envoyé.',
-      email: email,
-      token: result.value
+      resetLink: result.value
     };
   }
 

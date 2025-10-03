@@ -61,8 +61,9 @@ function LoginForm() {
             onChange={setCredentialsInfo}
           />
         </div>
-        <button type="submit">Me connecter</button>
+        <button type="submit" className='inline-block p-3 bg-orange-500'>Me connecter</button>
         <p className='mt-5'>Pas encore de compte ? <Link href='/app/auth/register' className='hover:underline hover:text-blue-500'>Me créer un compte</Link></p>
+        <p className='mt-2'><Link href="/app/auth/forgot-password" className='hover:underline hover:text-blue-500'>Mot de passe oublié ?</Link></p>
       </form>
     </>
   )
