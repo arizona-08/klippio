@@ -1,11 +1,14 @@
-import { BadRequestException, Body, Controller, Delete, InternalServerErrorException, NotFoundException, Patch, Post, Query, Session, UnauthorizedException, UseGuards } from "@nestjs/common";
-import type { LoginDTO } from "./dto/login.dto";
+import { BadRequestException, Body, Controller, Delete, Get, InternalServerErrorException, NotFoundException, Patch, Post, Query, Session, UnauthorizedException, UseGuards } from "@nestjs/common";
+import { LoginDTO } from "./dto/login.dto";
 import { AuthService } from "./auth.service";
 import { AuthenticatedGuard } from "./authenticated.guard";
 import { RegisterDTO } from "./dto/register.dto";
 import { CouldNotCreateUserError, PasswordDoNotMatchError } from "src/Error/UserError";
 import { ForgetPasswordDTO } from "./dto/forget-password.dto";
 import { ResetPasswordDTO } from "./dto/reset-password.dto";
+import { CurrentUser } from "./decorators/current-user.decorator";
+import type { User } from "@prisma/client";
+import { MailNotSendedError } from "src/Error/MailError";
 
 
 @Controller('api/auth')
@@ -44,6 +47,12 @@ export class AuthController{
   }
 
   @UseGuards(AuthenticatedGuard)
+  @Get('me')
+  async me(@CurrentUser() user: User){
+    return user;
+  }
+
+  @UseGuards(AuthenticatedGuard)
   @Delete('logout')
   logout(@Session() session: Record<string, any>) {
     session.destroy(); // Détruit la session
@@ -54,13 +63,17 @@ export class AuthController{
   async forgetPassword(@Body() { email }: ForgetPasswordDTO) {
     const result = await this.authService.forgetPassword(email);
     if(!result.ok){
-      throw new NotFoundException(result.error.message);
+
+      if(result.error instanceof MailNotSendedError){
+        throw new InternalServerErrorException(result.error.message)
+      }
+      // throw new NotFoundException(result.error.message);
+      return {message: 'Si un compte avec cet email existe, un email de réinitialisation a été envoyé.'}
     }
 
     return { 
       message: 'Si un compte avec cet email existe, un email de réinitialisation a été envoyé.',
-      email: email,
-      token: result.value
+      resetLink: result.value
     };
   }
 

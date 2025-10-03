@@ -3,11 +3,18 @@ import { AppModule } from './app.module';
 import session from 'express-session';
 import { PrismaSessionStore } from '@quixo3/prisma-session-store';
 import { PrismaClient } from '@prisma/client';
-import { ValidationPipe } from '@nestjs/common';
+import {BadRequestException, ValidationPipe } from '@nestjs/common';
+import { ValidationError } from 'class-validator';
 
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    cors: {
+      origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+      credentials: true
+    }
+  });
+  
   const sessionMiddleware = session({
        // ⚠️ Mettez cette clé secrète dans vos variables d'environnement !
       secret: process.env.SESSION_SECRET || 'a-very-strong-and-long-secret-key',
@@ -33,7 +40,27 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({
     skipMissingProperties: false,
     skipNullProperties: false,
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+    // Ici, nous redéfinissons la façon dont l'exception est créée
+    exceptionFactory: (errors: ValidationError[]) => {
+      const formattedErrors = {};
+
+      errors.forEach(err => {
+        // err.property est le nom du champ (ex: "firstname")
+        // err.constraints est un objet avec les messages d'erreur (ex: { isNotEmpty: "..." })
+        formattedErrors[err.property] = Object.values(err.constraints ?? {}).join(', ');
+      });
+      
+      // Retourne une exception standard de NestJS avec notre objet formaté
+      return new BadRequestException({
+          statusCode: 400,
+          message: 'Erreurs de validation',
+          errors: formattedErrors,
+      });
+    },
   }));
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 8000);
 }
 bootstrap();
