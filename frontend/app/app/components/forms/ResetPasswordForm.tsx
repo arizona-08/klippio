@@ -26,7 +26,12 @@ function ResetPasswordForm({token}: ResetPasswordFormProps) {
       return
     }
 
-    const response = resetPassword(token, resetPasswordCredentials);
+    const response = await resetPassword(token, resetPasswordCredentials);
+    const result = await response.json();
+
+    if(result.statusCode === 200){
+      setSuccessMessage(result.message);
+    }
   }
 
 
@@ -37,12 +42,24 @@ function ResetPasswordForm({token}: ResetPasswordFormProps) {
       {successMessage && <p className='p-3 bg-white text-green-500 rounded-md mb-3'>{successMessage}</p>}
       <form method="post" onSubmit={handleSubmit}>
         <div className='flex flex-col gap-2 items-start mb-3'>
-            <label htmlFor="email">Email:</label>
+            <label htmlFor="newPassword">Nouveau mot de passe:</label>
             <input
-              type="email"
-              id="email"
-              name="email"
-              placeholder="johndoe@gmail.com"
+              type="password"
+              id="newPassword"
+              name="newPassword"
+              placeholder="Entrez votre nouveau mot de passe"
+              required
+              className="p-3 bg-white"
+              onChange={setCredentialsInfo}
+            />
+          </div>
+          <div className='flex flex-col gap-2 items-start mb-3'>
+            <label htmlFor="confirmNewPassword">Confirmation du mot de passe:</label>
+            <input
+              type="password"
+              id="confirmNewPassword"
+              name="confirmNewPassword"
+              placeholder="Entrez votre nouveau mot de passe"
               required
               className="p-3 bg-white"
               onChange={setCredentialsInfo}
