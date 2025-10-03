@@ -7,10 +7,15 @@ import { err, ok, Result } from "src/Error/Result";
 import { RegisterDTO } from "./dto/register.dto";
 import { CouldNotCreateUserError, CouldNotUpdateUserError, PasswordDoNotMatchError, UserAlreadyExistsError, UserNotFoundError } from "src/Error/UserError";
 import * as crypto from 'crypto';
+import { MailService } from "src/mail/mail.service";
+import { MailNotSendedError } from "src/Error/MailError";
 
 @Injectable()
 export class AuthService {
-  constructor(private userService: UserService){}
+  constructor(
+    private userService: UserService,
+    private mailService: MailService,
+  ){}
 
   async register(registerDto: RegisterDTO): Promise<Result<User, PasswordDoNotMatchError | UserAlreadyExistsError | CouldNotCreateUserError>>{
 
@@ -48,7 +53,7 @@ export class AuthService {
     return ok(result);
   }
 
-  async forgetPassword(email: string): Promise<Result<string, UserNotFoundError | CouldNotUpdateUserError >>{
+  async forgetPassword(email: string): Promise<Result<string, UserNotFoundError | CouldNotUpdateUserError | MailNotSendedError >>{
     const user = await this.userService.findOneBy('email', email);
     if(!user.ok){
       return err(new UserNotFoundError('Aucun utilisateur trouvé avec cet email.'));
@@ -68,7 +73,15 @@ export class AuthService {
     }
 
     const tokenString = tokenSelector + hashedToken;
-    const resetLink = `http://localhost:8000/api/auth/reset-password?token=${tokenString}`;
+    const frontendURL = process.env.FRONTEND_URL;
+    const resetLink = `${frontendURL}/app/auth/reset-password?token=${tokenString}`;
+    const resetMail = this.mailService.resetPasswordMailOptions("team@klippio.com", email, resetLink);
+    const mail = await this.mailService.sendMail(resetMail);
+
+    if(!mail.ok){
+      return err(mail.error)
+    }
+
     return ok(resetLink) 
   }
 

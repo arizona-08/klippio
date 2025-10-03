@@ -8,6 +8,7 @@ import { ForgetPasswordDTO } from "./dto/forget-password.dto";
 import { ResetPasswordDTO } from "./dto/reset-password.dto";
 import { CurrentUser } from "./decorators/current-user.decorator";
 import type { User } from "@prisma/client";
+import { MailNotSendedError } from "src/Error/MailError";
 
 
 @Controller('api/auth')
@@ -62,6 +63,10 @@ export class AuthController{
   async forgetPassword(@Body() { email }: ForgetPasswordDTO) {
     const result = await this.authService.forgetPassword(email);
     if(!result.ok){
+
+      if(result.error instanceof MailNotSendedError){
+        throw new InternalServerErrorException(result.error.message)
+      }
       // throw new NotFoundException(result.error.message);
       return {message: 'Si un compte avec cet email existe, un email de réinitialisation a été envoyé.'}
     }

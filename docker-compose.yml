@@ -30,6 +30,16 @@ services:
     networks:
       - klippio-network
 
+  # Ajouter mailpit
+  mailer:
+    container_name: mailer
+    image: axllent/mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks:
+      - klippio-network
+
 volumes:
   db_data:
 

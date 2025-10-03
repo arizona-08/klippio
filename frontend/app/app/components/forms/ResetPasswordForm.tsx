@@ -1,3 +1,4 @@
+'use client';
 import { ResetPasswordDTO } from '@/proxy/auth/dto/reset-password.dto';
 import { resetPassword } from '@/proxy/auth/reset-password';
 import React from 'react'
@@ -27,19 +28,23 @@ function ResetPasswordForm({token}: ResetPasswordFormProps) {
     }
 
     const response = await resetPassword(token, resetPasswordCredentials);
+    console.log('response', response)
     const result = await response.json();
+    console.log('result', result);
 
-    if(result.statusCode === 200){
+    if(!response.ok){
+      setErrorMessage(result.message)
+    }
+
+    if(response.ok){
       setSuccessMessage(result.message);
     }
   }
 
-
-
-
   return (
     <>
       {successMessage && <p className='p-3 bg-white text-green-500 rounded-md mb-3'>{successMessage}</p>}
+      {errorMessage && <p className='p-3 bg-white text-red-500 rounded-md mb-3'>{errorMessage}</p>}
       <form method="post" onSubmit={handleSubmit}>
         <div className='flex flex-col gap-2 items-start mb-3'>
             <label htmlFor="newPassword">Nouveau mot de passe:</label>
