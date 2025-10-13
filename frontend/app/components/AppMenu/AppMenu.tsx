@@ -2,22 +2,55 @@
 import React from 'react'
 import BurgerMenu from './BurgerMenu'
 import Link from 'next/link'
+import { useUser } from '@/app/Context/AuthUserProvider'
+import { logout } from '@/proxy/auth/logout'
+import { useRouter } from 'next/navigation'
 
 function AppMenu() {
+  const {user, setUser} = useUser();
+
   const [burgerActive, setIsBurgerActive] = React.useState<boolean>(false);
   function toggleActive(){
     setIsBurgerActive(!burgerActive);
   }
+
+  const router = useRouter();
+  
+  async function handleLogout(){
+    const response = await logout();
+
+    if(response.ok){
+      setUser(undefined);
+      router.push('/');
+    }
+  }
   
   return (
     <div className=''>
+      {/* Mobile menu */}
       <div className="md:hidden">
         <BurgerMenu handleOnClick={toggleActive} isActive={burgerActive}/>
 
         <div className={`absolute top-0 bg-white h-screen w-full min-w-80 max-w-96 right-0 ${burgerActive ? 'translate-x-0' : 'translate-x-full'} transition-all z-20`}>
           <div className='mt-32 p-4 flex flex-col gap-3'>
-            <Link href="/app/auth/register" onClick={toggleActive} className='inline-block p-3 text-center rounded-lg bg-pink-500'>M'inscrire</Link>
-            <Link href="/app/auth/login" onClick={toggleActive} className='inline-block p-3 text-center rounded-lg bg-purple-500'>Me connecter</Link>
+            {!user && (
+              <>
+                <Link href="/app/auth/register" onClick={toggleActive} className='inline-block p-3 text-center rounded-lg bg-pink-500'>M'inscrire</Link>
+                <Link href="/app/auth/login" onClick={toggleActive} className='inline-block p-3 text-center rounded-lg bg-purple-500'>Me connecter</Link>
+              </>
+            )}
+
+            {user && (
+              <>
+                <Link href="/app" onClick={toggleActive} className='inline-block p-3 text-center rounded-lg bg-pink-500'>Mes plans</Link>
+                <button
+                  className='inline-block bg-slate-200 border border-slate-500 rounded-md p-2 text-red-500'
+                  onClick={handleLogout}
+                >
+                  Déconnexion
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -27,9 +60,29 @@ function AppMenu() {
         }
       </div>
 
+        {/* Desktop menu */}
       <div className='hidden md:flex gap-2'>
-        <Link href="/app/auth/register" onClick={toggleActive} className='p-3 bg-pink-500 rounded-md'>M'inscrire</Link>
-        <Link href="/app/auth/login" onClick={toggleActive} className='p-3 bg-purple-500 rounded-md'>Me connecter</Link>
+            {!user && (
+              <>
+                <Link href="/app/auth/register" onClick={toggleActive} className='inline-block p-3 text-center rounded-lg bg-pink-500'>M'inscrire</Link>
+                <Link href="/app/auth/login" onClick={toggleActive} className='inline-block p-3 text-center rounded-lg bg-purple-500'>Me connecter</Link>
+              </>
+            )}
+
+            {user && (
+              <>
+                <Link href="/app" onClick={toggleActive} className='inline-block p-3 text-center rounded-lg bg-pink-500'>Mes plans</Link>
+                <button
+                  className='inline-block bg-white border border-slate-300 rounded-md p-2 text-red-500'
+                  onClick={() => {
+                    handleLogout();
+                    toggleActive();
+                  }}
+                >
+                  Déconnexion
+                </button>
+              </>
+            )}
       </div>
     </div>
   )
