@@ -1,3 +1,4 @@
+import AuthUserProvider from "../Context/AuthUserProvider";
 import MarketingFooter from "./components/MarketingFooter";
 import MarketingHeader from "./components/MarketingHeader";
 
@@ -8,9 +9,11 @@ export default function MarketingLayout({
 }>) {
   return (
     <>
-      <MarketingHeader />
-      {children}
-      <MarketingFooter />
+      <AuthUserProvider>
+        <MarketingHeader />
+          {children}
+        <MarketingFooter />
+      </AuthUserProvider>
     </>
       
   );

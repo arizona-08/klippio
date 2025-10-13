@@ -1,1 +1,20 @@
 @import "tailwindcss";
+
+.burger-icon-container{
+  span.active:nth-child(1){
+    top: 50%;
+    transform: rotate(45deg);
+    transition: all 0.2s;
+  }
+
+  span.active:nth-child(2){
+    top: 50%;
+    transform: rotate(-45deg);
+    transition: all 0.2s;
+  }
+
+  span.active:nth-child(3){
+    display: none;
+    transition: all 0.2s;
+  }
+}
