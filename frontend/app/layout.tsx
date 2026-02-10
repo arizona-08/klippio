@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import AuthUserProvider from "./Context/AuthUserProvider";
+import AppHeader from "./components/layouts/AppHeader";
+import AppFooter from "./components/layouts/AppFooter";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -14,7 +17,11 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className='flex flex-col items-center min-h-screen relative overflow-x-hidden'>
-        {children}
+      <AuthUserProvider>
+        <AppHeader />
+          {children}
+        <AppFooter />
+      </AuthUserProvider>
       </body>
     </html>
   );

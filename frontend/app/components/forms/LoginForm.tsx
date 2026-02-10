@@ -4,7 +4,7 @@ import { login } from '@/proxy/auth/login';
 import Link from 'next/link'
 import { useRouter } from 'next/navigation';
 import React from 'react'
-import { useUser } from '../../../Context/AuthUserProvider';
+import { useUser } from '../../Context/AuthUserProvider';
 
 function LoginForm() {
 
