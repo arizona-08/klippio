@@ -1,3 +1,4 @@
+import { CTA } from '@repo/ui'
 import React from 'react'
 
 export default function page() {
@@ -12,7 +13,7 @@ export default function page() {
         <h1 className='text-2xl font-semibold'>Bienvenue dans la partie application de Klippio</h1>
 
         <p className='mb-4'>Sélectionnez un plan pour commencer à ajouter des photos :</p>
-        
+        <CTA />
         <ul className='list-disc list-inside mb-6'>
           {plans.map(plan => (
             <li key={plan.id}>
