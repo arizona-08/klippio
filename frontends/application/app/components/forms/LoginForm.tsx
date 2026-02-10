@@ -29,7 +29,7 @@ function LoginForm() {
 
     if(response.ok){
       setUser(result.user)
-      router.push('/app')
+      router.push('/')
     } else {
       setErrorMessage(result.message);
     }
