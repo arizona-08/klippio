@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+@source "../../../packages/ui/src/**/*.{ts,tsx}";
+
+@theme {
+  --color-primary: #00AF63;
+  --color-primary-hover: #00864C;
+  --color-stroke: #E9EAEB;
+
+}
+
 .burger-icon-container{
   span.active:nth-child(1){
     top: 50%;

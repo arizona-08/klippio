@@ -1,5 +1,5 @@
 import React from 'react'
-import ResetPasswordForm from '../../components/forms/ResetPasswordForm'
+import ResetPasswordForm from '../../components/organisms/forms/ResetPasswordForm'
 
 async function page({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const { token } = await searchParams

@@ -1,5 +1,5 @@
 import React from 'react'
-import PlanLoader from '../components/PlanLoader'
+import PlanLoader from '../components/organisms/plan/PlanLoader'
 import Link from 'next/link'
 
 async function page({searchParams}: {searchParams: Promise<Record<string, string | undefined>>}) {

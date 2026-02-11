@@ -1,8 +1,15 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Albert_Sans } from "next/font/google";
 import AuthUserProvider from "./Context/AuthUserProvider";
 import AppHeader from "./components/layouts/AppHeader";
 import AppFooter from "./components/layouts/AppFooter";
+
+const albertSans = Albert_Sans({
+  subsets: ["latin"],
+  variable: "--font-albert-sans",
+  // weight: ["400", "500", "600", "700"],
+});
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -16,11 +23,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-      <body className='flex flex-col items-center min-h-screen relative overflow-x-hidden'>
+      <body className={`min-h-screen relative overflow-x-hidden ${albertSans.className}`}>
       <AuthUserProvider>
-        <AppHeader />
+        {/* <AppHeader /> */}
           {children}
-        <AppFooter />
+        {/* <AppFooter /> */}
       </AuthUserProvider>
       </body>
     </html>

@@ -1,1 +1,1 @@
-export { default as CTA } from "./src/CTA";
+export { default as CTA } from "./src/atoms/CTA";
