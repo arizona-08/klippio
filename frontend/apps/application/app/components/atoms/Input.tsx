@@ -10,7 +10,7 @@ interface InputProps {
 }
 function Input({ type = "text", label, name, placeholder, value, onChange }: InputProps) {
   return (
-    <div className="flex flex-col gap-2 items-start mb-3">
+    <div className="flex flex-col gap-2 items-start">
       <label>{label}</label>
       <input
         type={type}

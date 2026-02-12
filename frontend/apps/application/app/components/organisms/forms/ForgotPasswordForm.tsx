@@ -2,6 +2,8 @@
 import { ForgotPasswordDTO } from '@/proxy/auth/dto/forgot-password.dto'
 import { forgotPassword } from '@/proxy/auth/forgot-password';
 import React from 'react'
+import Input from '../../atoms/Input';
+import { CTA } from '@repo/ui';
 
 function ForgotPasswordForm() {
   const [forgotPasswordCredentials, setForgotPasswordCredentials] = React.useState<ForgotPasswordDTO>({
@@ -13,6 +15,7 @@ function ForgotPasswordForm() {
   }
 
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
+  const [isNoticeShown, setIsNoticeShown] = React.useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>){
     e.preventDefault();
@@ -23,25 +26,32 @@ function ForgotPasswordForm() {
     if(response.ok){
       setSuccessMessage(result.message)
     }
+
+    setIsNoticeShown(true);
   }
 
   return (
     <>
       {successMessage && <p className='p-3 bg-white text-green-500 rounded-md mb-3'>{successMessage}</p>}
-      <form method="post" onSubmit={handleSubmit}>
-        <div className='flex flex-col gap-2 items-start mb-3'>
-            <label htmlFor="email">Email:</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              placeholder="johndoe@gmail.com"
-              required
-              className="p-3 bg-white"
-              onChange={setCredentialsInfo}
-            />
-          </div>
-          <button type="submit" className='p-3 bg-orage-400'>Envoyer</button>
+      <form className="max-w-96 mx-auto flex flex-col items-stretch gap-4" method="post" onSubmit={handleSubmit}>
+        <Input
+          type="email"
+          label="Email"
+          name="email"
+          placeholder="Entrez votre email"
+          value={forgotPasswordCredentials.email}
+          onChange={setCredentialsInfo}
+        />
+          <CTA
+            type="button"
+            color='primary'
+            text='Envoyer'
+            disabled={!forgotPasswordCredentials.email}
+          />
+
+          {isNoticeShown && (
+            <p className='mt-6'>Vous recevrez un email avec les instructions pour réinitialiser votre mot de passe si votre adresse mail est relié à un compte.</p>
+          )}
       </form>
     </>
   )

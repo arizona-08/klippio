@@ -10,7 +10,7 @@ function layout({ children }: LayoutProps) {
       <div className='w-full flex-1'>
         {children}
       </div>
-      <AppFooter />
+      {/* <AppFooter /> */}
     </main>
   )
 }

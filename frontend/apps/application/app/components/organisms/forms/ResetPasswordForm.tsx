@@ -2,6 +2,8 @@
 import { ResetPasswordDTO } from '@/proxy/auth/dto/reset-password.dto';
 import { resetPassword } from '@/proxy/auth/reset-password';
 import React from 'react'
+import Input from '../../atoms/Input';
+import { CTA } from '@repo/ui';
 
 interface ResetPasswordFormProps{
   token: string | undefined
@@ -11,6 +13,8 @@ function ResetPasswordForm({token}: ResetPasswordFormProps) {
     newPassword: "",
     confirmNewPassword: ""
   })
+
+  const isFormValid = Object.values(resetPasswordCredentials).every(value => value.trim() !== "") && resetPasswordCredentials.newPassword === resetPasswordCredentials.confirmNewPassword;
 
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null)
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
@@ -45,32 +49,34 @@ function ResetPasswordForm({token}: ResetPasswordFormProps) {
     <>
       {successMessage && <p className='p-3 bg-white text-green-500 rounded-md mb-3'>{successMessage}</p>}
       {errorMessage && <p className='p-3 bg-white text-red-500 rounded-md mb-3'>{errorMessage}</p>}
-      <form method="post" onSubmit={handleSubmit}>
-        <div className='flex flex-col gap-2 items-start mb-3'>
-            <label htmlFor="newPassword">Nouveau mot de passe:</label>
-            <input
-              type="password"
-              id="newPassword"
-              name="newPassword"
-              placeholder="Entrez votre nouveau mot de passe"
-              required
-              className="p-3 bg-white"
-              onChange={setCredentialsInfo}
-            />
-          </div>
-          <div className='flex flex-col gap-2 items-start mb-3'>
-            <label htmlFor="confirmNewPassword">Confirmation du mot de passe:</label>
-            <input
-              type="password"
-              id="confirmNewPassword"
-              name="confirmNewPassword"
-              placeholder="Entrez votre nouveau mot de passe"
-              required
-              className="p-3 bg-white"
-              onChange={setCredentialsInfo}
-            />
-          </div>
-          <button type="submit" className='p-3 bg-orage-400'>Envoyer</button>
+      <form 
+        method="post"
+        onSubmit={handleSubmit}
+        className="max-w-96 mx-auto flex flex-col items-stretch gap-4"
+      >
+        <Input
+          type="password"
+          label="Nouveau mot de passe:"
+          name="newPassword"
+          placeholder="Entrez votre mot de passe"
+          onChange={setCredentialsInfo}
+        />
+
+        <Input
+          type="password"
+          label="Confirmation du mot de passe:"
+          name="confirmNewPassword"
+          placeholder="Confirmez votre mot de passe"
+          onChange={setCredentialsInfo}
+        />
+        
+        <CTA
+          type="button"
+          color='primary'
+          text='Réinitialiser mon mot de passe'
+          disabled={!isFormValid}
+
+        />
       </form>
     </>
   )
