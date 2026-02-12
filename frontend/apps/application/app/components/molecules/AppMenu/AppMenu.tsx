@@ -5,10 +5,30 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/app/Context/AuthUserProvider'
 import { logout } from '@/proxy/auth/logout'
+import Logo from '@repo/ui/src/atoms/Logo'
+import AppMenuLink from '../../atoms/AppMenuLink'
 
 function AppMenu() {
   const {user, setUser} = useUser();
 
+  const appMenuLinks = [
+    {
+      label: 'Mes Projets',
+      href: '/dashbord/plans',
+      iconSrc: "/icons/book_green.svg"
+    },
+    {
+      label: 'Mes Archives',
+      href: '/dashbord/plans',
+      iconSrc: "/icons/archive_green.svg"
+    },
+    {
+      label: 'Mon Équipe',
+      href: '/dashbord/plans',
+      iconSrc: "/icons/users_green.svg"
+    }
+  ]
+  
   const [burgerActive, setIsBurgerActive] = React.useState<boolean>(false);
   function toggleActive(){
     setIsBurgerActive(!burgerActive);
@@ -28,12 +48,24 @@ function AppMenu() {
   return (
     <div className=''>
       {/* Mobile menu */}
-      <div className="md:hidden">
-        <BurgerMenu handleOnClick={toggleActive} isActive={burgerActive}/>
+      <div className="md:hidden relative">
+        <div className="flex items-center gap-4 p-4 relative z-30 bg-white">
+          <BurgerMenu handleOnClick={toggleActive} isActive={burgerActive}/>
+          <Logo type='long' color='black' />
+        </div>
 
-        <div className={`absolute top-0 bg-white h-screen w-full min-w-80 max-w-96 right-0 ${burgerActive ? 'translate-x-0' : 'translate-x-full'} transition-all z-20`}>
-          <div className='mt-32 p-4 flex flex-col gap-3'>
-            {!user && (
+        <div className={`absolute top-full bg-primary w-full min-w-80 left-0 ${burgerActive ? 'translate-y-0' : '-translate-y-full'} transition-all z-20`}>
+          <div className='p-4 flex flex-col gap-3'>
+
+            <ul className='flex flex-col gap-3'>
+              {appMenuLinks.map((menuLink, index) => (
+                <AppMenuLink
+                  key={index}
+                  menuLink={menuLink}
+                />
+              ))}
+            </ul>
+            {/* {!user && (
               <>
                 <Link href="/auth/register" onClick={toggleActive} className='inline-block p-3 text-center rounded-lg bg-pink-500'>M'inscrire</Link>
                 <Link href="/auth/login" onClick={toggleActive} className='inline-block p-3 text-center rounded-lg bg-purple-500'>Me connecter</Link>
@@ -50,12 +82,12 @@ function AppMenu() {
                   Déconnexion
                 </button>
               </>
-            )}
+            )} */}
           </div>
         </div>
 
         {burgerActive && 
-          <div className='layer absolute top-0 left-0 w-screen h-screen bg-black/75'>
+          <div className='layer absolute top-0 left-0 w-screen h-screen bg-black/25 backdrop-blur-sm'>
           </div>
         }
       </div>
