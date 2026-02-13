@@ -87,7 +87,7 @@ function AppMenu() {
         </div>
 
         {burgerActive && 
-          <div className='layer absolute top-0 left-0 w-screen h-screen bg-black/25 backdrop-blur-sm'>
+          <div className='layer absolute top-0 left-0 z-10 w-screen h-screen bg-black/25 backdrop-blur-sm'>
           </div>
         }
       </div>
