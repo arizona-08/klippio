@@ -11,8 +11,8 @@ function Logo({ type, color }: LogoProps) {
       <Image
         src={`/logos/logo_${type}_${color}.svg`}
         alt="Klippio Logo"
-        width={type === 'long' ? 100 : 40}
-        height={40}
+        width={type === 'long' ? 100 : 30}
+        height={30}
       />
     </div>
   )

@@ -7,6 +7,7 @@ import { useUser } from '@/app/Context/AuthUserProvider'
 import { logout } from '@/proxy/auth/logout'
 import Logo from '@repo/ui/src/atoms/Logo'
 import AppMenuLink from '../../atoms/AppMenuLink'
+import Image from 'next/image'
 
 function AppMenu() {
   const {user, setUser} = useUser();
@@ -30,8 +31,14 @@ function AppMenu() {
   ]
   
   const [burgerActive, setIsBurgerActive] = React.useState<boolean>(false);
-  function toggleActive(){
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState<boolean>(true);
+
+  function toggleBurgerActive(){
     setIsBurgerActive(!burgerActive);
+  }
+
+  function toggleSidebar(){
+    setIsSidebarOpen(!isSidebarOpen);
   }
 
   const router = useRouter();
@@ -48,9 +55,9 @@ function AppMenu() {
   return (
     <div className=''>
       {/* Mobile menu */}
-      <div className="md:hidden relative">
+      <div className="lg:hidden relative">
         <div className="flex items-center gap-4 p-4 relative z-30 bg-white">
-          <BurgerMenu handleOnClick={toggleActive} isActive={burgerActive}/>
+          <BurgerMenu handleOnClick={toggleBurgerActive} isActive={burgerActive}/>
           <Logo type='long' color='black' />
         </div>
 
@@ -67,14 +74,14 @@ function AppMenu() {
             </ul>
             {/* {!user && (
               <>
-                <Link href="/auth/register" onClick={toggleActive} className='inline-block p-3 text-center rounded-lg bg-pink-500'>M'inscrire</Link>
-                <Link href="/auth/login" onClick={toggleActive} className='inline-block p-3 text-center rounded-lg bg-purple-500'>Me connecter</Link>
+                <Link href="/auth/register" onClick={toggleBurgerActive} className='inline-block p-3 text-center rounded-lg bg-pink-500'>M'inscrire</Link>
+                <Link href="/auth/login" onClick={toggleBurgerActive} className='inline-block p-3 text-center rounded-lg bg-purple-500'>Me connecter</Link>
               </>
             )}
 
             {user && (
               <>
-                <Link href="/" onClick={toggleActive} className='inline-block p-3 text-center rounded-lg bg-pink-500'>Mes plans</Link>
+                <Link href="/" onClick={toggleBurgerActive} className='inline-block p-3 text-center rounded-lg bg-pink-500'>Mes plans</Link>
                 <button
                   className='inline-block bg-slate-200 border border-slate-500 rounded-md p-2 text-red-500'
                   onClick={handleLogout}
@@ -92,29 +99,62 @@ function AppMenu() {
         }
       </div>
 
-        {/* Desktop menu */}
-      <div className='hidden md:flex gap-2'>
-            {!user && (
-              <>
-                <Link href="/auth/register" onClick={toggleActive} className='inline-block p-3 text-center rounded-lg bg-pink-500'>M'inscrire</Link>
-                <Link href="/auth/login" onClick={toggleActive} className='inline-block p-3 text-center rounded-lg bg-purple-500'>Me connecter</Link>
-              </>
-            )}
+      
+      {/* Desktop menu */}
+      <div className={`hidden lg:flex flex-col gap-2 bg-primary h-screen py-6 px-3 shrink-0 ${isSidebarOpen ? 'w-64' : 'w-20'} transition-all `}>
 
-            {user && (
-              <>
-                <Link href="/" onClick={toggleActive} className='inline-block p-3 text-center rounded-lg bg-pink-500'>Mes plans</Link>
-                <button
-                  className='inline-block bg-white border border-slate-300 rounded-md p-2 text-red-500'
-                  onClick={() => {
-                    handleLogout();
-                    toggleActive();
-                  }}
-                >
-                  Déconnexion
-                </button>
-              </>
-            )}
+        <div className="top-header">
+          <div className={`header shrink-0 flex items-center justify-between ${isSidebarOpen ? '' : 'group'}`}>
+            <div className={`${isSidebarOpen ? '' : 'group-hover:hidden'}`}>
+              <Logo type={isSidebarOpen ? 'long' : 'icon'} color='white' />
+            </div>
+
+            <div className={`hover:bg-white/20 p-1 rounded-md cursor-pointer transition-all duration-150 ${isSidebarOpen ? "" : "hidden group-hover:block"}`} onClick={toggleSidebar}>
+              <Image
+                src="/icons/sidebar.svg"
+                alt="close icon"
+                width={22}
+                height={22}
+                className='cursor-pointer'
+                onClick={toggleSidebar}
+              />
+            </div>
+          </div>
+
+          <div className="navlinks-container shrink-0 min-w-64 flex flex-col gap-4 mt-8">
+            <ul className='flex flex-col items-start gap-3'>
+                {appMenuLinks.map((menuLink, index) => (
+                  <AppMenuLink
+                    key={index}
+                    menuLink={menuLink}
+                    hideText={!isSidebarOpen}
+                  />
+                ))}
+              </ul>
+          </div>
+        </div>
+
+        <div className="personal-infos flex items-center gap-2 mt-auto text-white hover:bg-white/20 p-2 rounded-md transition-all duration-150">
+          <div className="pp-container w-10 h-10 shrink-0 rounded-full bg-gray-300">
+
+          </div>
+
+          <div className={`user-infos max-w-2/5 ${isSidebarOpen ? '' : 'hidden'}`}>
+            <p className="line-clamp-1 text-sm font-medium">Jonathan Assi</p>
+            <p className="line-clamp-1 text-xs opacity-85">assijonathan2@gmail.com</p>
+          </div>
+
+          <div className={`logout-button ml-auto bg-white p-1 rounded-md ${isSidebarOpen ? '' : 'hidden'}`}>
+            <Image
+              src="/icons/logout.svg"
+              alt="logout icon"
+              width={16}
+              height={16}
+              className='cursor-pointer'
+              onClick={handleLogout}
+            />
+          </div>
+        </div>
       </div>
     </div>
   )

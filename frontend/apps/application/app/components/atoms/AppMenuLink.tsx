@@ -10,12 +10,13 @@ export type AppMenuLinkType = {
 
 interface AppMenuLinkProps {
   menuLink: AppMenuLinkType;
+  hideText?: boolean;
 }
 
-function AppMenuLink({ menuLink }: AppMenuLinkProps) {
+function AppMenuLink({ menuLink, hideText }: AppMenuLinkProps) {
   const { label, href, iconSrc } = menuLink;
   return (
-    <li className="">
+    <li className="inline-block">
       <Link href={href} className='flex items-center gap-4'>
         <div className="w-6 h-6 bg-white rounded-sm flex justify-center items-center">
           <Image
@@ -26,7 +27,7 @@ function AppMenuLink({ menuLink }: AppMenuLinkProps) {
           />
         </div>
 
-        <span className="text-white">{label}</span>
+        <span className={`${hideText ? 'hidden' : 'inline text-white'} transition-all duration-150`}>{label}</span>
       </Link>
     </li>
   )

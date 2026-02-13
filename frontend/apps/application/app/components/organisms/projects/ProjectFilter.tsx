@@ -46,7 +46,7 @@ function ProjectSorter() {
       </div>
 
       <div className={`${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'} absolute top-full right-0 z-10 mt-2 w-48 bg-white border border-gray-300 rounded-md shadow-lg transition-all duration-100`}>
-        <ul className="py-2">
+        <ul className="">
           {sortingOptions.map((option) => (
             <li key={option.value}
               className={`px-4 py-2 text-sm cursor-pointer hover:bg-gray-100 ${selectedOption.value === option.value ? 'bg-gray-200' : ''}`}
