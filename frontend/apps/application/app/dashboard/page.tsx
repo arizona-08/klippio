@@ -4,8 +4,10 @@ import ProjectsSection from '../components/organisms/projects/ProjectsSection'
 function DashboardRoot() {
   return (
     <div className="Dashboard-root-container p-4">
-      <span>Bonjour User!</span>
-      <h1 className="mt-2 text-2xl font-semibold">Mes projets</h1>
+      <div className="sticky top-0 z-10 bg-white py-4">
+        <span>Bonjour User!</span>
+        <h1 className="mt-2 text-2xl font-semibold">Mes projets</h1>
+      </div>
       
       <ProjectsSection />
     </div>
