@@ -101,15 +101,15 @@ function AppMenu() {
 
       
       {/* Desktop menu */}
-      <div className={`hidden lg:flex flex-col gap-2 bg-primary h-screen py-6 px-3 shrink-0 ${isSidebarOpen ? 'w-64' : 'w-20'} transition-all `}>
+      <div className={`hidden lg:flex flex-col gap-2 bg-primary h-screen py-6 shrink-0 ${isSidebarOpen ? 'w-64' : 'w-14'} transition-all duration-150`}>
 
-        <div className="top-header">
-          <div className={`header shrink-0 flex items-center justify-between ${isSidebarOpen ? '' : 'group'}`}>
-            <div className={`${isSidebarOpen ? '' : 'group-hover:hidden'}`}>
+        <div className="top-header px-3">
+          <div className={`header relative w-full shrink-0 flex items-center  ${isSidebarOpen ? 'justify-between' : 'group'}`}>
+            <div className={`shrink-0 ${isSidebarOpen ? '' : 'group-hover:hidden'}`}>
               <Logo type={isSidebarOpen ? 'long' : 'icon'} color='white' />
             </div>
 
-            <div className={`hover:bg-white/20 p-1 rounded-md cursor-pointer transition-all duration-150 ${isSidebarOpen ? "" : "hidden group-hover:block"}`} onClick={toggleSidebar}>
+            <div className={`sticky top-0 right-0 z-10  hover:bg-white/20 p-1 rounded-md cursor-pointer transition-all duration-150 ${isSidebarOpen ? "" : "hidden group-hover:block"}`} onClick={toggleSidebar}>
               <Image
                 src="/icons/sidebar.svg"
                 alt="close icon"
@@ -121,8 +121,8 @@ function AppMenu() {
             </div>
           </div>
 
-          <div className="navlinks-container shrink-0 min-w-64 flex flex-col gap-4 mt-8">
-            <ul className='flex flex-col items-start gap-3'>
+          <div className="navlinks-container flex flex-col gap-4 mt-8 w-fit overflow-x-hidden">
+            <ul className={`flex flex-col items-start gap-3 min-w-40 shrink-0 `}>
                 {appMenuLinks.map((menuLink, index) => (
                   <AppMenuLink
                     key={index}

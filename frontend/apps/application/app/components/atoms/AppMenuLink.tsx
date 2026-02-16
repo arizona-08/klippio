@@ -16,9 +16,9 @@ interface AppMenuLinkProps {
 function AppMenuLink({ menuLink, hideText }: AppMenuLinkProps) {
   const { label, href, iconSrc } = menuLink;
   return (
-    <li className="inline-block">
+    <li className="inline-block shrink-0 w-full">
       <Link href={href} className='flex items-center gap-4'>
-        <div className="w-6 h-6 bg-white rounded-sm flex justify-center items-center">
+        <div className="w-[30px] h-[30px] bg-white rounded-sm flex justify-center items-center">
           <Image
             src={iconSrc}
             alt={`${label} icon`}
@@ -27,7 +27,7 @@ function AppMenuLink({ menuLink, hideText }: AppMenuLinkProps) {
           />
         </div>
 
-        <span className={`${hideText ? 'hidden' : 'inline text-white'} transition-all duration-150`}>{label}</span>
+        <span className={`${hideText ? 'invisible opacity-0 hidden' : 'inline text-white'} transition-all duration-150`}>{label}</span>
       </Link>
     </li>
   )
