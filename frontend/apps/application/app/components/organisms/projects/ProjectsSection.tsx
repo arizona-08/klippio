@@ -4,6 +4,7 @@ import ProjectCard, { ProjectCardType } from '../../molecules/ProjectCard/Projec
 import { CTA } from '@repo/ui'
 import SearchBar from '../../atoms/SearchBar'
 import ProjectSorter from './ProjectFilter'
+import ProjectForm from '../../molecules/ProjectForm/ProjectForm';
 
 function ProjectsSection() {
 
@@ -96,6 +97,12 @@ function ProjectsSection() {
   const [currentPage, setCurrentPage] = React.useState(1)
   const displayedProjects = projects.slice((currentPage - 1) * numberOfDisplayedProjects, currentPage * numberOfDisplayedProjects) // à adapter selon le nombre de projets par page souhaité
 
+  const [isProjectFormOpen, setIsProjectFormOpen] = React.useState(false);
+
+  function closeProjectForm() {
+    setIsProjectFormOpen(false);
+  }
+
   return (
     <div className='relative'>
       <div className="top-projects-bar sticky top-20 z-10 p-4  w-full bg-white">
@@ -104,16 +111,21 @@ function ProjectsSection() {
             <SearchBar />
           </div>
 
-          <CTA
-            type='button'
-            text='Créer un nouveau projet'
-            color='primary'
-            icon={{
-              src: '/icons/plus.svg',
-              alt: 'plus icon'
-            }}
-            iconReverse={true}
-          />
+          <div className='relative'>
+            <CTA
+              type='button'
+              text='Créer un nouveau projet'
+              color='primary'
+              icon={{
+                src: '/icons/plus.svg',
+                alt: 'plus icon'
+              }}
+              iconReverse={true}
+              onClick={() => setIsProjectFormOpen(true)}
+            />
+
+            <ProjectForm showForm={isProjectFormOpen} closeForm={closeProjectForm} />
+          </div>
         </div>
 
         <div className="flex items-center justify-end gap-4 mt-4">
