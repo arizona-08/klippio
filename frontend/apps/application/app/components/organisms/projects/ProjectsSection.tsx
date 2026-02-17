@@ -91,11 +91,31 @@ function ProjectsSection() {
     },
   ]
 
-  const numberOfDisplayedProjects = 4; // à adapter selon le nombre de projets par page souhaité
-  const paginationCount = Math.ceil(projects.length / numberOfDisplayedProjects) // à adapter selon le nombre de projets par page souhaité
+  const numberOfDisplayedProjects = 6; // à adapter selon le nombre de projets par page souhaité
+  const [paginationCount, setPaginationCount] = React.useState(Math.ceil(projects.length / numberOfDisplayedProjects)) // à adapter selon le nombre de projets par page souhaité
   
   const [currentPage, setCurrentPage] = React.useState(1)
-  const displayedProjects = projects.slice((currentPage - 1) * numberOfDisplayedProjects, currentPage * numberOfDisplayedProjects) // à adapter selon le nombre de projets par page souhaité
+  const [displayedProjects, setDisplayedProjects] = React.useState<ProjectCardType[]>(projects.slice((currentPage - 1) * numberOfDisplayedProjects, currentPage * numberOfDisplayedProjects));
+
+
+  function previousPage(){
+    setCurrentPage(prev => Math.max(prev - 1, 1))
+    if(currentPage > 1){
+      setDisplayedProjects(projects.slice((currentPage - 2) * numberOfDisplayedProjects, (currentPage - 1) * numberOfDisplayedProjects));
+    }
+  }
+
+  function nextPage(){
+    setCurrentPage(prev => Math.min(prev + 1, paginationCount))
+    if(currentPage < paginationCount){
+      setDisplayedProjects(projects.slice(currentPage * numberOfDisplayedProjects, (currentPage + 1) * numberOfDisplayedProjects));
+    }
+  }
+
+  function jumpToPage(page: number) {
+    setCurrentPage(page);
+    setDisplayedProjects(projects.slice((page - 1) * numberOfDisplayedProjects, page * numberOfDisplayedProjects));
+  }
 
   const [isProjectFormOpen, setIsProjectFormOpen] = React.useState(false);
 
@@ -103,12 +123,32 @@ function ProjectsSection() {
     setIsProjectFormOpen(false);
   }
 
+  function searchProject(query: string) {
+    if(!query || query.trim() === '') {
+      setDisplayedProjects(projects.slice((currentPage - 1) * numberOfDisplayedProjects, currentPage * numberOfDisplayedProjects));
+      setPaginationCount(Math.ceil(projects.length / numberOfDisplayedProjects));
+      setCurrentPage(1);
+      return;
+    }
+
+    setCurrentPage(1);
+
+    const foundProjects = projects.filter(project => 
+      project.name.toLowerCase().includes(query.toLowerCase()) ||
+      project.address.toLowerCase().includes(query.toLowerCase()) ||
+      project.city.toLowerCase().includes(query.toLowerCase())
+    );
+    
+    setDisplayedProjects(foundProjects.slice((currentPage - 1) * numberOfDisplayedProjects, currentPage * numberOfDisplayedProjects));
+    setPaginationCount(Math.ceil(foundProjects.length / numberOfDisplayedProjects));
+  }
+
   return (
     <div className='relative'>
       <div className="top-projects-bar sticky top-20 z-10 p-4  w-full bg-white">
         <div className="flex flex-col gap-4 md:flex-row-reverse md:items-center md:justify-between">
           <div className="w-full md:max-w-80">
-            <SearchBar />
+            <SearchBar onSearch={searchProject} />
           </div>
 
           <div className='relative'>
@@ -142,14 +182,14 @@ function ProjectsSection() {
       </ul>
 
       <div className="pagination-container flex items-center justify-between mt-8 pb-8 max-w-130 mx-auto">
-        <button className="pagination-button px-3 py-1 mx-1 rounded-md bg-primary-light text-primary hover:bg-primary hover:text-white transition-all duration-150" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>Previous</button>
+        <button className="pagination-button px-3 py-1 mx-1 rounded-md bg-primary-light text-primary hover:bg-primary hover:text-white transition-all duration-150" onClick={previousPage}>Previous</button>
         <div className="space-x-4">
           {[...Array(paginationCount)].map((_, index) => (
-            <button key={index} className={`pagination-button px-3 py-1 rounded-md  hover:bg-primary hover:text-white transition-all duration-150 ${currentPage === index + 1 ? 'bg-primary text-white' : 'bg-primary-light text-primary'}`} onClick={() => setCurrentPage(index + 1)}>{index + 1}</button>
+            <button key={index} className={`pagination-button px-3 py-1 rounded-md  hover:bg-primary hover:text-white transition-all duration-150 ${currentPage === index + 1 ? 'bg-primary text-white' : 'bg-primary-light text-primary'}`} onClick={() => jumpToPage(index + 1)}>{index + 1}</button>
           ))}
           
         </div>
-        <button className="pagination-button px-3 py-1 mx-1 rounded-md bg-primary-light text-primary hover:bg-primary hover:text-white transition-all duration-150" onClick={() => setCurrentPage(prev => Math.min(prev + 1, paginationCount))}>Next</button>
+        <button className="pagination-button px-3 py-1 mx-1 rounded-md bg-primary-light text-primary hover:bg-primary hover:text-white transition-all duration-150" onClick={nextPage}>Next</button>
       </div>
     </div>
   )
