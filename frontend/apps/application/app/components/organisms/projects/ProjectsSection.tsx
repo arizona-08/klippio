@@ -1,3 +1,4 @@
+'use client';
 import React from 'react'
 import ProjectCard, { ProjectCardType } from '../../molecules/ProjectCard/ProjectCard'
 import { CTA } from '@repo/ui'
@@ -88,9 +89,16 @@ function ProjectsSection() {
       numberOfPhotos: 26
     },
   ]
+
+  const numberOfDisplayedProjects = 4; // à adapter selon le nombre de projets par page souhaité
+  const paginationCount = Math.ceil(projects.length / numberOfDisplayedProjects) // à adapter selon le nombre de projets par page souhaité
+  
+  const [currentPage, setCurrentPage] = React.useState(1)
+  const displayedProjects = projects.slice((currentPage - 1) * numberOfDisplayedProjects, currentPage * numberOfDisplayedProjects) // à adapter selon le nombre de projets par page souhaité
+
   return (
     <div className='relative'>
-      <div className="top-projects-bar sticky top-20 z-10 py-4 my-2 w-full bg-white">
+      <div className="top-projects-bar sticky top-20 z-10 p-4  w-full bg-white">
         <div className="flex flex-col gap-4 md:flex-row-reverse md:items-center md:justify-between">
           <div className="w-full md:max-w-80">
             <SearchBar />
@@ -115,20 +123,21 @@ function ProjectsSection() {
       </div>
 
 
-      <ul className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 mt-4 py-6">
-          {projects.map(project => (
+      <ul className="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 mt-4 py-6">
+          {displayedProjects.map(project => (
             <ProjectCard key={project.id} project={project} />
           ))}
       </ul>
 
-      <div className="pagination-container flex items-center justify-center mt-12">
-          <div>
-            <button className="pagination-button px-3 py-1 mx-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300">Previous</button>
-            <button className="pagination-button px-3 py-1 mx-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300">1</button>
-            <button className="pagination-button px-3 py-1 mx-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300">2</button>
-            <button className="pagination-button px-3 py-1 mx-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300">3</button>
-            <button className="pagination-button px-3 py-1 mx-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300">Next</button>
-          </div>
+      <div className="pagination-container flex items-center justify-between mt-8 pb-8 max-w-130 mx-auto">
+        <button className="pagination-button px-3 py-1 mx-1 rounded-md bg-primary-light text-primary hover:bg-primary hover:text-white transition-all duration-150" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>Previous</button>
+        <div className="space-x-4">
+          {[...Array(paginationCount)].map((_, index) => (
+            <button key={index} className={`pagination-button px-3 py-1 rounded-md  hover:bg-primary hover:text-white transition-all duration-150 ${currentPage === index + 1 ? 'bg-primary text-white' : 'bg-primary-light text-primary'}`} onClick={() => setCurrentPage(index + 1)}>{index + 1}</button>
+          ))}
+          
+        </div>
+        <button className="pagination-button px-3 py-1 mx-1 rounded-md bg-primary-light text-primary hover:bg-primary hover:text-white transition-all duration-150" onClick={() => setCurrentPage(prev => Math.min(prev + 1, paginationCount))}>Next</button>
       </div>
     </div>
   )
