@@ -18,6 +18,16 @@ interface ProjectCardProps {
 }
 
 function ProjectCard({ project }: ProjectCardProps) {
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+
+  function openMenu(){
+    setIsMenuOpen(true);
+  }
+
+  function closeMenu() {
+    setIsMenuOpen(false);
+  }
+  
   return (
     <>
       <li className='w-full cursor-pointer border border-gray-200 rounded-md p-4 hover:shadow-sm hover:scale-101 transition-all duration-150 relative hover:z-10'>
@@ -30,7 +40,7 @@ function ProjectCard({ project }: ProjectCardProps) {
         <div className="project-infos-container">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-xl font-semibold">{project.name}</h2>
-            <ProjectManager />
+            <ProjectManager isMenuOpen={isMenuOpen} openMenu={openMenu} closeMenu={closeMenu} />
           </div>
 
           <p className="text-gray-700">{project.address}, {project.zipCode} {project.city}</p>

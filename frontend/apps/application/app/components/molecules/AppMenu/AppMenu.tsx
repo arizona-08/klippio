@@ -3,7 +3,7 @@ import React from 'react'
 import BurgerMenu from './BurgerMenu'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useUser } from '@/app/Context/AuthUserProvider'
+import { useUser } from '@/app/Context/AuthContext/AuthUserProvider'
 import { logout } from '@/proxy/auth/logout'
 import Logo from '@repo/ui/src/atoms/Logo'
 import AppMenuLink from '../../atoms/AppMenuLink'
@@ -56,12 +56,12 @@ function AppMenu() {
     <div className=''>
       {/* Mobile menu */}
       <div className="lg:hidden relative">
-        <div className="flex items-center gap-4 p-4 relative z-40 bg-white">
+        <div className="flex items-center gap-4 p-4 relative z-50 bg-white">
           <BurgerMenu handleOnClick={toggleBurgerActive} isActive={burgerActive}/>
           <Logo type='long' color='black' />
         </div>
 
-        <div className={`absolute top-full bg-primary w-full min-w-80 left-0 ${burgerActive ? 'translate-y-0' : '-translate-y-full'} transition-all z-30`}>
+        <div className={`absolute top-full bg-primary w-full min-w-80 left-0 ${burgerActive ? 'translate-y-0' : '-translate-y-full'} transition-all z-40`}>
           <div className='p-4 flex flex-col gap-3'>
 
             <ul className='flex flex-col gap-3'>
@@ -94,7 +94,7 @@ function AppMenu() {
         </div>
 
         {burgerActive && 
-          <div className='layer absolute top-0 left-0 z-20 w-screen h-screen bg-black/25 backdrop-blur-sm'>
+          <div className='layer absolute top-0 left-0 z-30 w-screen h-screen bg-black/25 backdrop-blur-sm'>
           </div>
         }
       </div>

@@ -5,6 +5,7 @@ import { CTA } from '@repo/ui'
 import SearchBar from '../../atoms/SearchBar'
 import ProjectSorter from './ProjectFilter'
 import ProjectForm from '../../molecules/ProjectForm/ProjectForm';
+import DeleteProjectModal from '../../molecules/ProjectModals/DeleteProjectModal';
 
 function ProjectsSection() {
 
@@ -144,14 +145,15 @@ function ProjectsSection() {
   }
 
   return (
-    <div className='relative'>
-      <div className="top-projects-bar sticky top-20 z-10 p-4  w-full bg-white">
+    <div className=''>
+      <DeleteProjectModal />
+      <div className="top-projects-bar sticky top-20 z-20 p-4  w-full bg-white">
         <div className="flex flex-col gap-4 md:flex-row-reverse md:items-center md:justify-between">
           <div className="w-full md:max-w-80">
             <SearchBar onSearch={searchProject} />
           </div>
 
-          <div className='relative'>
+          <div className='relative w-full flex flex-col md:inline-block'>
             <CTA
               type='button'
               text='Créer un nouveau projet'
