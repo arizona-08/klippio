@@ -2,6 +2,7 @@
 import React from 'react'
 import { useDeleteProjectModalStore } from '@/stores/DeleteProjectModalStore';
 import { useOverlayStore } from '@/stores/OverlayStore';
+import { useModifyProjectStore } from '@/stores/ModifyProjectStore';
 
 interface ProjectManagerProps {
   projectId: string;
@@ -9,6 +10,7 @@ interface ProjectManagerProps {
   openMenu: () => void;
   closeMenu: () => void;
 }
+
 function ProjectManager({ projectId, isMenuOpen, openMenu, closeMenu }: ProjectManagerProps) {
 
   React.useEffect(() => {
@@ -28,6 +30,8 @@ function ProjectManager({ projectId, isMenuOpen, openMenu, closeMenu }: ProjectM
     useDeleteProjectModalStore.getState().openDeleteProjectModal(projectId);
   }
 
+  const openModifyForm = useModifyProjectStore((state) => state.openModifyProjectModal);
+
   return (
     <>
       <div className="relative">
@@ -39,7 +43,7 @@ function ProjectManager({ projectId, isMenuOpen, openMenu, closeMenu }: ProjectM
 
         <div className={`projectManagerMenu absolute  right-4  mt-2 bg-white border border-gray-200 rounded-md shadow-lg p-2 w-32 ${isMenuOpen ? 'opacity-100 visible -top-9 z-10' : 'opacity-0 invisible top-14' } transition-all duration-150 projectManagerMenu`}>
           <ul className="flex flex-col gap-2">
-            <li className="text-sm text-gray-700 hover:bg-gray-100 rounded-md px-2 py-1 cursor-pointer">Modifier</li>
+            <li className="text-sm text-gray-700 hover:bg-gray-100 rounded-md px-2 py-1 cursor-pointer" onClick={() => openModifyForm(projectId)}>Modifier</li>
             <li className="text-sm text-gray-700 hover:bg-gray-100 rounded-md px-2 py-1 cursor-pointer">Partager</li>
             <li className="text-sm text-red-500 hover:bg-red-100 rounded-md px-2 py-1 cursor-pointer" onClick={openDeleteProjectModal}>Supprimer</li>
           </ul>

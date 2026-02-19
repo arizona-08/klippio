@@ -3,13 +3,15 @@ import React from 'react'
 import Input from '../../atoms/Input'
 import { CreateProjectDTO } from '@/proxy/projects/dto/create-project.dto'
 import { CTA } from '@repo/ui'
+import { useModifyProjectStore } from '@/stores/ModifyProjectStore'
 
 interface ProjectFormProps {
   showForm: boolean;
   closeForm: () => void;
+  edit?: boolean;
 }
 
-function ProjectForm({ showForm, closeForm }: ProjectFormProps) {
+function ProjectForm({ showForm, closeForm, edit }: ProjectFormProps) {
   const [projectCredentials, setProjectCredentials] = React.useState<CreateProjectDTO>({
     title: '',
     address: '',
@@ -26,12 +28,16 @@ function ProjectForm({ showForm, closeForm }: ProjectFormProps) {
     });
   };
 
+  const isProjectFormVisible = useModifyProjectStore((state) => state.isModifyProjectModalOpen);
+  const closeModifyForm = useModifyProjectStore((state) => state.closeModifyProjectModal);
+
   React.useEffect(() => {
     function handleClickOutsideForm(event: MouseEvent) {
       const target = event.target as HTMLElement;
       if (!target.closest('.projectForm')) {
         resetForm();
         closeForm();
+        closeModifyForm();
       }
     }
 
@@ -40,11 +46,12 @@ function ProjectForm({ showForm, closeForm }: ProjectFormProps) {
   }, []);
 
 
+  
   return (
     <>
       <form 
         method="post"
-        className={`projectForm ${showForm ? 'opacity-100 visible top-full' : 'opacity-0 invisible top-20'} space-y-3 bg-white p-4 rounded-md border border-gray-300 absolute  left-0 min-w-72 max-w-96 mt-4 shadow-lg z-20 transition-all duration-150`}
+        className={`projectForm ${showForm  || isProjectFormVisible ? 'opacity-100 visible top-full' : 'opacity-0 invisible top-20'} space-y-3 bg-white p-4 rounded-md border border-gray-300 absolute  left-0 min-w-72 max-w-96 mt-4 shadow-lg z-20 transition-all duration-150`}
       >
         <Input
           type='text' 
@@ -87,14 +94,15 @@ function ProjectForm({ showForm, closeForm }: ProjectFormProps) {
             onClick={(e) => {
               e?.preventDefault();
               resetForm();
-              closeForm()
+              closeForm();
+              closeModifyForm();
             }}
           />
 
           <CTA
             type='button'
             color='primary'
-            text='Créer'
+            text={edit ? 'Modifier' : 'Créer'}
           />
         </div>
       </form>
