@@ -1,19 +1,30 @@
+'use client';
+import { useDeleteProjectModalStore } from '@/stores/DeleteProjectModalStore';
+import { useOverlayStore } from '@/stores/OverlayStore';
 import React from 'react'
 
-function DeleteProjectModal() {
-  
+interface DeleteProjectModalProps {
+  isVisible: boolean;
+}
 
+function DeleteProjectModal({ isVisible }: DeleteProjectModalProps) {
+  const projectIdToDelete = useDeleteProjectModalStore((state) => state.projectIdToDelete);
+  const onClose = useDeleteProjectModalStore((state) => state.closeDeleteProjectModal);
+  const closeOverlay = useOverlayStore((state) => state.closeOverlay);
+  
   function closeModal(){
-    
+    onClose();
+    closeOverlay();
   }
 
   function handleDeleteProject(){
-    console.log("delete project");
+    console.log(projectIdToDelete);
     closeModal();
   }
+
   return (
     <div 
-      className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg z-50 w-full max-w-md'
+      className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg z-50 w-full max-w-md ${isVisible ? 'block' : 'hidden'}`}
     >
       <h2 className='text-xl font-semibold mb-4'>Confirmer la suppression</h2>
       <p className='mb-6'>Êtes-vous sûr de vouloir supprimer ce projet ? Cette action est irréversible.</p>

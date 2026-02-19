@@ -1,15 +1,16 @@
 'use client';
-import { useDarkOverlay } from '@/app/Context/DarkOverlayContext/DarkOverlayProvider';
 import React from 'react'
-import DeleteProjectModal from '../ProjectModals/DeleteProjectModal';
+import { useDeleteProjectModalStore } from '@/stores/DeleteProjectModalStore';
+import { useOverlayStore } from '@/stores/OverlayStore';
 
 interface ProjectManagerProps {
+  projectId: string;
   isMenuOpen: boolean;
   openMenu: () => void;
   closeMenu: () => void;
 }
-function ProjectManager({ isMenuOpen, openMenu, closeMenu }: ProjectManagerProps) {
-  const { setDarkOverlayVisible } = useDarkOverlay();
+function ProjectManager({ projectId, isMenuOpen, openMenu, closeMenu }: ProjectManagerProps) {
+
   React.useEffect(() => {
     function handleClickOutsideMenu(event: MouseEvent) {
       const target = event.target as HTMLElement;
@@ -23,7 +24,8 @@ function ProjectManager({ isMenuOpen, openMenu, closeMenu }: ProjectManagerProps
   }, []);
 
   function openDeleteProjectModal(){
-    setDarkOverlayVisible(true);
+    useOverlayStore.getState().openOverlay();
+    useDeleteProjectModalStore.getState().openDeleteProjectModal(projectId);
   }
 
   return (

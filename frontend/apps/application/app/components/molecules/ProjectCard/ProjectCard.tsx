@@ -40,7 +40,7 @@ function ProjectCard({ project }: ProjectCardProps) {
         <div className="project-infos-container">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-xl font-semibold">{project.name}</h2>
-            <ProjectManager isMenuOpen={isMenuOpen} openMenu={openMenu} closeMenu={closeMenu} />
+            <ProjectManager projectId={project.id} isMenuOpen={isMenuOpen} openMenu={openMenu} closeMenu={closeMenu} />
           </div>
 
           <p className="text-gray-700">{project.address}, {project.zipCode} {project.city}</p>
