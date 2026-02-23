@@ -1,20 +1,9 @@
 import React from 'react'
 import ProjectManager from './ProjectManager';
-
-export type ProjectCardType = {
-  id: string;
-  name: string;
-  address: string;
-  zipCode: string;
-  city: string;
-  thumbnailUrl: string;
-
-  numberOfPlans: number;
-  numberOfPhotos: number;
-}
+import { ProjectType } from '@/types/project';
 
 interface ProjectCardProps {
-  project: ProjectCardType;
+  project: ProjectType;
 }
 
 function ProjectCard({ project }: ProjectCardProps) {
@@ -40,7 +29,7 @@ function ProjectCard({ project }: ProjectCardProps) {
         <div className="project-infos-container">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-xl font-semibold">{project.name}</h2>
-            <ProjectManager projectId={project.id} isMenuOpen={isMenuOpen} openMenu={openMenu} closeMenu={closeMenu} />
+            <ProjectManager project={project} isMenuOpen={isMenuOpen} openMenu={openMenu} closeMenu={closeMenu} />
           </div>
 
           <p className="text-gray-700">{project.address}, {project.zipCode} {project.city}</p>

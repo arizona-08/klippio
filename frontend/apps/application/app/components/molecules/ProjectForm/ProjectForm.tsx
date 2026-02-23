@@ -4,14 +4,15 @@ import Input from '../../atoms/Input'
 import { CreateProjectDTO } from '@/proxy/projects/dto/create-project.dto'
 import { CTA } from '@repo/ui'
 import { useModifyProjectStore } from '@/stores/ModifyProjectStore'
+import { ProjectType } from '@/types/project'
 
 interface ProjectFormProps {
-  showForm: boolean;
   closeForm: () => void;
   edit?: boolean;
+  projectToEdit?: ProjectType;
 }
 
-function ProjectForm({ showForm, closeForm, edit }: ProjectFormProps) {
+function ProjectForm({ closeForm, edit, projectToEdit }: ProjectFormProps) {
   const [projectCredentials, setProjectCredentials] = React.useState<CreateProjectDTO>({
     title: '',
     address: '',
@@ -28,7 +29,18 @@ function ProjectForm({ showForm, closeForm, edit }: ProjectFormProps) {
     });
   };
 
-  const isProjectFormVisible = useModifyProjectStore((state) => state.isModifyProjectModalOpen);
+  React.useEffect(() => {
+    if(edit && projectToEdit) {
+      setProjectCredentials({
+        title: projectToEdit.name,
+        address: projectToEdit.address,
+        zipCode: projectToEdit.zipCode,
+        city: projectToEdit.city,
+      });
+    }
+  }, [projectToEdit]);
+  
+
   const closeModifyForm = useModifyProjectStore((state) => state.closeModifyProjectModal);
 
   React.useEffect(() => {
@@ -46,12 +58,11 @@ function ProjectForm({ showForm, closeForm, edit }: ProjectFormProps) {
   }, []);
 
 
-  
   return (
     <>
       <form 
         method="post"
-        className={`projectForm ${showForm  || isProjectFormVisible ? 'opacity-100 visible top-full' : 'opacity-0 invisible top-20'} space-y-3 bg-white p-4 rounded-md border border-gray-300 absolute  left-0 min-w-72 max-w-96 mt-4 shadow-lg z-20 transition-all duration-150`}
+        className={`projectForm space-y-3 bg-white p-4 rounded-md border border-gray-300  min-w-72 max-w-96 mt-4 shadow-lg transition-all duration-150`}
       >
         <Input
           type='text' 

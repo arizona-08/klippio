@@ -5,7 +5,6 @@ import { CTA } from '@repo/ui'
 import SearchBar from '../../atoms/SearchBar'
 import ProjectSorter from './ProjectFilter'
 import ProjectForm from '../../molecules/ProjectForm/ProjectForm';
-import DeleteProjectModal from '../../molecules/ProjectModals/DeleteProjectModal';
 
 function ProjectsSection() {
 
@@ -92,6 +91,8 @@ function ProjectsSection() {
     },
   ]
 
+  const [isProjectFormOpen, setIsProjectFormOpen] = React.useState(false);
+
   const numberOfDisplayedProjects = 6; // à adapter selon le nombre de projets par page souhaité
   const [paginationCount, setPaginationCount] = React.useState(Math.ceil(projects.length / numberOfDisplayedProjects)) // à adapter selon le nombre de projets par page souhaité
   
@@ -116,12 +117,6 @@ function ProjectsSection() {
   function jumpToPage(page: number) {
     setCurrentPage(page);
     setDisplayedProjects(projects.slice((page - 1) * numberOfDisplayedProjects, page * numberOfDisplayedProjects));
-  }
-
-  const [isProjectFormOpen, setIsProjectFormOpen] = React.useState(false);
-
-  function closeProjectForm() {
-    setIsProjectFormOpen(false);
   }
 
   function searchProject(query: string) {
@@ -166,7 +161,9 @@ function ProjectsSection() {
               onClick={() => setIsProjectFormOpen(true)}
             />
 
-            <ProjectForm showForm={isProjectFormOpen} closeForm={closeProjectForm} />
+            <div className={`absolute left-0 ${isProjectFormOpen ? 'visible opacity-100 top-full' : 'opacity-0 invisible top-20'} transition-all duration-150`}>
+              <ProjectForm closeForm={() => setIsProjectFormOpen(false)} />
+            </div>
           </div>
         </div>
 

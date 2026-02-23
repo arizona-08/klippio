@@ -1,15 +1,16 @@
+import { ProjectType } from "@/types/project";
 import { create } from "zustand";
 
 type ModifyProjectStoreType = {
   isModifyProjectModalOpen: boolean;
-  projectIdToModify: string | null;
-  openModifyProjectModal: (projectId: string) => void;
+  projectToModify: ProjectType | null;
+  openModifyProjectModal: (project: ProjectType) => void;
   closeModifyProjectModal: () => void;
 };
 
 export const useModifyProjectStore = create<ModifyProjectStoreType>((set) => ({
   isModifyProjectModalOpen: false,
-  projectIdToModify: null,
-  openModifyProjectModal: (projectId) => set({ isModifyProjectModalOpen: true, projectIdToModify: projectId }),
-  closeModifyProjectModal: () => set({ isModifyProjectModalOpen: false, projectIdToModify: null }),
+  projectToModify: null,
+  openModifyProjectModal: (project) => set({ isModifyProjectModalOpen: true, projectToModify: project }),
+  closeModifyProjectModal: () => set({ isModifyProjectModalOpen: false, projectToModify: null }),
 }));
