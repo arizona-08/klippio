@@ -4,6 +4,7 @@ import { useDeleteProjectModalStore } from '@/stores/DeleteProjectModalStore';
 import { useOverlayStore } from '@/stores/OverlayStore';
 import { useModifyProjectStore } from '@/stores/ModifyProjectStore';
 import { ProjectType } from '@/types/project';
+import { useShareProjectModalStore } from '@/stores/ShareProjectModalStore';
 
 
 interface ProjectManagerProps {
@@ -39,6 +40,13 @@ function ProjectManager({ project, isMenuOpen, openMenu, closeMenu }: ProjectMan
     useOverlayStore.getState().openOverlay();
   }
 
+  const openShareProjectModal = useShareProjectModalStore((state) => state.openShareProjectModal);
+
+  const openShareProjectForm = () => {
+    openShareProjectModal();
+    useOverlayStore.getState().openOverlay();
+  }
+
   return (
     <>
       <div className="relative">
@@ -51,7 +59,7 @@ function ProjectManager({ project, isMenuOpen, openMenu, closeMenu }: ProjectMan
         <div className={`projectManagerMenu absolute  right-4  mt-2 bg-white border border-gray-200 rounded-md shadow-lg p-2 w-32 ${isMenuOpen ? 'opacity-100 visible -top-9 z-10' : 'opacity-0 invisible top-14' } transition-all duration-150 projectManagerMenu`}>
           <ul className="flex flex-col gap-2">
             <li className="text-sm text-gray-700 hover:bg-gray-100 rounded-md px-2 py-1 cursor-pointer" onClick={openModifyProjectForm}>Modifier</li>
-            <li className="text-sm text-gray-700 hover:bg-gray-100 rounded-md px-2 py-1 cursor-pointer">Partager</li>
+            <li className="text-sm text-gray-700 hover:bg-gray-100 rounded-md px-2 py-1 cursor-pointer" onClick={openShareProjectForm}>Partager</li>
             <li className="text-sm text-red-500 hover:bg-red-100 rounded-md px-2 py-1 cursor-pointer" onClick={openDeleteProjectModal}>Supprimer</li>
           </ul>
         </div>

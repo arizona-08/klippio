@@ -43,19 +43,19 @@ function ProjectForm({ closeForm, edit, projectToEdit }: ProjectFormProps) {
 
   const closeModifyForm = useModifyProjectStore((state) => state.closeModifyProjectModal);
 
-  React.useEffect(() => {
-    function handleClickOutsideForm(event: MouseEvent) {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.projectForm')) {
-        resetForm();
-        closeForm();
-        closeModifyForm();
-      }
-    }
+  // React.useEffect(() => {
+  //   function handleClickOutsideForm(event: MouseEvent) {
+  //     const target = event.target as HTMLElement;
+  //     if (!target.closest('.projectForm')) {
+  //       resetForm();
+  //       closeForm();
+  //       closeModifyForm();
+  //     }
+  //   }
 
-    document.addEventListener('mousedown', handleClickOutsideForm);
-    return () => document.removeEventListener('mousedown', handleClickOutsideForm);
-  }, []);
+  //   document.addEventListener('mousedown', handleClickOutsideForm);
+  //   return () => document.removeEventListener('mousedown', handleClickOutsideForm);
+  // }, []);
 
 
   return (

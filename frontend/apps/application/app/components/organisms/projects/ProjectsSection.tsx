@@ -1,14 +1,15 @@
 'use client';
 import React from 'react'
-import ProjectCard, { ProjectCardType } from '../../molecules/ProjectCard/ProjectCard'
+import ProjectCard from '../../molecules/ProjectCard/ProjectCard'
 import { CTA } from '@repo/ui'
 import SearchBar from '../../atoms/SearchBar'
 import ProjectSorter from './ProjectFilter'
 import ProjectForm from '../../molecules/ProjectForm/ProjectForm';
+import { ProjectType } from '@/types/project';
 
 function ProjectsSection() {
 
-  const projects: ProjectCardType[] = [
+  const projects: ProjectType[] = [
     {
       id: "projet-1",
       name: 'Projet 1',
@@ -97,7 +98,7 @@ function ProjectsSection() {
   const [paginationCount, setPaginationCount] = React.useState(Math.ceil(projects.length / numberOfDisplayedProjects)) // à adapter selon le nombre de projets par page souhaité
   
   const [currentPage, setCurrentPage] = React.useState(1)
-  const [displayedProjects, setDisplayedProjects] = React.useState<ProjectCardType[]>(projects.slice((currentPage - 1) * numberOfDisplayedProjects, currentPage * numberOfDisplayedProjects));
+  const [displayedProjects, setDisplayedProjects] = React.useState<ProjectType[]>(projects.slice((currentPage - 1) * numberOfDisplayedProjects, currentPage * numberOfDisplayedProjects));
 
 
   function previousPage(){
@@ -161,7 +162,7 @@ function ProjectsSection() {
               onClick={() => setIsProjectFormOpen(true)}
             />
 
-            <div className={`absolute left-0 ${isProjectFormOpen ? 'visible opacity-100 top-full' : 'opacity-0 invisible top-20'} transition-all duration-150`}>
+            <div className={`absolute left-0 z-40 ${isProjectFormOpen ? 'visible opacity-100 top-full' : 'opacity-0 invisible top-20'} transition-all duration-150`}>
               <ProjectForm closeForm={() => setIsProjectFormOpen(false)} />
             </div>
           </div>
