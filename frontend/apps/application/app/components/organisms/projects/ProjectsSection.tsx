@@ -18,7 +18,30 @@ function ProjectsSection() {
       city: 'Paris',
       thumbnailUrl: '',
       numberOfPlans: 3,
-      numberOfPhotos: 15
+      numberOfPhotos: 15,
+
+      collaborators: [
+        {
+          firstname: 'John',
+          lastname: 'Doe',
+          email: 'john@test.com',
+          role: 'owner',
+        },
+        {
+          firstname: 'Jane',
+          lastname: 'Smith',
+          email: 'jane@test.com',
+          role: 'editor',
+          invitationStatus: 'pending'
+        },
+        {
+          firstname: 'Bob',
+          lastname: 'Johnson',
+          email: 'bob@test.com',
+          role: 'viewer',
+          invitationStatus: 'accepted'
+        }
+      ] 
     },
     {
       id: "projet-2",
@@ -28,7 +51,30 @@ function ProjectsSection() {
       city: 'Paris',
       thumbnailUrl: '',
       numberOfPlans: 2,
-      numberOfPhotos: 7
+      numberOfPhotos: 7,
+
+      collaborators: [
+        {
+          firstname: 'John',
+          lastname: 'Doe',
+          email: 'john@test.com',
+          role: 'owner',
+        },
+        {
+          firstname: 'Jane',
+          lastname: 'Smith',
+          email: 'jane@test.com',
+          role: 'editor',
+          invitationStatus: 'declined'
+        },
+        {
+          firstname: 'Bob',
+          lastname: 'Johnson',
+          email: 'bob@test.com',
+          role: 'viewer',
+          invitationStatus: 'pending'
+        }
+      ] 
     },
     {
       id: "projet-3",
@@ -38,7 +84,23 @@ function ProjectsSection() {
       city: 'Paris',
       thumbnailUrl: '',
       numberOfPlans: 4,
-      numberOfPhotos: 26
+      numberOfPhotos: 26,
+
+      collaborators: [
+        {
+          firstname: 'John',
+          lastname: 'Doe',
+          email: 'john@test.com',
+          role: 'owner',
+        },
+        {
+          firstname: 'Bob',
+          lastname: 'Johnson',
+          email: 'bob@test.com',
+          role: 'viewer',
+          invitationStatus: 'accepted'
+        }
+      ] 
     },
     {
       id: "projet-4",
@@ -48,7 +110,16 @@ function ProjectsSection() {
       city: 'Paris',
       thumbnailUrl: '',
       numberOfPlans: 4,
-      numberOfPhotos: 26
+      numberOfPhotos: 26,
+
+      collaborators: [
+        {
+          firstname: 'John',
+          lastname: 'Doe',
+          email: 'john@test.com',
+          role: 'owner',
+        }
+      ] 
     },
     {
       id: "projet-5",
@@ -58,7 +129,30 @@ function ProjectsSection() {
       city: 'Paris',
       thumbnailUrl: '',
       numberOfPlans: 4,
-      numberOfPhotos: 26
+      numberOfPhotos: 26,
+
+      collaborators: [
+        {
+          firstname: 'John',
+          lastname: 'Doe',
+          email: 'john@test.com',
+          role: 'owner',
+        },
+        {
+          firstname: 'Jane',
+          lastname: 'Smith',
+          email: 'jane@test.com',
+          role: 'editor',
+          invitationStatus: 'accepted'
+        },
+        {
+          firstname: 'Bob',
+          lastname: 'Johnson',
+          email: 'bob@test.com',
+          role: 'viewer',
+          invitationStatus: 'accepted'
+        }
+      ] 
     },
     {
       id: "projet-6",
@@ -68,7 +162,30 @@ function ProjectsSection() {
       city: 'Paris',
       thumbnailUrl: '',
       numberOfPlans: 4,
-      numberOfPhotos: 26
+      numberOfPhotos: 26,
+
+      collaborators: [
+        {
+          firstname: 'John',
+          lastname: 'Doe',
+          email: 'john@test.com',
+          role: 'owner',
+        },
+        {
+          firstname: 'Jane',
+          lastname: 'Smith',
+          email: 'jane@test.com',
+          role: 'editor',
+          invitationStatus: 'accepted'
+        },
+        {
+          firstname: 'Bob',
+          lastname: 'Johnson',
+          email: 'bob@test.com',
+          role: 'viewer',
+          invitationStatus: 'accepted'
+        }
+      ] 
     },
     {
       id: "projet-7",
@@ -78,7 +195,16 @@ function ProjectsSection() {
       city: 'Paris',
       thumbnailUrl: '',
       numberOfPlans: 4,
-      numberOfPhotos: 26
+      numberOfPhotos: 26,
+
+      collaborators: [
+        {
+          firstname: 'John',
+          lastname: 'Doe',
+          email: 'john@test.com',
+          role: 'owner',
+        }
+      ] 
     },
     {
       id: "projet-8",
@@ -88,7 +214,16 @@ function ProjectsSection() {
       city: 'Paris',
       thumbnailUrl: '',
       numberOfPlans: 4,
-      numberOfPhotos: 26
+      numberOfPhotos: 26,
+
+      collaborators: [
+        {
+          firstname: 'John',
+          lastname: 'Doe',
+          email: 'john@test.com',
+          role: 'owner',
+        }
+      ] 
     },
   ]
 

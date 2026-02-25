@@ -28,7 +28,7 @@ function ModalOverlay() {
         <ProjectForm edit={true} projectToEdit={projectToModify} closeForm={() => useOverlayStore.getState().closeOverlay()}/>
       </div>
 
-      <div className={`w-full max-w-96 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 ${isShareProjectModalVisible ? 'block' : 'hidden'}`}>
+      <div className={`w-full max-w-125 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 ${isShareProjectModalVisible ? 'block' : 'hidden'}`}>
         <ShareProjectForm closeForm={() => useShareProjectModalStore.getState().closeShareProjectModal()}/>
       </div>
     </>

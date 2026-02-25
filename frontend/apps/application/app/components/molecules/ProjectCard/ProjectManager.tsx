@@ -43,7 +43,7 @@ function ProjectManager({ project, isMenuOpen, openMenu, closeMenu }: ProjectMan
   const openShareProjectModal = useShareProjectModalStore((state) => state.openShareProjectModal);
 
   const openShareProjectForm = () => {
-    openShareProjectModal();
+    openShareProjectModal(project);
     useOverlayStore.getState().openOverlay();
   }
 

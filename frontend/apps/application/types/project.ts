@@ -8,4 +8,14 @@ export type ProjectType = {
 
   numberOfPlans: number;
   numberOfPhotos: number;
+
+  collaborators: CollaboratorType[];
+}
+
+export type CollaboratorType = {
+  firstname: string;
+  lastname: string;
+  email: string;
+  role: 'owner' | 'editor' | 'viewer';
+  invitationStatus?: 'pending' | 'accepted' | 'declined';
 }
