@@ -1,6 +1,8 @@
 'use client'
 import React from 'react'
 import PicModal from './PicModal'
+import { CTA } from '@repo/ui'
+import AddPlanModal from './AddPlanModal'
 
 export type MarkerType = {
   id: number,
@@ -18,30 +20,27 @@ function PlanLoader() {
   const [nextMarkerId, setNextMarkerId] = React.useState<number>(1);
   const [isModalActive, setIsModalActive] = React.useState<boolean>(false)
   const [modalCurrentMarker, setModalCurrentMarker] = React.useState<MarkerType | undefined>(undefined)
+  const [isAddPlanModalActive, setIsAddPlanModalActive] = React.useState<boolean>(false)
 
+  const planUploadContainerRef = React.useRef<HTMLDivElement | null>(null);
+  const planUploadInputRef = React.useRef<HTMLInputElement | null>(null);
   const planSectionRef = React.useRef<HTMLDivElement | null>(null);
   const planContainerRef = React.useRef<HTMLDivElement | null>(null)
   const photoInputRef = React.useRef<HTMLInputElement | null>(null)
 
-  function uploadPlan(event: React.ChangeEvent<HTMLInputElement>){
-    const files = event.target.files
+  function uploadPlan(file: File){
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if(!planContainerRef.current || !planSectionRef.current || !e.target) return 
 
-    if(!files) return
-
-    const file = files[0]
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          if(!planContainerRef.current || !planSectionRef.current || !e.target) return 
-
-          planContainerRef.current.style.backgroundImage = `url('${e.target.result}')`;
-          planSectionRef.current.classList.remove('hidden');
-          // Réinitialiser les anciens repères si un nouveau plan est chargé
-          setMarkers([]);
-          setNextMarkerId(1);
-        };
-        reader.readAsDataURL(file);
-    }
+      planContainerRef.current.style.backgroundImage = `url('${e.target.result}')`;
+      planUploadContainerRef.current!.classList.add('hidden');
+      planSectionRef.current.classList.remove('hidden');
+      // Réinitialiser les anciens repères si un nouveau plan est chargé
+      setMarkers([]);
+      setNextMarkerId(1);
+    };
+    reader.readAsDataURL(file);
   }
 
   function handlePlanClick(event: React.MouseEvent){
@@ -130,15 +129,30 @@ function PlanLoader() {
 
   return (
     <>
-      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-        <label htmlFor="plan-upload" className="block text-lg font-medium mb-2">1. Chargez votre plan de chantier</label>
-        <input
+      <div id="plan-upload-container" className="w-full max-w-sm relative top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-50 p-6 rounded-lg border border-gray-200" ref={planUploadContainerRef}>
+        <div className="text-center mb-4">
+          <h2 className="block text-lg font-medium mb-2">Vous n'avez aucun plan pour le moment</h2>
+          <p>Chargez-en un ici</p>
+          
+        </div>
+
+        <div className="flex justify-center">
+          <CTA 
+            color="primary"
+            type='button'
+            text='Charger un plan'
+            onClick={() => setIsAddPlanModalActive(true)}
+          />
+        </div>
+
+        {/* <input
           type="file"
           id="plan-upload"
           accept="image/*"
-          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+          className="hidden w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
           onChange={uploadPlan}
-        />
+          ref={planUploadInputRef}
+        /> */}
       </div>
 
       {/* Container qui va accueillir le plan */}
@@ -179,6 +193,12 @@ function PlanLoader() {
         handleSetText={handleSetText}
         handleDeleteMarker={handleDeleteMarker}
         handleClose={handleCloseModal}
+      />
+
+      <AddPlanModal
+        isActive={isAddPlanModalActive}
+        onClose={() => setIsAddPlanModalActive(false)}
+        handlePickFile={uploadPlan}
       />
     </>
   )
