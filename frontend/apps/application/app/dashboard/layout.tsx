@@ -8,9 +8,9 @@ interface DashboardLayoutProps {
 function DashboardLayout({children}: DashboardLayoutProps) {
   return (
     <>
-      <div className="flex flex-col gap-4 min-h-screen lg:flex-row">
+      <div className="flex flex-col h-screen lg:flex-row overflow-hidden">
         <AppMenu />
-        <main className='w-full'>
+        <main className='w-full overflow-y-auto relative'>
           {children}
         </main>
       </div>

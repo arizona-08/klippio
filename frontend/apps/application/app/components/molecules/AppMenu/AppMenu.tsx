@@ -3,7 +3,7 @@ import React from 'react'
 import BurgerMenu from './BurgerMenu'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useUser } from '@/app/Context/AuthUserProvider'
+import { useUser } from '@/app/Context/AuthContext/AuthUserProvider'
 import { logout } from '@/proxy/auth/logout'
 import Logo from '@repo/ui/src/atoms/Logo'
 import AppMenuLink from '../../atoms/AppMenuLink'
@@ -56,12 +56,12 @@ function AppMenu() {
     <div className=''>
       {/* Mobile menu */}
       <div className="lg:hidden relative">
-        <div className="flex items-center gap-4 p-4 relative z-30 bg-white">
+        <div className="flex items-center gap-4 p-4 relative z-50 bg-white">
           <BurgerMenu handleOnClick={toggleBurgerActive} isActive={burgerActive}/>
           <Logo type='long' color='black' />
         </div>
 
-        <div className={`absolute top-full bg-primary w-full min-w-80 left-0 ${burgerActive ? 'translate-y-0' : '-translate-y-full'} transition-all z-20`}>
+        <div className={`absolute top-full bg-primary w-full min-w-80 left-0 ${burgerActive ? 'translate-y-0' : '-translate-y-full'} transition-all z-40`}>
           <div className='p-4 flex flex-col gap-3'>
 
             <ul className='flex flex-col gap-3'>
@@ -94,22 +94,22 @@ function AppMenu() {
         </div>
 
         {burgerActive && 
-          <div className='layer absolute top-0 left-0 z-10 w-screen h-screen bg-black/25 backdrop-blur-sm'>
+          <div className='layer absolute top-0 left-0 z-30 w-screen h-screen bg-black/25 backdrop-blur-sm'>
           </div>
         }
       </div>
 
       
       {/* Desktop menu */}
-      <div className={`hidden lg:flex flex-col gap-2 bg-primary h-screen py-6 px-3 shrink-0 ${isSidebarOpen ? 'w-64' : 'w-20'} transition-all `}>
+      <div className={`hidden lg:flex flex-col gap-2 bg-primary h-screen py-6 shrink-0 ${isSidebarOpen ? 'w-64' : 'w-14'} transition-all duration-150`}>
 
-        <div className="top-header">
-          <div className={`header shrink-0 flex items-center justify-between ${isSidebarOpen ? '' : 'group'}`}>
-            <div className={`${isSidebarOpen ? '' : 'group-hover:hidden'}`}>
+        <div className="top-header px-3">
+          <div className={`header relative w-full shrink-0 flex items-center  ${isSidebarOpen ? 'justify-between' : 'group'}`}>
+            <div className={`shrink-0 ${isSidebarOpen ? '' : 'group-hover:hidden'}`}>
               <Logo type={isSidebarOpen ? 'long' : 'icon'} color='white' />
             </div>
 
-            <div className={`hover:bg-white/20 p-1 rounded-md cursor-pointer transition-all duration-150 ${isSidebarOpen ? "" : "hidden group-hover:block"}`} onClick={toggleSidebar}>
+            <div className={`sticky top-0 right-0 z-10  hover:bg-white/20 p-1 rounded-md cursor-pointer transition-all duration-150 ${isSidebarOpen ? "" : "hidden group-hover:block"}`} onClick={toggleSidebar}>
               <Image
                 src="/icons/sidebar.svg"
                 alt="close icon"
@@ -121,8 +121,8 @@ function AppMenu() {
             </div>
           </div>
 
-          <div className="navlinks-container shrink-0 min-w-64 flex flex-col gap-4 mt-8">
-            <ul className='flex flex-col items-start gap-3'>
+          <div className="navlinks-container flex flex-col gap-4 mt-8 w-fit overflow-x-hidden">
+            <ul className={`flex flex-col items-start gap-3 min-w-40 shrink-0 `}>
                 {appMenuLinks.map((menuLink, index) => (
                   <AppMenuLink
                     key={index}

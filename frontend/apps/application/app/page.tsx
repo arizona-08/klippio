@@ -13,7 +13,7 @@ export default function page() {
         <h1 className='text-2xl font-semibold'>Bienvenue dans la partie application de Klippio</h1>
 
         <p className='mb-4'>Sélectionnez un plan pour commencer à ajouter des photos :</p>
-        <CTA />
+        <CTA type='button' color='primary' text='Ajouter' />
         <ul className='list-disc list-inside mb-6'>
           {plans.map(plan => (
             <li key={plan.id}>

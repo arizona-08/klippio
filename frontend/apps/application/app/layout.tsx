@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Albert_Sans } from "next/font/google";
-import AuthUserProvider from "./Context/AuthUserProvider";
-import AppHeader from "./components/layouts/AppHeader";
-import AppFooter from "./components/layouts/AppFooter";
+import AuthUserProvider from "./Context/AuthContext/AuthUserProvider";
+import ModalOverlay from "./components/organisms/ModalOverlay/ModalOverlay";
 
 const albertSans = Albert_Sans({
   subsets: ["latin"],
@@ -24,11 +23,10 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className={`min-h-screen relative overflow-x-hidden ${albertSans.className}`}>
-      <AuthUserProvider>
-        {/* <AppHeader /> */}
+        <ModalOverlay />
+        <AuthUserProvider>
           {children}
-        {/* <AppFooter /> */}
-      </AuthUserProvider>
+        </AuthUserProvider>
       </body>
     </html>
   );
