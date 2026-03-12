@@ -5,6 +5,7 @@ import { CTA } from '@repo/ui'
 import AddPlanModal from './AddPlanModal'
 import { PlanType } from '@/types/project'
 import { useAllPlansStore } from '@/stores/AllPlansStore'
+import VisualizerMenu from '../../molecules/VisualizerMenu/VisualizerMenu'
 
 export type MarkerType = {
   id: number,
@@ -25,6 +26,7 @@ function PlanLoader() {
   const [isAddPlanModalActive, setIsAddPlanModalActive] = React.useState<boolean>(false);
 
   const addPlan = useAllPlansStore((state) => state.addPlan);
+  const plans = useAllPlansStore((state) => state.plans);
 
   const planUploadContainerRef = React.useRef<HTMLDivElement | null>(null);
   const planUploadInputRef = React.useRef<HTMLInputElement | null>(null);
@@ -194,6 +196,9 @@ function PlanLoader() {
         ref={photoInputRef}
         onChange={chooseMarkerPic}
       />
+
+      {plans && plans.length > 0 && <VisualizerMenu />}
+      
 
       <PicModal
         isActive={isModalActive}
