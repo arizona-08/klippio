@@ -19,3 +19,8 @@ export type CollaboratorType = {
   role: 'owner' | 'editor' | 'viewer';
   invitationStatus?: 'pending' | 'accepted' | 'declined';
 }
+
+export type PlanType = {
+  name: string;
+  file: File;
+}

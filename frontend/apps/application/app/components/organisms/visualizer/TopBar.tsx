@@ -1,16 +1,22 @@
 
+'use client';
+import { useAllPlansStore } from '@/stores/AllPlansStore'
 import { ArrowLeft, ChevronDown } from 'lucide-react'
+import Link from 'next/link'
 import React from 'react'
 
 function TopBar() {
+  const allPlans = useAllPlansStore((state) => state.plans);
   return (
     <div className="bg-gray-100 text-black p-4 flex items-center justify-between">
-      <div className="flex items-center gap-4">
-        <ArrowLeft />
-        <h3>Titre du projet</h3>
-      </div>
+      <Link href={"/dashboard"}>
+        <div className="flex items-center gap-4">
+          <ArrowLeft />
+          <h3>Titre du projet</h3>
+        </div>
+      </Link>
       <div className="flex items-center gap-2 cursor-pointer">
-        <p>Aucun plan</p>
+        <p>{allPlans.length > 0 ? allPlans[0].name : 'Aucun'}</p>
         <ChevronDown />
       </div>
     </div>

@@ -3,6 +3,8 @@ import React from 'react'
 import PicModal from './PicModal'
 import { CTA } from '@repo/ui'
 import AddPlanModal from './AddPlanModal'
+import { PlanType } from '@/types/project'
+import { useAllPlansStore } from '@/stores/AllPlansStore'
 
 export type MarkerType = {
   id: number,
@@ -20,7 +22,9 @@ function PlanLoader() {
   const [nextMarkerId, setNextMarkerId] = React.useState<number>(1);
   const [isModalActive, setIsModalActive] = React.useState<boolean>(false)
   const [modalCurrentMarker, setModalCurrentMarker] = React.useState<MarkerType | undefined>(undefined)
-  const [isAddPlanModalActive, setIsAddPlanModalActive] = React.useState<boolean>(false)
+  const [isAddPlanModalActive, setIsAddPlanModalActive] = React.useState<boolean>(false);
+
+  const addPlan = useAllPlansStore((state) => state.addPlan);
 
   const planUploadContainerRef = React.useRef<HTMLDivElement | null>(null);
   const planUploadInputRef = React.useRef<HTMLInputElement | null>(null);
@@ -28,7 +32,9 @@ function PlanLoader() {
   const planContainerRef = React.useRef<HTMLDivElement | null>(null)
   const photoInputRef = React.useRef<HTMLInputElement | null>(null)
 
-  function uploadPlan(file: File){
+  function uploadPlan(plan: PlanType){
+    addPlan(plan);
+    const file = plan.file
     const reader = new FileReader();
     reader.onload = (e) => {
       if(!planContainerRef.current || !planSectionRef.current || !e.target) return 
@@ -36,6 +42,8 @@ function PlanLoader() {
       planContainerRef.current.style.backgroundImage = `url('${e.target.result}')`;
       planUploadContainerRef.current!.classList.add('hidden');
       planSectionRef.current.classList.remove('hidden');
+
+
       // Réinitialiser les anciens repères si un nouveau plan est chargé
       setMarkers([]);
       setNextMarkerId(1);

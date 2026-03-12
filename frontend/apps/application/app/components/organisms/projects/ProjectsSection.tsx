@@ -6,6 +6,7 @@ import SearchBar from '../../atoms/SearchBar'
 import ProjectSorter from './ProjectFilter'
 import ProjectForm from '../../molecules/ProjectForm/ProjectForm';
 import { ProjectType } from '@/types/project';
+import { PlusIcon } from 'lucide-react';
 
 function ProjectsSection() {
 
@@ -285,17 +286,16 @@ function ProjectsSection() {
           </div>
 
           <div className='relative w-full flex flex-col md:inline-block'>
-            <CTA
-              type='button'
-              text='Créer un nouveau projet'
-              color='primary'
-              icon={{
-                src: '/icons/plus.svg',
-                alt: 'plus icon'
-              }}
-              iconReverse={true}
-              onClick={() => setIsProjectFormOpen(true)}
-            />
+            <div className="md:max-w-90">
+              <CTA
+                type='button'
+                text='Créer un nouveau projet'
+                color='primary'
+                icon={<PlusIcon />}
+                iconReverse={true}
+                onClick={() => setIsProjectFormOpen(true)}
+              />
+            </div>
 
             <div className={`absolute left-0 z-40 ${isProjectFormOpen ? 'visible opacity-100 top-full' : 'opacity-0 invisible top-20'} transition-all duration-150`}>
               <ProjectForm closeForm={() => setIsProjectFormOpen(false)} />
@@ -308,7 +308,6 @@ function ProjectsSection() {
         </div>
 
       </div>
-
 
       <ul className="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 mt-4 py-6">
           {displayedProjects.map(project => (

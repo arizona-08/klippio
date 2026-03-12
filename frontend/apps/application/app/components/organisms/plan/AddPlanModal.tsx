@@ -4,22 +4,23 @@ import Input from '../../atoms/Input'
 import { CTA } from '@repo/ui'
 import { Cross, Plus, X } from 'lucide-react'
 import { convertFileSizeInMo } from '@/utils/files'
+import { PlanType } from '@/types/project'
 
 interface AddPlanModalProps {
   isActive: boolean
   onClose: () => void;
-  handlePickFile: (file: File) => void;
+  handlePickFile: (plan: PlanType) => void;
 }
 
 function AddPlanModal({ isActive, onClose, handlePickFile }: AddPlanModalProps) {
-  const [planTitle, setPlanTitle] = React.useState<string>('');
-  const isDisabled = planTitle.trim() === ''
-
+  const [plan, setPlan] = React.useState<PlanType | null>(null);
+  
   const photoinputRef = React.useRef<HTMLInputElement | null>(null);
-  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+
+  const isDisabled = plan == null || plan?.name.trim() === '' || plan?.file === null;
 
   function handleChangePlanTitle(event: React.ChangeEvent<HTMLInputElement>){
-    setPlanTitle(event.target.value)
+    setPlan(prevPlan => prevPlan ? { ...prevPlan, name: event.target.value } : { name: event.target.value, file: null as unknown as File });
   }
 
   function handleChangePlanPDF(event: React.ChangeEvent<HTMLInputElement>){
@@ -28,13 +29,14 @@ function AddPlanModal({ isActive, onClose, handlePickFile }: AddPlanModalProps) 
     if(!files) return
 
     const file = files[0]
-    setSelectedFile(file)
+    setPlan(prevPlan => prevPlan ? { ...prevPlan, file } : { name: '', file });
   }
 
   function onConfirm(){
-    if(!selectedFile) return;
+    if(!plan) return;
+    if(!plan.file) return;
 
-    handlePickFile(selectedFile);
+    handlePickFile(plan);
     onClose();
   }
 
@@ -62,12 +64,12 @@ function AddPlanModal({ isActive, onClose, handlePickFile }: AddPlanModalProps) 
         </div>
 
         <div>
-          {selectedFile && (
+          {plan && plan.file && (
             <div className="flex items-center gap-2 py-1 px-2 border border-primary rounded-full w-fit mt-3">
-              <p className="text-sm text-gray-600">{selectedFile.name} {convertFileSizeInMo(selectedFile.size)} Mo</p>
+              <p className="text-sm text-gray-600">{plan.file.name} {convertFileSizeInMo(plan.file.size)} Mo</p>
               <X 
                 className="w-5 h-5 cursor-pointer"
-                onClick={() => {setSelectedFile(null)}}
+                onClick={() => {setPlan(prevPlan => prevPlan ? { ...prevPlan, file: null as unknown as File } : null); if(photoinputRef.current) photoinputRef.current.value = ''}}
               />
             </div>
           )}
