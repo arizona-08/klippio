@@ -24,3 +24,18 @@ export type PlanType = {
   name: string;
   file: File;
 }
+
+export type FileType = {
+  id: string;
+  type: 'file';
+  name: string;
+  lastModified: Date;
+}
+
+export type FolderType = {
+  id: string;
+  type: 'folder';
+  name: string;
+  lastModified: Date;
+  children?: Array<FolderType | FileType>;
+}

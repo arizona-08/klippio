@@ -6,6 +6,7 @@ import AddPlanModal from './AddPlanModal'
 import { PlanType } from '@/types/project'
 import { useAllPlansStore } from '@/stores/AllPlansStore'
 import VisualizerMenu from '../../molecules/VisualizerMenu/VisualizerMenu'
+import ProjectFolders from '../ProjectFolders/ProjectFolders'
 
 export type MarkerType = {
   id: number,
@@ -213,6 +214,8 @@ function PlanLoader() {
         onClose={() => setIsAddPlanModalActive(false)}
         handlePickFile={uploadPlan}
       />
+
+      <ProjectFolders />
     </>
   )
 }
