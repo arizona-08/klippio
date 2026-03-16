@@ -27,6 +27,7 @@ export type PlanType = {
 
 export type FileType = {
   id: string;
+  parentId?: string;
   type: 'file';
   name: string;
   lastModified: Date;
@@ -34,7 +35,8 @@ export type FileType = {
 
 export type FolderType = {
   id: string;
-  type: 'folder';
+  parentId?: string;
+  type: 'folder' | 'root';
   name: string;
   lastModified: Date;
   children?: Array<FolderType | FileType>;
