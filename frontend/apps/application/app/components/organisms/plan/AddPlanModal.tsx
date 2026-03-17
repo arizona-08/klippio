@@ -100,6 +100,7 @@ function AddPlanModal({ isActive, onClose, handlePickFile }: AddPlanModalProps) 
           name=""
           id="file-input"
           className="hidden"
+          accept='application/pdf, image/*'
           ref={photoinputRef}
           onChange={handleChangePlanPDF}
         />

@@ -8,6 +8,13 @@ import { useAllPlansStore } from '@/stores/AllPlansStore'
 import VisualizerMenu from '../../molecules/VisualizerMenu/VisualizerMenu'
 import ProjectFolders from '../ProjectFolders/ProjectFolders'
 
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import { Document, Page, pdfjs } from 'react-pdf';
+// Configuration obligatoire du worker pour react-pdf (compatible Next.js)
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+// import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+// import 'react-pdf/dist/esm/Page/TextLayer.css';
+
 export type MarkerType = {
   id: number,
   x: number,
@@ -26,6 +33,11 @@ function PlanLoader() {
   const [modalCurrentMarker, setModalCurrentMarker] = React.useState<MarkerType | undefined>(undefined)
   const [isAddPlanModalActive, setIsAddPlanModalActive] = React.useState<boolean>(false);
 
+
+  // État pour gérer le fichier (PDF ou Image)
+  const [currentFileUrl, setCurrentFileUrl] = React.useState<string | null>(null);
+  const [isPdf, setIsPdf] = React.useState<boolean>(false);
+
   const addPlan = useAllPlansStore((state) => state.addPlan);
   const plans = useAllPlansStore((state) => state.plans);
 
@@ -35,40 +47,40 @@ function PlanLoader() {
   const planContainerRef = React.useRef<HTMLDivElement | null>(null)
   const photoInputRef = React.useRef<HTMLInputElement | null>(null)
 
-  function uploadPlan(plan: PlanType){
+  function uploadPlan(plan: PlanType) {
     addPlan(plan);
-    const file = plan.file
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if(!planContainerRef.current || !planSectionRef.current || !e.target) return 
-
-      planContainerRef.current.style.backgroundImage = `url('${e.target.result}')`;
-      planUploadContainerRef.current!.classList.add('hidden');
-      planSectionRef.current.classList.remove('hidden');
-
-
-      // Réinitialiser les anciens repères si un nouveau plan est chargé
-      setMarkers([]);
-      setNextMarkerId(1);
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function handlePlanClick(event: React.MouseEvent){
-    if (event.currentTarget.classList.contains('marker')) {
-      return;
+    const file = plan.file;
+    
+    // Vérifier si c'est un PDF
+    if (file.type === 'application/pdf') {
+      setIsPdf(true);
+      setCurrentFileUrl(URL.createObjectURL(file)); // Crée un lien local temporaire
+    } else {
+      setIsPdf(false);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target) setCurrentFileUrl(e.target.result as string);
+      };
+      reader.readAsDataURL(file);
     }
 
-    if(!planContainerRef.current || !photoInputRef.current) return
+    setMarkers([]);
+    setNextMarkerId(1);
+  }
+
+  function handlePlanClick(event: React.MouseEvent) {
+    // Empêcher le clic de se déclencher si on est en train de "glisser/panner" le plan
+    // ou si on clique sur un marqueur
+    if (event.currentTarget.classList.contains('marker')) return;
+    if (!planContainerRef.current || !photoInputRef.current) return;
 
     const rect = planContainerRef.current.getBoundingClientRect();
-    // Calcule les coordonnées en pourcentage pour la responsivité
+    
+    // Le calcul en pourcentage reste parfait même avec le zoom !
     const x = ((event.clientX - rect.left) / rect.width) * 100;
     const y = ((event.clientY - rect.top) / rect.height) * 100;
     
     currentClickCoords.current = {x, y};
-    
-    // Déclenche l'input de fichier photo
     photoInputRef.current.click();
   }
 
@@ -139,54 +151,97 @@ function PlanLoader() {
   }
 
   return (
-    <>
-      <div id="plan-upload-container" className="w-full max-w-sm relative top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-50 p-6 rounded-lg border border-gray-200" ref={planUploadContainerRef}>
-        <div className="text-center mb-4">
-          <h2 className="block text-lg font-medium mb-2">Vous n'avez aucun plan pour le moment</h2>
-          <p>Chargez-en un ici</p>
-          
+    <div className="relative w-full h-[calc(100vh-88px)] bg-gray-100 overflow-hidden flex flex-col">
+      
+      {!currentFileUrl ? (
+        <div id="plan-upload-container" className="w-full max-w-sm relative top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-50 p-6 rounded-lg border border-gray-200" ref={planUploadContainerRef}>
+          <div className="text-center mb-4">
+            <h2 className="block text-lg font-medium mb-2">Vous n'avez aucun plan pour le moment</h2>
+            <p>Chargez-en un ici</p>
+          </div>
+
+          <div className="flex justify-center">
+            <CTA 
+              color="primary"
+              type='button'
+              text='Charger un plan'
+              onClick={() => setIsAddPlanModalActive(true)}
+            />
+          </div>
         </div>
+      ) : (
+        // Conteneur qui contient le plan
 
-        <div className="flex justify-center">
-          <CTA 
-            color="primary"
-            type='button'
-            text='Charger un plan'
-            onClick={() => setIsAddPlanModalActive(true)}
-          />
-        </div>
-
-        {/* <input
-          type="file"
-          id="plan-upload"
-          accept="image/*"
-          className="hidden w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
-          onChange={uploadPlan}
-          ref={planUploadInputRef}
-        /> */}
-      </div>
-
-      {/* Container qui va accueillir le plan */}
-      <div id="plan-section" className="bg-white p-4 rounded-lg shadow-md hidden" ref={planSectionRef}>
-        <h2 className="text-lg font-medium mb-4">2. Cliquez sur le plan pour ajouter un repère photo</h2>
-        <div
-          id="plan-container"
-          className="border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 pb-[75%] bg-contain bg-center bg-no-repeat relative"
-          ref={planContainerRef}
-          onClick={handlePlanClick}
+        <TransformWrapper
+          initialScale={1}
+          minScale={0.5}
+          maxScale={8} // Zoom max
+          // centerOnInit={true}
+          wheel={{ step: 0.1 }} // Sensibilité de la molette
+          panning={{ velocityDisabled: true }} // Rend le glissement plus précis
         >
-          {markers.map((marker, index) => (
-            <div
-              key={index}
-              className="marker absolute w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-sm cursor-pointer border-2 border-white shadow-lg transform -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform"
-              style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
-              onClick={(e) => handleMarkerClick(e, marker)}
-            >
-              {marker.id}
-            </div>
-          ))}
-        </div>
-      </div>
+
+          {({zoomIn, zoomOut, resetTransform}) => (
+            <>
+              {/* Petits boutons de contrôle flottants (Optionnel mais UX friendly) */}
+              <div className="absolute top-4 right-4 z-30 flex gap-2 bg-white p-2 rounded-lg shadow-md">
+                <button onClick={() => zoomOut()} className="p-2 bg-gray-100 hover:bg-gray-200 rounded">-</button>
+                <button onClick={() => resetTransform()} className="p-2 bg-gray-100 hover:bg-gray-200 rounded">Reset</button>
+                <button onClick={() => zoomIn()} className="p-2 bg-gray-100 hover:bg-gray-200 rounded">+</button>
+              </div>
+
+              <TransformComponent wrapperClass="!w-full !h-full" contentClass="!w-full !h-full flex items-center justify-center">
+                <div ref={planContainerRef} className='relative bg-white' onClick={handlePlanClick}>
+                  {isPdf ? (
+                      <Document file={currentFileUrl}>
+                        {/* On ne rend que la page 1. La prop 'width' peut être définie si tu veux forcer une taille */}
+                        <Page pageNumber={1} renderTextLayer={false} renderAnnotationLayer={false} />
+                      </Document>
+                    ) : (
+                      <img src={currentFileUrl} alt="Plan" className="max-w-none" />
+                    )
+                  }
+
+                    {/* Affichage des marqueurs (ton code intact) */}
+                    {markers.map((marker, index) => (
+                      <div
+                        key={index}
+                        className="marker absolute w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-sm cursor-pointer border-2 border-white shadow-lg transform -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform z-10"
+                        style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
+                        onClick={(e) => handleMarkerClick(e, marker)}
+                      >
+                        {marker.id}
+                      </div>
+                    ))}
+                </div>
+              </TransformComponent>
+            </>
+          )}
+        </TransformWrapper>
+
+        // <div id="plan-section" className="bg-white p-4 rounded-lg shadow-md hidden" ref={planSectionRef}>
+        //   <h2 className="text-lg font-medium mb-4">2. Cliquez sur le plan pour ajouter un repère photo</h2>
+        //   <div
+        //     id="plan-container"
+        //     className="border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 pb-[75%] bg-contain bg-center bg-no-repeat relative"
+        //     ref={planContainerRef}
+        //     onClick={handlePlanClick}
+        //   >
+        //     {markers.map((marker, index) => (
+        //       <div
+        //         key={index}
+        //         className="marker absolute w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-sm cursor-pointer border-2 border-white shadow-lg transform -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform"
+        //         style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
+        //         onClick={(e) => handleMarkerClick(e, marker)}
+        //       >
+        //         {marker.id}
+        //       </div>
+        //     ))}
+        //   </div>
+        // </div>
+      )}
+
+
 
       {/* Input caché pour le chargement des photos */}
       <input
@@ -216,7 +271,7 @@ function PlanLoader() {
       />
 
       <ProjectFolders />
-    </>
+    </div>
   )
 }
 
