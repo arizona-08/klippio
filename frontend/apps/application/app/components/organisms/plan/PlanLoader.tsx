@@ -5,7 +5,7 @@ import { CTA } from '@repo/ui'
 import AddPlanModal from './AddPlanModal'
 import { PlanType } from '@/types/project'
 import { useAllPlansStore } from '@/stores/AllPlansStore'
-import VisualizerMenu from '../../molecules/VisualizerMenu/VisualizerMenu'
+import VisualizerMenu, { SelectOption } from '../../molecules/VisualizerMenu/VisualizerMenu'
 import ProjectFolders from '../ProjectFolders/ProjectFolders'
 
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
@@ -45,7 +45,13 @@ function PlanLoader() {
   const planUploadInputRef = React.useRef<HTMLInputElement | null>(null);
   const planSectionRef = React.useRef<HTMLDivElement | null>(null);
   const planContainerRef = React.useRef<HTMLDivElement | null>(null)
-  const photoInputRef = React.useRef<HTMLInputElement | null>(null)
+  const photoInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  const [option, setOption] = React.useState<SelectOption>('hand');
+
+  function selectOption(option: SelectOption) {
+    setOption(option);
+  }
 
   function uploadPlan(plan: PlanType) {
     addPlan(plan);
@@ -69,6 +75,7 @@ function PlanLoader() {
   }
 
   function handlePlanClick(event: React.MouseEvent) {
+     if(option !== 'pin') return;
     // Empêcher le clic de se déclencher si on est en train de "glisser/panner" le plan
     // ou si on clique sur un marqueur
     if (event.currentTarget.classList.contains('marker')) return;
@@ -85,6 +92,9 @@ function PlanLoader() {
   }
 
   function chooseMarkerPic(event: React.ChangeEvent<HTMLInputElement>){
+
+   
+
     const files = event.target.files
     if(!files) return
 
@@ -253,7 +263,7 @@ function PlanLoader() {
         onChange={chooseMarkerPic}
       />
 
-      {plans && plans.length > 0 && <VisualizerMenu />}
+      {plans && plans.length > 0 && <VisualizerMenu option={option} selectOption={selectOption}/>}
       
 
       <PicModal
