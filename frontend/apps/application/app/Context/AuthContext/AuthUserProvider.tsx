@@ -1,7 +1,8 @@
 'use client';
 import React, { useContext, useEffect } from 'react'
 import { AuthUserContext, User } from './AuthUserContext'
-import { getAuthUser } from '@/proxy/auth/get-auth-user'
+import { getAuthUser } from '@/proxy/auth/auth-functions';
+
 
 interface AuthUserProps{
   children: React.ReactNode

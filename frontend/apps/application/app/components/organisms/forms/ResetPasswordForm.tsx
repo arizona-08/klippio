@@ -1,9 +1,10 @@
 'use client';
 import { ResetPasswordDTO } from '@/proxy/auth/dto/reset-password.dto';
-import { resetPassword } from '@/proxy/auth/reset-password';
+
 import React from 'react'
 import Input from '../../atoms/Input';
 import { CTA } from '@repo/ui';
+import { resetPassword } from '@/proxy/auth/auth-functions';
 
 interface ResetPasswordFormProps{
   token: string | undefined

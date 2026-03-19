@@ -1,8 +1,8 @@
 export type ProjectType = {
   id: string;
-  name: string;
+  title: string;
   address: string;
-  zipCode: string;
+  zipcode: string;
   city: string;
   thumbnailUrl: string;
 

@@ -1,12 +1,12 @@
 'use client';
 import { LoginDTO } from '@/proxy/auth/dto/login.dto';
-import { login } from '@/proxy/auth/login';
 import Link from 'next/link'
 import { useRouter } from 'next/navigation';
 import React from 'react'
 import { useUser } from '../../../Context/AuthContext/AuthUserProvider';
 import Input from '../../atoms/Input';
 import { CTA } from '@repo/ui';
+import { login } from '@/proxy/auth/auth-functions';
 
 function LoginForm() {
 

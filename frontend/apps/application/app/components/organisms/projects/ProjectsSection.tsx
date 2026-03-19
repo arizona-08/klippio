@@ -1,5 +1,5 @@
 'use client';
-import React from 'react'
+import React, { useEffect } from 'react'
 import ProjectCard from '../../molecules/ProjectCard/ProjectCard'
 import { CTA } from '@repo/ui'
 import SearchBar from '../../atoms/SearchBar'
@@ -7,267 +7,280 @@ import ProjectSorter from './ProjectFilter'
 import ProjectForm from '../../molecules/ProjectForm/ProjectForm';
 import { ProjectType } from '@/types/project';
 import { PlusIcon } from 'lucide-react';
+import { getProjects } from '@/proxy/projects/project-functions';
 
 function ProjectsSection() {
 
-  const projects: ProjectType[] = [
-    {
-      id: "projet-1",
-      name: 'Projet 1',
-      address: '123 Rue de la Paix',
-      zipCode: '75000',
-      city: 'Paris',
-      thumbnailUrl: '',
-      numberOfPlans: 3,
-      numberOfPhotos: 15,
+  // const projects: ProjectType[] = [
+  //   {
+  //     id: "projet-1",
+  //     name: 'Projet 1',
+  //     address: '123 Rue de la Paix',
+  //     zipcode: '75000',
+  //     city: 'Paris',
+  //     thumbnailUrl: '',
+  //     numberOfPlans: 3,
+  //     numberOfPhotos: 15,
 
-      collaborators: [
-        {
-          firstname: 'John',
-          lastname: 'Doe',
-          email: 'john@test.com',
-          role: 'owner',
-        },
-        {
-          firstname: 'Jane',
-          lastname: 'Smith',
-          email: 'jane@test.com',
-          role: 'editor',
-          invitationStatus: 'pending'
-        },
-        {
-          firstname: 'Bob',
-          lastname: 'Johnson',
-          email: 'bob@test.com',
-          role: 'viewer',
-          invitationStatus: 'accepted'
-        }
-      ] 
-    },
-    {
-      id: "projet-2",
-      name: 'Projet 2',
-      address: '456 Avenue des Champs',
-      zipCode: '75008',
-      city: 'Paris',
-      thumbnailUrl: '',
-      numberOfPlans: 2,
-      numberOfPhotos: 7,
+  //     collaborators: [
+  //       {
+  //         firstname: 'John',
+  //         lastname: 'Doe',
+  //         email: 'john@test.com',
+  //         role: 'owner',
+  //       },
+  //       {
+  //         firstname: 'Jane',
+  //         lastname: 'Smith',
+  //         email: 'jane@test.com',
+  //         role: 'editor',
+  //         invitationStatus: 'pending'
+  //       },
+  //       {
+  //         firstname: 'Bob',
+  //         lastname: 'Johnson',
+  //         email: 'bob@test.com',
+  //         role: 'viewer',
+  //         invitationStatus: 'accepted'
+  //       }
+  //     ] 
+  //   },
+  //   {
+  //     id: "projet-2",
+  //     name: 'Projet 2',
+  //     address: '456 Avenue des Champs',
+  //     zipcode: '75008',
+  //     city: 'Paris',
+  //     thumbnailUrl: '',
+  //     numberOfPlans: 2,
+  //     numberOfPhotos: 7,
 
-      collaborators: [
-        {
-          firstname: 'John',
-          lastname: 'Doe',
-          email: 'john@test.com',
-          role: 'owner',
-        },
-        {
-          firstname: 'Jane',
-          lastname: 'Smith',
-          email: 'jane@test.com',
-          role: 'editor',
-          invitationStatus: 'declined'
-        },
-        {
-          firstname: 'Bob',
-          lastname: 'Johnson',
-          email: 'bob@test.com',
-          role: 'viewer',
-          invitationStatus: 'pending'
-        }
-      ] 
-    },
-    {
-      id: "projet-3",
-      name: 'Projet 3',
-      address: '789 Boulevard Saint-Michel',
-      zipCode: '75005',
-      city: 'Paris',
-      thumbnailUrl: '',
-      numberOfPlans: 4,
-      numberOfPhotos: 26,
+  //     collaborators: [
+  //       {
+  //         firstname: 'John',
+  //         lastname: 'Doe',
+  //         email: 'john@test.com',
+  //         role: 'owner',
+  //       },
+  //       {
+  //         firstname: 'Jane',
+  //         lastname: 'Smith',
+  //         email: 'jane@test.com',
+  //         role: 'editor',
+  //         invitationStatus: 'declined'
+  //       },
+  //       {
+  //         firstname: 'Bob',
+  //         lastname: 'Johnson',
+  //         email: 'bob@test.com',
+  //         role: 'viewer',
+  //         invitationStatus: 'pending'
+  //       }
+  //     ] 
+  //   },
+  //   {
+  //     id: "projet-3",
+  //     name: 'Projet 3',
+  //     address: '789 Boulevard Saint-Michel',
+  //     zipcode: '75005',
+  //     city: 'Paris',
+  //     thumbnailUrl: '',
+  //     numberOfPlans: 4,
+  //     numberOfPhotos: 26,
 
-      collaborators: [
-        {
-          firstname: 'John',
-          lastname: 'Doe',
-          email: 'john@test.com',
-          role: 'owner',
-        },
-        {
-          firstname: 'Bob',
-          lastname: 'Johnson',
-          email: 'bob@test.com',
-          role: 'viewer',
-          invitationStatus: 'accepted'
-        }
-      ] 
-    },
-    {
-      id: "projet-4",
-      name: 'Projet 4',
-      address: '101 Rue de Rivoli',
-      zipCode: '75001',
-      city: 'Paris',
-      thumbnailUrl: '',
-      numberOfPlans: 4,
-      numberOfPhotos: 26,
+  //     collaborators: [
+  //       {
+  //         firstname: 'John',
+  //         lastname: 'Doe',
+  //         email: 'john@test.com',
+  //         role: 'owner',
+  //       },
+  //       {
+  //         firstname: 'Bob',
+  //         lastname: 'Johnson',
+  //         email: 'bob@test.com',
+  //         role: 'viewer',
+  //         invitationStatus: 'accepted'
+  //       }
+  //     ] 
+  //   },
+  //   {
+  //     id: "projet-4",
+  //     name: 'Projet 4',
+  //     address: '101 Rue de Rivoli',
+  //     zipcode: '75001',
+  //     city: 'Paris',
+  //     thumbnailUrl: '',
+  //     numberOfPlans: 4,
+  //     numberOfPhotos: 26,
 
-      collaborators: [
-        {
-          firstname: 'John',
-          lastname: 'Doe',
-          email: 'john@test.com',
-          role: 'owner',
-        }
-      ] 
-    },
-    {
-      id: "projet-5",
-      name: 'Projet 5',
-      address: '202 Avenue Montaigne',
-      zipCode: '75008',
-      city: 'Paris',
-      thumbnailUrl: '',
-      numberOfPlans: 4,
-      numberOfPhotos: 26,
+  //     collaborators: [
+  //       {
+  //         firstname: 'John',
+  //         lastname: 'Doe',
+  //         email: 'john@test.com',
+  //         role: 'owner',
+  //       }
+  //     ] 
+  //   },
+  //   {
+  //     id: "projet-5",
+  //     name: 'Projet 5',
+  //     address: '202 Avenue Montaigne',
+  //     zipcode: '75008',
+  //     city: 'Paris',
+  //     thumbnailUrl: '',
+  //     numberOfPlans: 4,
+  //     numberOfPhotos: 26,
 
-      collaborators: [
-        {
-          firstname: 'John',
-          lastname: 'Doe',
-          email: 'john@test.com',
-          role: 'owner',
-        },
-        {
-          firstname: 'Jane',
-          lastname: 'Smith',
-          email: 'jane@test.com',
-          role: 'editor',
-          invitationStatus: 'accepted'
-        },
-        {
-          firstname: 'Bob',
-          lastname: 'Johnson',
-          email: 'bob@test.com',
-          role: 'viewer',
-          invitationStatus: 'accepted'
-        }
-      ] 
-    },
-    {
-      id: "projet-6",
-      name: 'Projet 6',
-      address: '303 Rue de la Paix',
-      zipCode: '75002',
-      city: 'Paris',
-      thumbnailUrl: '',
-      numberOfPlans: 4,
-      numberOfPhotos: 26,
+  //     collaborators: [
+  //       {
+  //         firstname: 'John',
+  //         lastname: 'Doe',
+  //         email: 'john@test.com',
+  //         role: 'owner',
+  //       },
+  //       {
+  //         firstname: 'Jane',
+  //         lastname: 'Smith',
+  //         email: 'jane@test.com',
+  //         role: 'editor',
+  //         invitationStatus: 'accepted'
+  //       },
+  //       {
+  //         firstname: 'Bob',
+  //         lastname: 'Johnson',
+  //         email: 'bob@test.com',
+  //         role: 'viewer',
+  //         invitationStatus: 'accepted'
+  //       }
+  //     ] 
+  //   },
+  //   {
+  //     id: "projet-6",
+  //     name: 'Projet 6',
+  //     address: '303 Rue de la Paix',
+  //     zipcode: '75002',
+  //     city: 'Paris',
+  //     thumbnailUrl: '',
+  //     numberOfPlans: 4,
+  //     numberOfPhotos: 26,
 
-      collaborators: [
-        {
-          firstname: 'John',
-          lastname: 'Doe',
-          email: 'john@test.com',
-          role: 'owner',
-        },
-        {
-          firstname: 'Jane',
-          lastname: 'Smith',
-          email: 'jane@test.com',
-          role: 'editor',
-          invitationStatus: 'accepted'
-        },
-        {
-          firstname: 'Bob',
-          lastname: 'Johnson',
-          email: 'bob@test.com',
-          role: 'viewer',
-          invitationStatus: 'accepted'
-        }
-      ] 
-    },
-    {
-      id: "projet-7",
-      name: 'Projet 7',
-      address: '404 Rue de la Paix',
-      zipCode: '75003',
-      city: 'Paris',
-      thumbnailUrl: '',
-      numberOfPlans: 4,
-      numberOfPhotos: 26,
+  //     collaborators: [
+  //       {
+  //         firstname: 'John',
+  //         lastname: 'Doe',
+  //         email: 'john@test.com',
+  //         role: 'owner',
+  //       },
+  //       {
+  //         firstname: 'Jane',
+  //         lastname: 'Smith',
+  //         email: 'jane@test.com',
+  //         role: 'editor',
+  //         invitationStatus: 'accepted'
+  //       },
+  //       {
+  //         firstname: 'Bob',
+  //         lastname: 'Johnson',
+  //         email: 'bob@test.com',
+  //         role: 'viewer',
+  //         invitationStatus: 'accepted'
+  //       }
+  //     ] 
+  //   },
+  //   {
+  //     id: "projet-7",
+  //     name: 'Projet 7',
+  //     address: '404 Rue de la Paix',
+  //     zipcode: '75003',
+  //     city: 'Paris',
+  //     thumbnailUrl: '',
+  //     numberOfPlans: 4,
+  //     numberOfPhotos: 26,
 
-      collaborators: [
-        {
-          firstname: 'John',
-          lastname: 'Doe',
-          email: 'john@test.com',
-          role: 'owner',
-        }
-      ] 
-    },
-    {
-      id: "projet-8",
-      name: 'Projet 8',
-      address: '505 Rue de la Paix',
-      zipCode: '75004',
-      city: 'Paris',
-      thumbnailUrl: '',
-      numberOfPlans: 4,
-      numberOfPhotos: 26,
+  //     collaborators: [
+  //       {
+  //         firstname: 'John',
+  //         lastname: 'Doe',
+  //         email: 'john@test.com',
+  //         role: 'owner',
+  //       }
+  //     ] 
+  //   },
+  //   {
+  //     id: "projet-8",
+  //     name: 'Projet 8',
+  //     address: '505 Rue de la Paix',
+  //     zipcode: '75004',
+  //     city: 'Paris',
+  //     thumbnailUrl: '',
+  //     numberOfPlans: 4,
+  //     numberOfPhotos: 26,
 
-      collaborators: [
-        {
-          firstname: 'John',
-          lastname: 'Doe',
-          email: 'john@test.com',
-          role: 'owner',
-        }
-      ] 
-    },
-  ]
+  //     collaborators: [
+  //       {
+  //         firstname: 'John',
+  //         lastname: 'Doe',
+  //         email: 'john@test.com',
+  //         role: 'owner',
+  //       }
+  //     ] 
+  //   },
+  // ]
 
   const [isProjectFormOpen, setIsProjectFormOpen] = React.useState(false);
 
   const numberOfDisplayedProjects = 6; // à adapter selon le nombre de projets par page souhaité
-  const [paginationCount, setPaginationCount] = React.useState(Math.ceil(projects.length / numberOfDisplayedProjects)) // à adapter selon le nombre de projets par page souhaité
+  const [paginationCount, setPaginationCount] = React.useState(1) // à adapter selon le nombre de projets par page souhaité
   
   const [currentPage, setCurrentPage] = React.useState(1)
-  const [displayedProjects, setDisplayedProjects] = React.useState<ProjectType[]>(projects.slice((currentPage - 1) * numberOfDisplayedProjects, currentPage * numberOfDisplayedProjects));
+  const [displayedProjects, setDisplayedProjects] = React.useState<ProjectType[]>([]);
 
+
+  useEffect(() => {
+    async function fetchProjects(){
+      const response = await getProjects();
+      const allProjects = await response.json();
+      setDisplayedProjects(allProjects.slice((currentPage - 1) * numberOfDisplayedProjects, currentPage * numberOfDisplayedProjects));
+      setPaginationCount(Math.ceil(allProjects.length / numberOfDisplayedProjects));
+      console.log(allProjects);
+    }
+
+    fetchProjects();
+  }, []);
 
   function previousPage(){
     setCurrentPage(prev => Math.max(prev - 1, 1))
     if(currentPage > 1){
-      setDisplayedProjects(projects.slice((currentPage - 2) * numberOfDisplayedProjects, (currentPage - 1) * numberOfDisplayedProjects));
+      setDisplayedProjects(displayedProjects.slice((currentPage - 2) * numberOfDisplayedProjects, (currentPage - 1) * numberOfDisplayedProjects));
     }
   }
 
   function nextPage(){
     setCurrentPage(prev => Math.min(prev + 1, paginationCount))
     if(currentPage < paginationCount){
-      setDisplayedProjects(projects.slice(currentPage * numberOfDisplayedProjects, (currentPage + 1) * numberOfDisplayedProjects));
+      setDisplayedProjects(displayedProjects.slice(currentPage * numberOfDisplayedProjects, (currentPage + 1) * numberOfDisplayedProjects));
     }
   }
 
   function jumpToPage(page: number) {
     setCurrentPage(page);
-    setDisplayedProjects(projects.slice((page - 1) * numberOfDisplayedProjects, page * numberOfDisplayedProjects));
+    setDisplayedProjects(displayedProjects.slice((page - 1) * numberOfDisplayedProjects, page * numberOfDisplayedProjects));
   }
 
   function searchProject(query: string) {
     if(!query || query.trim() === '') {
-      setDisplayedProjects(projects.slice((currentPage - 1) * numberOfDisplayedProjects, currentPage * numberOfDisplayedProjects));
-      setPaginationCount(Math.ceil(projects.length / numberOfDisplayedProjects));
+      setDisplayedProjects(displayedProjects.slice((currentPage - 1) * numberOfDisplayedProjects, currentPage * numberOfDisplayedProjects));
+      setPaginationCount(Math.ceil(displayedProjects.length / numberOfDisplayedProjects));
       setCurrentPage(1);
       return;
     }
 
     setCurrentPage(1);
 
-    const foundProjects = projects.filter(project => 
-      project.name.toLowerCase().includes(query.toLowerCase()) ||
+    const foundProjects = displayedProjects.filter(project => 
+      project.title.toLowerCase().includes(query.toLowerCase()) ||
       project.address.toLowerCase().includes(query.toLowerCase()) ||
       project.city.toLowerCase().includes(query.toLowerCase())
     );

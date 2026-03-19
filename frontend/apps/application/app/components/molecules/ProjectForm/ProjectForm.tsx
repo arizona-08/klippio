@@ -5,6 +5,7 @@ import { CreateProjectDTO } from '@/proxy/projects/dto/create-project.dto'
 import { CTA } from '@repo/ui'
 import { useModifyProjectStore } from '@/stores/ModifyProjectStore'
 import { ProjectType } from '@/types/project'
+import { createProject, modifyProject } from '@/proxy/projects/project-functions'
 
 interface ProjectFormProps {
   closeForm: () => void;
@@ -16,7 +17,7 @@ function ProjectForm({ closeForm, edit, projectToEdit }: ProjectFormProps) {
   const [projectCredentials, setProjectCredentials] = React.useState<CreateProjectDTO>({
     title: '',
     address: '',
-    zipCode: '',
+    zipcode: '',
     city: '',
   });
 
@@ -24,7 +25,7 @@ function ProjectForm({ closeForm, edit, projectToEdit }: ProjectFormProps) {
     setProjectCredentials({
       title: '',
       address: '',
-      zipCode: '',
+      zipcode: '',
       city: '',
     });
   };
@@ -32,9 +33,9 @@ function ProjectForm({ closeForm, edit, projectToEdit }: ProjectFormProps) {
   React.useEffect(() => {
     if(edit && projectToEdit) {
       setProjectCredentials({
-        title: projectToEdit.name,
+        title: projectToEdit.title,
         address: projectToEdit.address,
-        zipCode: projectToEdit.zipCode,
+        zipcode: projectToEdit.zipcode,
         city: projectToEdit.city,
       });
     }
@@ -56,6 +57,27 @@ function ProjectForm({ closeForm, edit, projectToEdit }: ProjectFormProps) {
   //   document.addEventListener('mousedown', handleClickOutsideForm);
   //   return () => document.removeEventListener('mousedown', handleClickOutsideForm);
   // }, []);
+
+  async function handleSubmit(e?: React.MouseEvent<HTMLButtonElement, MouseEvent>){ 
+    e?.preventDefault();
+    const pickedFunction = edit ? modifyProject : createProject;
+
+    try{
+      const response = await pickedFunction(projectCredentials);
+
+      if(response.ok){
+        resetForm();
+        closeForm();
+        closeModifyForm();
+      } else {
+        // Handle error response, e.g., show an error message
+        console.error('Failed to submit project form');
+      }
+    } catch (error) {
+      console.error('Error occurred while submitting project form', error);
+    }
+
+  }
 
 
   return (
@@ -83,10 +105,10 @@ function ProjectForm({ closeForm, edit, projectToEdit }: ProjectFormProps) {
         <Input
           type='text' 
           label="Code postal"
-          name="zipCode"
+          name="zipcode"
           placeholder="75000"
-          value={projectCredentials.zipCode}
-          onChange={(e) => setProjectCredentials({...projectCredentials, zipCode: e.target.value})}
+          value={projectCredentials.zipcode}
+          onChange={(e) => setProjectCredentials({...projectCredentials, zipcode: e.target.value})}
         />
         <Input
           type='text' 
@@ -97,7 +119,7 @@ function ProjectForm({ closeForm, edit, projectToEdit }: ProjectFormProps) {
           onChange={(e) => setProjectCredentials({...projectCredentials, city: e.target.value})}
         />
 
-        <div className="form-actions flex items-center justify-between mt-6">
+        <div className="form-actions flex items-center justify-between mt-6 gap-4">
           <CTA
             type='button'
             color='secondary'
@@ -114,6 +136,7 @@ function ProjectForm({ closeForm, edit, projectToEdit }: ProjectFormProps) {
             type='button'
             color='primary'
             text={edit ? 'Modifier' : 'Créer'}
+            onClick={handleSubmit}
           />
         </div>
       </form>

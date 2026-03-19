@@ -6,6 +6,8 @@ import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { MailModule } from './mail/mail.module';
+import { AmazonS3Module } from './amazon/amazon-s3.module';
+import { ProjectModule } from './project/project.module';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { MailModule } from './mail/mail.module';
     AuthModule,
     UserModule,
     MailModule,
+    AmazonS3Module,
+    ProjectModule
   ],
   controllers: [AppController],
   providers: [AppService],

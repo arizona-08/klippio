@@ -4,10 +4,10 @@ import BurgerMenu from './BurgerMenu'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/app/Context/AuthContext/AuthUserProvider'
-import { logout } from '@/proxy/auth/logout'
 import Logo from '@repo/ui/src/atoms/Logo'
 import AppMenuLink from '../../atoms/AppMenuLink'
 import Image from 'next/image'
+import { logout } from '@/proxy/auth/auth-functions'
 
 function AppMenu() {
   const {user, setUser} = useUser();

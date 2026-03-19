@@ -1,12 +1,13 @@
 'use client';
 import { RegisterDTO } from '@/proxy/auth/dto/register.dto';
 import { RegisterErrors } from '@/proxy/auth/errors/register.error';
-import { register } from '@/proxy/auth/register';
+
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React from 'react'
 import Input from '../../atoms/Input';
 import { CTA } from '@repo/ui';
+import { register } from '@/proxy/auth/auth-functions';
 
 function RegisterForm() {
   const [registerCredentials, setRegisterCredentials] = React.useState<RegisterDTO>({
@@ -176,7 +177,7 @@ function RegisterForm() {
             type='button'
             color='secondary'
             text='Se connecter avec Google'
-            icon={{
+            iconImage={{
               src: '/logos/brand_logos/google.svg',
               alt: 'Google icon'
             }}
