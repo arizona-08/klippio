@@ -33,7 +33,7 @@ function LoginForm() {
 
     if(response.ok){
       setUser(result.user)
-      router.push('/')
+      router.push('/dashboard')
     } else {
       setErrorMessage(result.message);
     }
@@ -78,7 +78,7 @@ function LoginForm() {
             type='button'
             color='secondary'
             text='Se connecter avec Google'
-            icon={{
+            iconImage={{
               src: '/logos/brand_logos/google.svg',
               alt: 'Google icon'
             }}

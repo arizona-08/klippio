@@ -8,13 +8,17 @@ interface CTAProps {
   href?: string
   color: 'primary' | 'secondary' | 'gray' | 'danger'
   icon?: React.ReactNode
+  iconImage?: {
+    src: string,
+    alt: string
+  }
   iconReverse?: boolean
   onClick?: (e?: React.MouseEvent<HTMLButtonElement>) => void
   disabled?: boolean
 } 
 
-function CTA({ type, text, href, color, icon, iconReverse, onClick, disabled }: CTAProps) {
-  const baseClasses = `w-full block px-4 py-2 rounded ${icon ? 'flex items-center justify-center gap-2' : ''} ${iconReverse ? 'flex-row-reverse' : ''}`;
+function CTA({ type, text, href, color, icon, iconImage, iconReverse, onClick, disabled }: CTAProps) {
+  const baseClasses = `w-full block px-4 py-2 rounded ${icon || iconImage ? 'flex items-center justify-center gap-2' : ''} ${iconReverse ? 'flex-row-reverse' : ''}`;
   const colorClasses = {
     primary: `bg-primary text-white hover:bg-primary-hover transition-colors duration-150 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
     secondary: `border-1 border-primary text-primary hover:bg-primary hover:text-white transition-colors duration-150 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
@@ -27,6 +31,7 @@ function CTA({ type, text, href, color, icon, iconReverse, onClick, disabled }: 
       <button className={`${baseClasses} ${colorClasses[color]}`} onClick={onClick} disabled={disabled}>
         {text}
         {icon}
+        {iconImage && <Image src={iconImage.src} alt={iconImage.alt} width={20} height={20} />}
       </button>
     )
   }
@@ -36,6 +41,7 @@ function CTA({ type, text, href, color, icon, iconReverse, onClick, disabled }: 
       <Link href={href as string} className={`${baseClasses} ${colorClasses[color]}`} >
         {text}
         {icon}
+        {iconImage && <Image src={iconImage.src} alt={iconImage.alt} width={20} height={20} />}
       </Link>
     )
   }
