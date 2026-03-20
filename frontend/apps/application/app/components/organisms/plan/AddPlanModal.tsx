@@ -5,14 +5,16 @@ import { CTA } from '@repo/ui'
 import { Cross, Plus, X } from 'lucide-react'
 import { convertFileSizeInMo } from '@/utils/files'
 import { PlanType } from '@/types/project'
+import { uploadPlan } from '@/proxy/plan/plan-functions'
 
 interface AddPlanModalProps {
   isActive: boolean
+  projectId: string;
   onClose: () => void;
   handlePickFile: (plan: PlanType) => void;
 }
 
-function AddPlanModal({ isActive, onClose, handlePickFile }: AddPlanModalProps) {
+function AddPlanModal({ isActive, projectId, onClose, handlePickFile }: AddPlanModalProps) {
   const [plan, setPlan] = React.useState<PlanType | null>(null);
   
   const photoinputRef = React.useRef<HTMLInputElement | null>(null);
@@ -32,9 +34,22 @@ function AddPlanModal({ isActive, onClose, handlePickFile }: AddPlanModalProps) 
     setPlan(prevPlan => prevPlan ? { ...prevPlan, file } : { name: '', file });
   }
 
-  function onConfirm(){
+  async function onConfirm(){
     if(!plan) return;
     if(!plan.file) return;
+
+    const formData = new FormData();
+    formData.append('file', plan.file);
+    formData.append('name', plan.name);
+
+    const response = await uploadPlan(formData, projectId);
+    if(!response.ok){
+      console.error(response.json());
+      return;
+    } else {
+      const responseData = await response.json();
+      console.log(responseData);
+    }
 
     handlePickFile(plan);
     onClose();

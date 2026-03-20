@@ -60,9 +60,9 @@ model Plan {
   id          String   @id @default(uuid())
   name                String
   documentStoragKey  String   
-  projectIdentifier   String
+  projectId   String
 
-  project             Project  @relation(fields: [projectIdentifier], references: [id], onDelete: Cascade)
+  project             Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   markers             Marker[]
 }
 
@@ -74,16 +74,16 @@ model Marker {
   title               String
   comment             String?
   
-  planIdentifier      String
+  planId      String
 
   markerPhotos        MarkerPhoto[]
-  plan                Plan     @relation(fields: [planIdentifier], references: [id], onDelete: Cascade)
+  plan                Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
 }
 
 model MarkerPhoto {
   id          String   @id @default(uuid())
   photoStorageKey     String   
   
-  markerIdentifier    String
-  marker              Marker   @relation(fields: [markerIdentifier], references: [id], onDelete: Cascade)
+  markerId    String
+  marker              Marker   @relation(fields: [markerId], references: [id], onDelete: Cascade)
 }

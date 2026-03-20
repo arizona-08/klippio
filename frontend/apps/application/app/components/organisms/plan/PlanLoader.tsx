@@ -24,7 +24,11 @@ export type MarkerType = {
   photoUrl: string | ArrayBuffer | null
 }
 
-function PlanLoader() {
+interface PlanLoaderProps {
+  projectId: string;
+}
+
+function PlanLoader({ projectId }: PlanLoaderProps) {
 
   const [markers, setMarkers] = React.useState<MarkerType[]>([]);
   const currentClickCoords = React.useRef({x: 0, y: 0})
@@ -275,6 +279,7 @@ function PlanLoader() {
       />
 
       <AddPlanModal
+        projectId={projectId}
         isActive={isAddPlanModalActive}
         onClose={() => setIsAddPlanModalActive(false)}
         handlePickFile={uploadPlan}
