@@ -4,18 +4,18 @@ import Input from '../../atoms/Input'
 import { CTA } from '@repo/ui'
 import { Cross, Plus, X } from 'lucide-react'
 import { convertFileSizeInMo } from '@/utils/files'
-import { PlanType } from '@/types/project'
+import { PlanTypeDto } from '@/types/project'
 import { uploadPlan } from '@/proxy/plan/plan-functions'
 
 interface AddPlanModalProps {
   isActive: boolean
   projectId: string;
   onClose: () => void;
-  handlePickFile: (plan: PlanType) => void;
+  handleUploadPlan: (planId: string, planName: string, storageKey: string, temporaryAccessUrl: string, isPdfDocument: boolean) => void;
 }
 
-function AddPlanModal({ isActive, projectId, onClose, handlePickFile }: AddPlanModalProps) {
-  const [plan, setPlan] = React.useState<PlanType | null>(null);
+function AddPlanModal({ isActive, projectId, onClose, handleUploadPlan }: AddPlanModalProps) {
+  const [plan, setPlan] = React.useState<PlanTypeDto | null>(null);
   
   const photoinputRef = React.useRef<HTMLInputElement | null>(null);
 
@@ -47,12 +47,13 @@ function AddPlanModal({ isActive, projectId, onClose, handlePickFile }: AddPlanM
       console.error(response.json());
       return;
     } else {
-      const responseData = await response.json();
-      console.log(responseData);
+      const result = await response.json();
+      const uploadedPlan = result.uploadedPlan;
+      handleUploadPlan(uploadedPlan.id, uploadedPlan.name, uploadedPlan.documentStorageKey, uploadedPlan.temporaryAccessUrl, plan.file.type === 'application/pdf');
+      onClose();
     }
 
-    handlePickFile(plan);
-    onClose();
+   
   }
 
   return (

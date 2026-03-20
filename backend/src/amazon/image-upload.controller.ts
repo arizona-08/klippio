@@ -34,7 +34,7 @@ export class ImageUploadController {
 
     return {
       message: 'Fichier sauvegardé avec succès',
-      fileUrl: uploadedPlanInfo.documentStoragKey,
+      uploadedPlan: uploadedPlanInfo,
     };
   }
 }

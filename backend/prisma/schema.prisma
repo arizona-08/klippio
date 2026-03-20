@@ -59,7 +59,8 @@ model Project {
 model Plan {
   id          String   @id @default(uuid())
   name                String
-  documentStoragKey  String   
+  documentStorageKey  String   
+  temporaryAccessUrl  String?
   projectId   String
 
   project             Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)

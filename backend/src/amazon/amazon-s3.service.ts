@@ -1,4 +1,5 @@
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Injectable, InternalServerErrorException, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PicUpload } from "./types/pic-upload";
@@ -23,7 +24,7 @@ export class AmazonS3Service {
   /**
    * Envoie un fichier vers le bucket Amazon S3
    */
-  async uploadImage({ type, file, userId, projectId, markerId }: PicUpload): Promise<{fileUrl: string, generatedFileName: string}> {
+  async uploadImage({ type, file, userId, projectId, markerId }: PicUpload): Promise<{fileUrl: string, generatedFileName: string, temporaryAccessUrl: string}> {
     const bucketName = this.configurationService.getOrThrow<string>('AMAZON_S3_BUCKET_NAME');
     
     // Génération d'un nom unique pour éviter d'écraser des fichiers existants
@@ -60,17 +61,43 @@ export class AmazonS3Service {
     try {
       await this.amazonClient.send(uploadCommand);
       const regionName = await this.amazonClient.config.region();
+      const temporaryAccessUrl = await this.generatePresignedUrl(storageKey, 3600);
 
       const fileUrl = `https://${bucketName}.s3.${regionName}.amazonaws.com/${storageKey}`;
-      return { fileUrl, generatedFileName };
+      return { fileUrl, generatedFileName, temporaryAccessUrl };
     } catch (uploadError) {
       this.loggerInstance.error("Échec lors de l'envoi de l'image sur Amazon S3", uploadError);
       throw uploadError;
     }
   }
 
+  async generatePresignedUrl(storageKey: string, expirationInSeconds: number = 900): Promise<string> {
+    const bucketName = this.configurationService.getOrThrow<string>('AMAZON_S3_BUCKET_NAME');
+
+    // On prépare la commande de lecture
+    const getObjectCommand = new GetObjectCommand({
+      Bucket: bucketName,
+      Key: storageKey,
+    });
+
+    try {
+      // Le client Amazon va signer la requête avec tes clés secrètes
+      // Le paramètre expiresIn définit la durée de validité (ici 900 secondes = 15 minutes)
+      const temporaryAccessUrl = await getSignedUrl(
+        this.amazonClient, 
+        getObjectCommand, 
+        { expiresIn: expirationInSeconds }
+      );
+      
+      return temporaryAccessUrl;
+    } catch (signatureError) {
+      this.loggerInstance.error("Erreur lors de la génération de l'URL présignée", signatureError);
+      throw new InternalServerErrorException("Impossible de générer l'accès au fichier sécurisé");
+    }
+  }
+
   async  uploadPlan(name: string, projectId: string, userId: number, file: Express.Multer.File) {
-    const { fileUrl } = await this.uploadImage({
+    const { fileUrl, temporaryAccessUrl } = await this.uploadImage({
       type: "PLAN",
       file,
       userId,
@@ -82,12 +109,13 @@ export class AmazonS3Service {
       const insertedPlan = await this.prismaService.plan.create({
         data: {
           projectId,
-          documentStoragKey: fileUrl,
+          documentStorageKey: fileUrl,
+          temporaryAccessUrl,
           name,
         },
       });
 
-      return insertedPlan;
+      return {...insertedPlan, temporaryAccessUrl};
     } catch (error) {
       throw new InternalServerErrorException("Erreur lors de l'enregistrement du plan en base de données");
     }

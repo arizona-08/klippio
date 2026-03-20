@@ -3,13 +3,12 @@ import React from 'react'
 import PicModal from './PicModal'
 import { CTA } from '@repo/ui'
 import AddPlanModal from './AddPlanModal'
-import { PlanType } from '@/types/project'
-import { useAllPlansStore } from '@/stores/AllPlansStore'
 import VisualizerMenu, { SelectOption } from '../../molecules/VisualizerMenu/VisualizerMenu'
 import ProjectFolders from '../ProjectFolders/ProjectFolders'
 
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { Document, Page, pdfjs } from 'react-pdf';
+import { usePlanStore } from '@/stores/AllPlansStore'
 // Configuration obligatoire du worker pour react-pdf (compatible Next.js)
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 // import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
@@ -42,12 +41,10 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
   const [currentFileUrl, setCurrentFileUrl] = React.useState<string | null>(null);
   const [isPdf, setIsPdf] = React.useState<boolean>(false);
 
-  const addPlan = useAllPlansStore((state) => state.addPlan);
-  const plans = useAllPlansStore((state) => state.plans);
+  const setCurrentPlan = usePlanStore((state) => state.setCurrentPlan);
+  const currentPlan = usePlanStore((state) => state.currentPlan);
 
   const planUploadContainerRef = React.useRef<HTMLDivElement | null>(null);
-  const planUploadInputRef = React.useRef<HTMLInputElement | null>(null);
-  const planSectionRef = React.useRef<HTMLDivElement | null>(null);
   const planContainerRef = React.useRef<HTMLDivElement | null>(null)
   const photoInputRef = React.useRef<HTMLInputElement | null>(null);
 
@@ -57,22 +54,11 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
     setOption(option);
   }
 
-  function uploadPlan(plan: PlanType) {
-    addPlan(plan);
-    const file = plan.file;
+  function displayPlan(id: string, planName: string, storageKey: string, temporaryAccessUrl: string, isPdfDocument: boolean) {
     
-    // Vérifier si c'est un PDF
-    if (file.type === 'application/pdf') {
-      setIsPdf(true);
-      setCurrentFileUrl(URL.createObjectURL(file)); // Crée un lien local temporaire
-    } else {
-      setIsPdf(false);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target) setCurrentFileUrl(e.target.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+    setIsPdf(isPdfDocument);
+    setCurrentFileUrl(temporaryAccessUrl);
+    setCurrentPlan({ id, name: planName, storageKey: storageKey, temporaryAccessUrl, isPdfDocument: isPdfDocument });
 
     setMarkers([]);
     setNextMarkerId(1);
@@ -96,8 +82,6 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
   }
 
   function chooseMarkerPic(event: React.ChangeEvent<HTMLInputElement>){
-
-   
 
     const files = event.target.files
     if(!files) return
@@ -232,27 +216,6 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
             </>
           )}
         </TransformWrapper>
-
-        // <div id="plan-section" className="bg-white p-4 rounded-lg shadow-md hidden" ref={planSectionRef}>
-        //   <h2 className="text-lg font-medium mb-4">2. Cliquez sur le plan pour ajouter un repère photo</h2>
-        //   <div
-        //     id="plan-container"
-        //     className="border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 pb-[75%] bg-contain bg-center bg-no-repeat relative"
-        //     ref={planContainerRef}
-        //     onClick={handlePlanClick}
-        //   >
-        //     {markers.map((marker, index) => (
-        //       <div
-        //         key={index}
-        //         className="marker absolute w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-sm cursor-pointer border-2 border-white shadow-lg transform -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform"
-        //         style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
-        //         onClick={(e) => handleMarkerClick(e, marker)}
-        //       >
-        //         {marker.id}
-        //       </div>
-        //     ))}
-        //   </div>
-        // </div>
       )}
 
 
@@ -267,7 +230,7 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
         onChange={chooseMarkerPic}
       />
 
-      {plans && plans.length > 0 && <VisualizerMenu option={option} selectOption={selectOption}/>}
+      {currentPlan && <VisualizerMenu option={option} selectOption={selectOption}/>}
       
 
       <PicModal
@@ -282,7 +245,7 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
         projectId={projectId}
         isActive={isAddPlanModalActive}
         onClose={() => setIsAddPlanModalActive(false)}
-        handlePickFile={uploadPlan}
+        handleUploadPlan={displayPlan}
       />
 
       <ProjectFolders />

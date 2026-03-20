@@ -20,9 +20,17 @@ export type CollaboratorType = {
   invitationStatus?: 'pending' | 'accepted' | 'declined';
 }
 
-export type PlanType = {
+export type PlanTypeDto = {
   name: string;
   file: File;
+}
+
+export type CurrentPlanType = {
+  id: string;
+  name: string;
+  storageKey: string;
+  temporaryAccessUrl: string;
+  isPdfDocument: boolean;
 }
 
 export type FileType = {
