@@ -61,6 +61,7 @@ model Plan {
   name                String
   documentStorageKey  String   
   temporaryAccessUrl  String?
+  lastOpenedAt        DateTime @default(now())
   projectId   String
 
   project             Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)

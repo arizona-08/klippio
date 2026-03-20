@@ -23,7 +23,7 @@ export class AmazonS3Service {
   /**
    * Envoie un fichier vers le bucket Amazon S3
    */
-  async uploadImage({ type, file, userId, projectId, markerId }: PicUpload): Promise<{fileUrl: string, generatedFileName: string, temporaryAccessUrl: string}> {
+  async uploadImage({ type, file, userId, projectId, markerId }: PicUpload): Promise<{storageKey: string, generatedFileName: string, temporaryAccessUrl: string}> {
     const bucketName = this.configurationService.getOrThrow<string>('AMAZON_S3_BUCKET_NAME');
     
     // Génération d'un nom unique pour éviter d'écraser des fichiers existants
@@ -60,8 +60,8 @@ export class AmazonS3Service {
       const regionName = await this.amazonClient.config.region();
       const temporaryAccessUrl = await this.generatePresignedUrl(storageKey, 3600);
 
-      const fileUrl = `https://${bucketName}.s3.${regionName}.amazonaws.com/${storageKey}`;
-      return { fileUrl, generatedFileName, temporaryAccessUrl };
+      // const fileUrl = `https://${bucketName}.s3.${regionName}.amazonaws.com/${storageKey}`;
+      return { storageKey, generatedFileName, temporaryAccessUrl };
     } catch (uploadError) {
       this.loggerInstance.error("Échec lors de l'envoi de l'image sur Amazon S3", uploadError);
       throw uploadError;

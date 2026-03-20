@@ -1,5 +1,5 @@
 'use client'
-import React from 'react'
+import React, { useEffect } from 'react'
 import PicModal from './PicModal'
 import { CTA } from '@repo/ui'
 import AddPlanModal from './AddPlanModal'
@@ -9,6 +9,7 @@ import ProjectFolders from '../ProjectFolders/ProjectFolders'
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { Document, Page, pdfjs } from 'react-pdf';
 import { usePlanStore } from '@/stores/AllPlansStore'
+import { getLastOpenedPlan } from '@/proxy/plan/plan-functions'
 // Configuration obligatoire du worker pour react-pdf (compatible Next.js)
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 // import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
@@ -65,7 +66,7 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
   }
 
   function handlePlanClick(event: React.MouseEvent) {
-     if(option !== 'pin') return;
+    if(option !== 'pin') return;
     // Empêcher le clic de se déclencher si on est en train de "glisser/panner" le plan
     // ou si on clique sur un marqueur
     if (event.currentTarget.classList.contains('marker')) return;
@@ -148,6 +149,27 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
     setModalCurrentMarker(undefined);
   }
 
+  useEffect(() => {
+    async function fetchLastOpenedPlan() {
+      if(!currentFileUrl){
+        const response = await getLastOpenedPlan(projectId);
+        if(response.ok){
+          const result = await response.json();
+          const lastPlan = result.lastPlan;
+          if(lastPlan) {
+            const isActuallyPdf = lastPlan.documentStorageKey.toLowerCase().endsWith('.pdf');
+            displayPlan(lastPlan.id, lastPlan.name, lastPlan.documentStorageKey, lastPlan.temporaryAccessUrl, isActuallyPdf);
+          }
+        } else {
+          console.error("Erreur lors de la récupération du dernier plan ouvert :", response.statusText);
+        }
+      }
+    }
+
+    fetchLastOpenedPlan();
+  }, [currentFileUrl])
+
+  console.log(currentFileUrl);
   return (
     <div className="relative w-full h-[calc(100vh-88px)] bg-gray-100 overflow-hidden flex flex-col">
       

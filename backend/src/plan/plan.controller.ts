@@ -1,4 +1,4 @@
-import { Controller, Post, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator, Req, Param, UseGuards, Body } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator, Req, Param, UseGuards, Body, Get } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import type { User } from 'src/user/interfaces/user.interface';
@@ -36,5 +36,17 @@ export class PlanController {
       message: 'Fichier sauvegardé avec succès',
       uploadedPlan: uploadedPlanInfo,
     };
+  }
+
+  @Get(':planId')
+  async getPlan(@Param('planId') planId: string) {
+    return await this.planService.getPlan(planId);
+  }
+
+  @Get('last-opened/:projectId')
+  async getLastOpenedPlan(@Param('projectId') projectId: string) {
+    const lastPlan = await this.planService.getLastOpenedPlan(projectId);
+
+    return {lastPlan};
   }
 }
