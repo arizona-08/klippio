@@ -1,9 +1,10 @@
 'use client';
 import { ForgotPasswordDTO } from '@/proxy/auth/dto/forgot-password.dto'
-import { forgotPassword } from '@/proxy/auth/forgot-password';
+
 import React from 'react'
 import Input from '../../atoms/Input';
 import { CTA } from '@repo/ui';
+import { forgotPassword } from '@/proxy/auth/auth-functions';
 
 function ForgotPasswordForm() {
   const [forgotPasswordCredentials, setForgotPasswordCredentials] = React.useState<ForgotPasswordDTO>({

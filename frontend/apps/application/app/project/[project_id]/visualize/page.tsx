@@ -11,11 +11,11 @@ async function VisualizePage({ params } : { params: Promise<{ project_id: string
   return (
     <div className="flex flex-col h-screen lg:flex-row">
       <AppMenu />
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto flex flex-col">
         <TopBar />
 
-        <div className="p-4">
-          <PlanLoader/>
+        <div className="relative p-4 flex-1">
+          <PlanLoader projectId={project_id} />
         </div>
       </div>
     </div>

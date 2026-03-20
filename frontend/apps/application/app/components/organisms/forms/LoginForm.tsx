@@ -1,12 +1,12 @@
 'use client';
 import { LoginDTO } from '@/proxy/auth/dto/login.dto';
-import { login } from '@/proxy/auth/login';
 import Link from 'next/link'
 import { useRouter } from 'next/navigation';
 import React from 'react'
 import { useUser } from '../../../Context/AuthContext/AuthUserProvider';
 import Input from '../../atoms/Input';
 import { CTA } from '@repo/ui';
+import { login } from '@/proxy/auth/auth-functions';
 
 function LoginForm() {
 
@@ -33,7 +33,7 @@ function LoginForm() {
 
     if(response.ok){
       setUser(result.user)
-      router.push('/')
+      router.push('/dashboard')
     } else {
       setErrorMessage(result.message);
     }
@@ -78,7 +78,7 @@ function LoginForm() {
             type='button'
             color='secondary'
             text='Se connecter avec Google'
-            icon={{
+            iconImage={{
               src: '/logos/brand_logos/google.svg',
               alt: 'Google icon'
             }}

@@ -8,6 +8,8 @@ import { useModifyProjectStore } from '@/stores/ModifyProjectStore';
 import { ProjectType } from '@/types/project';
 import ShareProjectForm from '../../molecules/ShareProjectForm/ShareProjectForm';
 import { useShareProjectModalStore } from '@/stores/ShareProjectModalStore';
+import AddPlanModal from '../plan/AddPlanModal';
+import { useAddPlanModalStore } from '@/stores/AddPlanModalStore';
 
 function ModalOverlay() {
   const isOverlayVisible = useOverlayStore((state) => state.isOverlayOpen);
@@ -18,6 +20,7 @@ function ModalOverlay() {
   const projectToModify = useModifyProjectStore((state) => state.projectToModify) as ProjectType | undefined;
 
   const isShareProjectModalVisible = useShareProjectModalStore((state) => state.isShareProjectModalOpen);
+  const isAddPlanModalVisible = useAddPlanModalStore((state) => state.isAddPlanModalOpen);
 
   return (
     <>
@@ -31,6 +34,10 @@ function ModalOverlay() {
       <div className={`w-full max-w-125 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 ${isShareProjectModalVisible ? 'block' : 'hidden'}`}>
         <ShareProjectForm closeForm={() => useShareProjectModalStore.getState().closeShareProjectModal()}/>
       </div>
+
+      {/* <div className={`w-full max-w-md m-2 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 ${isAddPlanModalVisible ? 'block' : 'hidden'}`}>
+        <AddPlanModal />
+      </div> */}
     </>
   )
 }

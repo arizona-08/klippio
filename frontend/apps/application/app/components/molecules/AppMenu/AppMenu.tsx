@@ -4,10 +4,10 @@ import BurgerMenu from './BurgerMenu'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/app/Context/AuthContext/AuthUserProvider'
-import { logout } from '@/proxy/auth/logout'
 import Logo from '@repo/ui/src/atoms/Logo'
 import AppMenuLink from '../../atoms/AppMenuLink'
 import Image from 'next/image'
+import { logout } from '@/proxy/auth/auth-functions'
 
 function AppMenu() {
   const {user, setUser} = useUser();
@@ -15,17 +15,17 @@ function AppMenu() {
   const appMenuLinks = [
     {
       label: 'Mes Projets',
-      href: '/dashbord/plans',
+      href: '/dashboard/plans',
       iconSrc: "/icons/book_green.svg"
     },
     {
       label: 'Mes Archives',
-      href: '/dashbord/plans',
+      href: '/dashboard/plans',
       iconSrc: "/icons/archive_green.svg"
     },
     {
       label: 'Mon Équipe',
-      href: '/dashbord/plans',
+      href: '/dashboard/plans',
       iconSrc: "/icons/users_green.svg"
     }
   ]
@@ -48,10 +48,10 @@ function AppMenu() {
 
     if(response.ok){
       setUser(undefined);
-      router.push('/');
+      router.push('/auth/login');
     }
   }
-  
+
   return (
     <div className=''>
       {/* Mobile menu */}

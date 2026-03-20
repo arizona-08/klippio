@@ -26,6 +26,8 @@ model User {
   role                        Role      @default(STANDARD)
   createdAt                   DateTime  @default(now())
   updatedAt                   DateTime  @default(now())
+
+  projects                   Project[]
 }
 
 
@@ -40,4 +42,50 @@ model Session {
   sid       String   @unique
   data      String   
   expiresAt   DateTime
+}
+
+model Project {
+  id                  String   @id @default(uuid())
+  authorId            Int
+  title               String
+  address             String
+  zipcode             String
+  city                String
+  
+  author              User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  plans               Plan[]
+}
+
+model Plan {
+  id          String   @id @default(uuid())
+  name                String
+  documentStorageKey  String   
+  temporaryAccessUrl  String?
+  lastOpenedAt        DateTime @default(now())
+  projectId   String
+
+  project             Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  markers             Marker[]
+}
+
+model Marker {
+  id          String   @id @default(uuid())
+  coordX Float   
+  coordY   Float   
+  
+  title               String
+  comment             String?
+  
+  planId      String
+
+  markerPhotos        MarkerPhoto[]
+  plan                Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+}
+
+model MarkerPhoto {
+  id          String   @id @default(uuid())
+  photoStorageKey     String   
+  
+  markerId    String
+  marker              Marker   @relation(fields: [markerId], references: [id], onDelete: Cascade)
 }

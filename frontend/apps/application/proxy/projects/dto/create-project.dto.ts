@@ -1,6 +1,6 @@
 export interface CreateProjectDTO {
   title: string;
   address: string;
-  zipCode: string;
+  zipcode: string;
   city: string;
 }
