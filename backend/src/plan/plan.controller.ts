@@ -1,14 +1,14 @@
 import { Controller, Post, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator, Req, Param, UseGuards, Body } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { AmazonS3Service } from './amazon-s3.service';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import type { User } from 'src/user/interfaces/user.interface';
 import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
+import { PlanService } from './plan.service';
 
 @UseGuards(AuthenticatedGuard) // Assure que seul un utilisateur connecté peut accéder à ce contrôleur
-@Controller('/api/images')
-export class ImageUploadController {
-  constructor(private readonly amazonS3Service: AmazonS3Service) {}
+@Controller('/api/plans')
+export class PlanController {
+  constructor(private readonly planService: PlanService) {}
 
   @Post('upload-plan/:projectId')
   @UseInterceptors(FileInterceptor('file')) // 'imageFile' est le nom du champ dans le FormData côté Next.js
@@ -30,7 +30,7 @@ export class ImageUploadController {
     
     const userId = user.id;
     const fileName = body.name;
-    const uploadedPlanInfo = await this.amazonS3Service.uploadPlan(fileName, projectId, userId, file);
+    const uploadedPlanInfo = await this.planService.uploadPlan(fileName, projectId, userId, file);
 
     return {
       message: 'Fichier sauvegardé avec succès',

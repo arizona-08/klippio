@@ -1,7 +1,7 @@
 import { getApi } from "../api";
 
 export async function uploadPlan(formData: FormData, projectId: string) {
-  const response = await getApi(`/api/images/upload-plan/${projectId}`, {
+  const response = await getApi(`/api/plans/upload-plan/${projectId}`, {
     method: "POST",
     body: formData,
   });

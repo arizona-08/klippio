@@ -3,14 +3,13 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Injectable, InternalServerErrorException, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PicUpload } from "./types/pic-upload";
-import { PrismaService } from "src/prisma/prisma.service";
 
 @Injectable()
 export class AmazonS3Service {
   private readonly amazonClient: S3Client;
   private readonly loggerInstance = new Logger(AmazonS3Service.name);
 
-  constructor(private readonly configurationService: ConfigService, private readonly prismaService: PrismaService) {
+  constructor(private readonly configurationService: ConfigService) {
     // Initialisation du client Amazon avec les identifiants sécurisés
     this.amazonClient = new S3Client({
       region: this.configurationService.getOrThrow<string>('AMAZON_S3_REGION'),
@@ -32,9 +31,7 @@ export class AmazonS3Service {
     const fileExtension = file.originalname.split('.').pop();
     const generatedFileName = `${uniqueTimestamp}-${file.originalname.replace(/[^a-zA-Z0-9.]/g, '-').toLowerCase()}`;
 
-    
-
-    
+  
     let storageKey = `client-${userId}`;
 
     if(type === "PLAN") {
@@ -93,31 +90,6 @@ export class AmazonS3Service {
     } catch (signatureError) {
       this.loggerInstance.error("Erreur lors de la génération de l'URL présignée", signatureError);
       throw new InternalServerErrorException("Impossible de générer l'accès au fichier sécurisé");
-    }
-  }
-
-  async  uploadPlan(name: string, projectId: string, userId: number, file: Express.Multer.File) {
-    const { fileUrl, temporaryAccessUrl } = await this.uploadImage({
-      type: "PLAN",
-      file,
-      userId,
-      projectId,
-    });
-
-
-    try {
-      const insertedPlan = await this.prismaService.plan.create({
-        data: {
-          projectId,
-          documentStorageKey: fileUrl,
-          temporaryAccessUrl,
-          name,
-        },
-      });
-
-      return {...insertedPlan, temporaryAccessUrl};
-    } catch (error) {
-      throw new InternalServerErrorException("Erreur lors de l'enregistrement du plan en base de données");
     }
   }
 }
