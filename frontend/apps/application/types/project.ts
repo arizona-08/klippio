@@ -49,3 +49,17 @@ export type FolderType = {
   lastModified: Date;
   children?: Array<FolderType | FileType>;
 }
+
+export type MarkerType = {
+  id: number,
+  x: number,
+  y: number,
+  title: string,
+  photos: MarkerPhotoType[]
+}
+
+export type MarkerPhotoType = {
+  label: string
+  comment: string
+  photoUrl: string | ArrayBuffer | null
+}

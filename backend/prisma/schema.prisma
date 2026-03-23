@@ -70,11 +70,9 @@ model Plan {
 
 model Marker {
   id          String   @id @default(uuid())
-  coordX Float   
-  coordY   Float   
-  
-  title               String
-  comment             String?
+  coordX      Float   
+  coordY      Float   
+  title       String
   
   planId      String
 
@@ -84,8 +82,10 @@ model Marker {
 
 model MarkerPhoto {
   id          String   @id @default(uuid())
-  photoStorageKey     String   
+  photoStorageKey     String
+  photoLabel          String
+  comment             String? 
   
-  markerId    String
+  markerId            String
   marker              Marker   @relation(fields: [markerId], references: [id], onDelete: Cascade)
 }

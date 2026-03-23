@@ -17,16 +17,16 @@ function VisualizerMenu({ option, selectOption }: VisualizerMenuProps) {
   return (
     <div className={`w-12 rounded-full bg-gray-200 px-2 py-4 flex flex-col items-center justify-center cursor-pointer fixed bottom-12 right-5 z-50 ${isMenuOpen ? 'h-55' : 'h-12'} transition-all duration-150 overflow-hidden`}>
       <div className={`w-full elements flex flex-col items-center gap-2 h-50 ${isMenuOpen ? 'opacity-100 flex-1' : 'opacity-0 hidden'} transition-all duration-150`}>
-        <div className={`hover:bg-gray-300 p-1 rounded-full ${option === 'hand' ? 'bg-gray-300' : ''}`} onClick={() => selectOption('hand')}>
+        <div className={`hover:bg-gray-300 p-1 rounded-full ${option === 'hand' ? 'bg-gray-300' : ''}`} onClick={() => selectOption('hand')} title='Main libre'>
           <Hand />
         </div>
-        <div className={`hover:bg-gray-300 p-1 rounded-full ${option === 'pin' ? 'bg-gray-300' : ''}`} onClick={() => selectOption('pin')}>
+        <div className={`hover:bg-gray-300 p-1 rounded-full ${option === 'pin' ? 'bg-gray-300' : ''}`} onClick={() => selectOption('pin')} title='Ajouter un marqueur'>
           <MapPin />
         </div>
-        <div className={`hover:bg-gray-300 p-1 rounded-full ${option === 'filter' ? 'bg-gray-300' : ''}`} onClick={() => selectOption('filter')}>
+        <div className={`hover:bg-gray-300 p-1 rounded-full ${option === 'filter' ? 'bg-gray-300' : ''}`} onClick={() => selectOption('filter')} title='Filtrer les marqueurs'>
           <ListFilter />
         </div>
-        <div className={`hover:bg-gray-300 p-1 rounded-full ${option === 'add' ? 'bg-gray-300' : ''}`} onClick={() => selectOption('add')}>
+        <div className={`hover:bg-gray-300 p-1 rounded-full ${option === 'add' ? 'bg-gray-300' : ''}`} onClick={() => selectOption('add')} title='Ajouter un plan'>
           <DiamondPlus />
         </div>
       </div>

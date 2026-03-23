@@ -10,19 +10,11 @@ import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { Document, Page, pdfjs } from 'react-pdf';
 import { usePlanStore } from '@/stores/AllPlansStore'
 import { getLastOpenedPlan } from '@/proxy/plan/plan-functions'
+import { MarkerPhotoType, MarkerType } from '@/types/project'
 // Configuration obligatoire du worker pour react-pdf (compatible Next.js)
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 // import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 // import 'react-pdf/dist/esm/Page/TextLayer.css';
-
-export type MarkerType = {
-  id: number,
-  x: number,
-  y: number,
-  title: string,
-  comment: string
-  photoUrl: string | ArrayBuffer | null
-}
 
 interface PlanLoaderProps {
   projectId: string;
@@ -35,6 +27,8 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
   const [nextMarkerId, setNextMarkerId] = React.useState<number>(1);
   const [isModalActive, setIsModalActive] = React.useState<boolean>(false)
   const [modalCurrentMarker, setModalCurrentMarker] = React.useState<MarkerType | undefined>(undefined)
+  const [selectedMarkerIndex, setSelectedMarkerIndex] = React.useState<number | null>(null);
+  const derivedCurrentMarker = selectedMarkerIndex !== null ? markers[selectedMarkerIndex] : undefined;
   const [isAddPlanModalActive, setIsAddPlanModalActive] = React.useState<boolean>(false);
 
 
@@ -99,18 +93,22 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
               x: currentClickCoords.current.x,
               y: currentClickCoords.current.y,
               title: '',
-              comment: '',
-              photoUrl: e.target.result
+              photos: [
+                {
+                  label: '',
+                  comment: '',
+                  photoUrl: e.target.result as string
+                }
+              ]
           };
 
           setMarkers([...markers, newMarker]);
 
           //permettre d'ajouter un titre et des commentaires dès l'ajout du marqueur
           setIsModalActive(true);
-          setModalCurrentMarker(newMarker)
+          setSelectedMarkerIndex(markers.length); // Le nouvel index du marqueur ajouté
 
           setNextMarkerId(prevId => prevId + 1);
-          console.log(nextMarkerId)
         };
         reader.readAsDataURL(file);
 
@@ -122,31 +120,50 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
 
   function handleMarkerClick(event: React.MouseEvent, marker: MarkerType) {
     event.stopPropagation();
-    setModalCurrentMarker(marker)
     setIsModalActive(true);
+    setSelectedMarkerIndex(markers.findIndex(m => m.id === marker.id));
   }
 
   function handleCloseModal(){
     setIsModalActive(false)
   }
 
-  function handleSetText(e: React.ChangeEvent, marker: MarkerType){
-    const { name, value } = e.target as HTMLInputElement;
+  function handleSetTitle(e: React.ChangeEvent<HTMLInputElement>, marker: MarkerType){
+    const { value } = e.target as HTMLInputElement;
 
-    const updatedMarker  = { ...marker, [name === 'pic-title' ? 'title' : 'comment']: value };
+    const updatedMarker  = { ...marker, title: value };
     setMarkers(prevMarkers => 
       prevMarkers.map(markerItem => 
         markerItem.id === marker.id ? { ...updatedMarker } : markerItem
       )
     );
+  }
 
-    setModalCurrentMarker(updatedMarker); 
+  function handleSetPhotoText(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, markerPhoto: MarkerPhotoType, markerPhotoIndex: number){
+    const { name, value } = e.target as HTMLInputElement | HTMLTextAreaElement;
+
+    const updatedPhoto: MarkerPhotoType = { ...markerPhoto, [name === 'pic-label' ? 'label' : 'comment']: value };
+    
+
+    setMarkers(prevMarkers => 
+      prevMarkers.map((markerItem, index) => {
+        if (index === selectedMarkerIndex) {
+          return {
+            ...markerItem,
+            photos: markerItem.photos.map((photo, photoIndex) => 
+              photoIndex === markerPhotoIndex ? { ...updatedPhoto } : photo
+            )
+          };
+        }
+        return markerItem;
+      })
+    );
   }
 
   function handleDeleteMarker(marker: MarkerType){
     setMarkers(prevMarkers => prevMarkers.filter(m => m.id !== marker.id));
     setIsModalActive(false);
-    setModalCurrentMarker(undefined);
+    setSelectedMarkerIndex(null);
   }
 
   useEffect(() => {
@@ -169,7 +186,6 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
     fetchLastOpenedPlan();
   }, [currentFileUrl])
 
-  console.log(currentFileUrl);
   return (
     <div className="relative w-full h-[calc(100vh-88px)] bg-gray-100 overflow-hidden flex flex-col">
       
@@ -257,8 +273,9 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
 
       <PicModal
         isActive={isModalActive}
-        marker={modalCurrentMarker}
-        handleSetText={handleSetText}
+        marker={derivedCurrentMarker}
+        handleSetTitle={handleSetTitle}
+        handleSetPhotoText={handleSetPhotoText}
         handleDeleteMarker={handleDeleteMarker}
         handleClose={handleCloseModal}
       />

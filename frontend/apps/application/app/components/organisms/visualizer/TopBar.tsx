@@ -1,6 +1,7 @@
 
 'use client';
 import { usePlanStore } from '@/stores/AllPlansStore';
+import { useCurrentProjectStore } from '@/stores/CurrentProjectStore';
 import { useProjectNodeStore } from '@/stores/ProjectNodesStore';
 import { ArrowLeft, ChevronDown } from 'lucide-react'
 import Link from 'next/link'
@@ -10,12 +11,14 @@ function TopBar() {
   const currentPlan = usePlanStore((state) => state.currentPlan);
   const openFolders = useProjectNodeStore((state) => state.open);
 
+  const currentProject = useCurrentProjectStore((state) => state.currentProject);
+
   return (
     <div className="bg-gray-100 text-black p-4 flex items-center justify-between">
       <Link href={"/dashboard"}>
         <div className="flex items-center gap-4">
           <ArrowLeft />
-          <h3>Titre du projet</h3>
+          <h3>{currentProject ? currentProject.title : 'Titre du projet'}</h3>
         </div>
       </Link>
       <div className="flex items-center gap-2 cursor-pointer" onClick={openFolders}>
