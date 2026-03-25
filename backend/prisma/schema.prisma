@@ -84,7 +84,8 @@ model MarkerPhoto {
   id          String   @id @default(uuid())
   photoStorageKey     String
   photoLabel          String
-  comment             String? 
+  comment             String?
+  temporaryAccessUrl  String?
   
   markerId            String
   marker              Marker   @relation(fields: [markerId], references: [id], onDelete: Cascade)

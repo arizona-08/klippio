@@ -8,7 +8,7 @@ interface VisualizerMenuProps {
 }
 
 function VisualizerMenu({ option, selectOption }: VisualizerMenuProps) {
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const [isMenuOpen, setIsMenuOpen] = React.useState(true);
 
   function toggleMenu() {
     setIsMenuOpen(prev => !prev);

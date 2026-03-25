@@ -1,9 +1,10 @@
-import { Controller, Post, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator, Req, Param, UseGuards, Body, Get } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { Controller, Post, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator, Req, Param, UseGuards, Body, Get, UploadedFiles } from '@nestjs/common';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import type { User } from 'src/user/interfaces/user.interface';
 import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
 import { PlanService } from './plan.service';
+import { CreateMarkerDto } from './dtos/markers/create-marker.dto';
 
 @UseGuards(AuthenticatedGuard) // Assure que seul un utilisateur connecté peut accéder à ce contrôleur
 @Controller('/api/plans')
@@ -11,7 +12,7 @@ export class PlanController {
   constructor(private readonly planService: PlanService) {}
 
   @Post('upload-plan/:projectId')
-  @UseInterceptors(FileInterceptor('file')) // 'imageFile' est le nom du champ dans le FormData côté Next.js
+  @UseInterceptors(FileInterceptor('file')) // 'file' est le nom du champ dans le FormData côté Next.js
   async uploadPlan(
     @UploadedFile(
       // Sécurité : On valide le type et la taille du fichier avant de l'envoyer à Amazon
@@ -48,5 +49,27 @@ export class PlanController {
     const lastPlan = await this.planService.getLastOpenedPlan(projectId);
 
     return {lastPlan};
+  }
+
+  @Post(':projectId/:planId/marker')
+  @UseInterceptors(FilesInterceptor('photos'))
+  async addMarker(
+    @UploadedFiles() files: Express.Multer.File[],
+    @Param('projectId') projectId: string,
+    @Param('planId') planId: string,
+    @Body('markerData') stringifiedMarkerData: string,
+    @CurrentUser() user: User,
+  ) {
+    const userId = user.id;
+
+    const parsedMarkerData: CreateMarkerDto = JSON.parse(stringifiedMarkerData);
+    const result = await this.planService.addMarker(
+      userId,
+      projectId,
+      planId,
+      parsedMarkerData,
+      files
+    );
+    return result;
   }
 }

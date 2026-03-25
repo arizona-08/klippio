@@ -41,3 +41,16 @@ export async function deletePlan(planId: string) {
 
   return response;
 }
+
+
+
+//-----MARKERS-----
+
+export async function addMarker(formData: FormData, projectId: string, planId: string) {
+  const response = await getApi(`/api/plans/${projectId}/${planId}/marker`, {
+    method: "POST",
+    body: formData,
+  });
+
+  return response;
+}

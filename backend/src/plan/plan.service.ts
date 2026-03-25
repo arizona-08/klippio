@@ -1,6 +1,7 @@
 import { Injectable, InternalServerErrorException } from "@nestjs/common";
 import { AmazonS3Service } from "src/amazon/amazon-s3.service";
 import { PrismaService } from "src/prisma/prisma.service";
+import { CreateMarkerDto } from "./dtos/markers/create-marker.dto";
 
 @Injectable()
 export class PlanService {
@@ -74,4 +75,63 @@ export class PlanService {
       temporaryAccessUrl: newTemporaryAccessUrl,
     };
    }
+
+
+  //  --------------------------MARKERS------------------------------
+
+  async addMarker(
+    userId: number,
+    projectId: string,
+    planId: string,
+    markerData: CreateMarkerDto,
+    files: Express.Multer.File[]
+  ) {
+    try{
+      const insertedMarker = await this.prismaService.marker.create({
+        data: {
+          title: markerData.title,
+          coordX: markerData.x,
+          coordY: markerData.y,
+          planId,
+        }
+      });
+
+      const markerPhotosData = await Promise.all(markerData.photosMetaData.map(async (photoMetaData, index) => {
+        const file = files[index];
+        const { storageKey, temporaryAccessUrl } = await this.amazonS3Service.uploadImage({
+          type: "MARKER_PICTURE",
+          file,
+          userId, 
+          projectId,
+          markerId: insertedMarker.id,
+        });
+
+        return {
+          label: photoMetaData.label,
+          comment: photoMetaData.comment,
+          storageKey,
+          temporaryAccessUrl,
+        };
+      }));
+
+      await this.prismaService.markerPhoto.createMany({
+        data: markerPhotosData.map(photo => ({
+          photoLabel: photo.label,
+          comment: photo.comment,
+          photoStorageKey: photo.storageKey,
+          temporaryAccessUrl: photo.temporaryAccessUrl,
+          markerId: insertedMarker.id,
+        }))
+      });
+
+      return { 
+        ...insertedMarker,
+        x: insertedMarker.coordX,
+        y: insertedMarker.coordY,
+        photos: markerPhotosData
+      };
+    } catch (error) {
+      throw new InternalServerErrorException("Error when adding marker and its photos : " + error.message);
+    }
+  }
 }

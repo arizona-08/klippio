@@ -9,7 +9,7 @@ import ProjectFolders from '../ProjectFolders/ProjectFolders'
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { Document, Page, pdfjs } from 'react-pdf';
 import { usePlanStore } from '@/stores/AllPlansStore'
-import { getLastOpenedPlan } from '@/proxy/plan/plan-functions'
+import { addMarker, getLastOpenedPlan } from '@/proxy/plan/plan-functions'
 import { MarkerPhotoType, MarkerType } from '@/types/project'
 // Configuration obligatoire du worker pour react-pdf (compatible Next.js)
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -21,14 +21,10 @@ interface PlanLoaderProps {
 }
 
 function PlanLoader({ projectId }: PlanLoaderProps) {
-
   const [markers, setMarkers] = React.useState<MarkerType[]>([]);
   const currentClickCoords = React.useRef({x: 0, y: 0})
-  const [nextMarkerId, setNextMarkerId] = React.useState<number>(1);
   const [isModalActive, setIsModalActive] = React.useState<boolean>(false)
-  const [modalCurrentMarker, setModalCurrentMarker] = React.useState<MarkerType | undefined>(undefined)
-  const [selectedMarkerIndex, setSelectedMarkerIndex] = React.useState<number | null>(null);
-  const derivedCurrentMarker = selectedMarkerIndex !== null ? markers[selectedMarkerIndex] : undefined;
+  const [temporaryModalMarker, setTemporaryModalMarker] = React.useState<MarkerType | undefined>(undefined)
   const [isAddPlanModalActive, setIsAddPlanModalActive] = React.useState<boolean>(false);
 
 
@@ -56,7 +52,6 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
     setCurrentPlan({ id, name: planName, storageKey: storageKey, temporaryAccessUrl, isPdfDocument: isPdfDocument });
 
     setMarkers([]);
-    setNextMarkerId(1);
   }
 
   function handlePlanClick(event: React.MouseEvent) {
@@ -89,7 +84,6 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
           if(!e.target) return;
 
           const newMarker: MarkerType = {
-              id: nextMarkerId,
               x: currentClickCoords.current.x,
               y: currentClickCoords.current.y,
               title: '',
@@ -97,18 +91,16 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
                 {
                   label: '',
                   comment: '',
-                  photoUrl: e.target.result as string
+                  previewUrl: e.target.result as string,
+                  physicalFile: file
                 }
               ]
           };
 
-          setMarkers([...markers, newMarker]);
-
           //permettre d'ajouter un titre et des commentaires dès l'ajout du marqueur
           setIsModalActive(true);
-          setSelectedMarkerIndex(markers.length); // Le nouvel index du marqueur ajouté
+          setTemporaryModalMarker(newMarker);
 
-          setNextMarkerId(prevId => prevId + 1);
         };
         reader.readAsDataURL(file);
 
@@ -118,52 +110,85 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
     }
   }
 
+  async function handleAddMarker(marker: MarkerType){
+    // Call API pour sauvegarder le marqueur dans la BDD et récupérer son ID généré
+
+    const markerFormData = new FormData();
+
+    const markertoRegister = {
+      title: marker.title,
+      x: marker.x,
+      y: marker.y,
+      photosMetaData: marker.photos.map(photo => ({
+        label: photo.label,
+        comment: photo.comment,
+      })),
+    }
+
+    markerFormData.append('markerData', JSON.stringify(markertoRegister));
+
+    marker.photos.forEach((photo) => {
+      markerFormData.append('photos', photo.physicalFile);
+    });
+
+    try{
+      const response = await addMarker(markerFormData, projectId, currentPlan?.id as string);
+      if(!response.ok){
+        console.error("Erreur lors de l'ajout du marqueur :", response.statusText);
+        return;
+      } else {
+        const result = await response.json();
+        
+        setMarkers(prevMarkers => [...prevMarkers, result]);
+        setTemporaryModalMarker(undefined);
+        handleCloseModal();
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'ajout du marqueur :", error);
+    }
+  }
+
   function handleMarkerClick(event: React.MouseEvent, marker: MarkerType) {
     event.stopPropagation();
     setIsModalActive(true);
-    setSelectedMarkerIndex(markers.findIndex(m => m.id === marker.id));
+    setTemporaryModalMarker(marker);
   }
 
   function handleCloseModal(){
     setIsModalActive(false)
+    setTemporaryModalMarker(undefined);
   }
 
   function handleSetTitle(e: React.ChangeEvent<HTMLInputElement>, marker: MarkerType){
     const { value } = e.target as HTMLInputElement;
 
     const updatedMarker  = { ...marker, title: value };
-    setMarkers(prevMarkers => 
-      prevMarkers.map(markerItem => 
-        markerItem.id === marker.id ? { ...updatedMarker } : markerItem
-      )
-    );
+    setTemporaryModalMarker(updatedMarker);
   }
 
   function handleSetPhotoText(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, markerPhoto: MarkerPhotoType, markerPhotoIndex: number){
+    if(!temporaryModalMarker) return;
+
     const { name, value } = e.target as HTMLInputElement | HTMLTextAreaElement;
 
     const updatedPhoto: MarkerPhotoType = { ...markerPhoto, [name === 'pic-label' ? 'label' : 'comment']: value };
-    
 
-    setMarkers(prevMarkers => 
-      prevMarkers.map((markerItem, index) => {
-        if (index === selectedMarkerIndex) {
-          return {
-            ...markerItem,
-            photos: markerItem.photos.map((photo, photoIndex) => 
-              photoIndex === markerPhotoIndex ? { ...updatedPhoto } : photo
-            )
-          };
-        }
-        return markerItem;
-      })
-    );
+    setTemporaryModalMarker(prev => {
+      if(!prev) return prev;
+
+      const updatedPhotos = [...prev.photos];
+      updatedPhotos[markerPhotoIndex] = updatedPhoto;
+
+      return { ...prev, photos: updatedPhotos };
+    });
+    
   }
 
   function handleDeleteMarker(marker: MarkerType){
+    // Appel API pour supprimer le marqueur de la BDD
     setMarkers(prevMarkers => prevMarkers.filter(m => m.id !== marker.id));
     setIsModalActive(false);
-    setSelectedMarkerIndex(null);
+    
   }
 
   useEffect(() => {
@@ -246,7 +271,7 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
                         style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
                         onClick={(e) => handleMarkerClick(e, marker)}
                       >
-                        {marker.id}
+                        {index + 1}
                       </div>
                     ))}
                 </div>
@@ -273,9 +298,10 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
 
       <PicModal
         isActive={isModalActive}
-        marker={derivedCurrentMarker}
+        marker={temporaryModalMarker}
         handleSetTitle={handleSetTitle}
         handleSetPhotoText={handleSetPhotoText}
+        handleAddMarker={handleAddMarker}
         handleDeleteMarker={handleDeleteMarker}
         handleClose={handleCloseModal}
       />

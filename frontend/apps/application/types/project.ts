@@ -51,7 +51,7 @@ export type FolderType = {
 }
 
 export type MarkerType = {
-  id: number,
+  id?: number,
   x: number,
   y: number,
   title: string,
@@ -61,5 +61,7 @@ export type MarkerType = {
 export type MarkerPhotoType = {
   label: string
   comment: string
-  photoUrl: string | ArrayBuffer | null
+  previewUrl: string | ArrayBuffer | null
+  physicalFile: File
+  temporaryAccessUrl?: string
 }

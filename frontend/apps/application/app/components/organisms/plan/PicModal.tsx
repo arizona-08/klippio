@@ -10,10 +10,11 @@ interface PicModalInterface{
   handleClose: () => void;
   handleSetTitle: (e: React.ChangeEvent<HTMLInputElement>, marker: MarkerType) => void;
   handleSetPhotoText: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, markerPhoto: MarkerPhotoType, markerPhotoIndex: number) => void;
+  handleAddMarker: (marker: MarkerType) => void;
   handleDeleteMarker: (marker: MarkerType) => void;
 }
 
-function PicModal({isActive, marker, handleClose, handleSetTitle, handleSetPhotoText, handleDeleteMarker}: PicModalInterface) {
+function PicModal({isActive, marker, handleClose, handleSetTitle, handleSetPhotoText, handleAddMarker, handleDeleteMarker}: PicModalInterface) {
   const [currentMarkerPhotoIndex, setCurrentMarkerPhotoIndex] = React.useState(0);
   const [maxPhotoIndex, setMaxPhotoIndex] = React.useState(marker?.photos.length ? marker.photos.length - 1 : 0);
 
@@ -33,7 +34,8 @@ function PicModal({isActive, marker, handleClose, handleSetTitle, handleSetPhoto
         const newPhoto: MarkerPhotoType = {
           label: '',
           comment: '',
-          photoUrl: e.target.result as string
+          previewUrl: e.target.result as string,
+          physicalFile: file
         }
 
         marker.photos.push(newPhoto);
@@ -66,8 +68,18 @@ function PicModal({isActive, marker, handleClose, handleSetTitle, handleSetPhoto
               <button id="close-modal-btn" className="text-gray-500 hover:text-gray-800 text-3xl" onClick={handleClose}>&times;</button>
             </div>
             <div className="p-4">
-              <img id="modal-image" src={marker?.photos[currentMarkerPhotoIndex]?.photoUrl as string} alt="Photo de chantier" className="w-full h-auto rounded"/>
-              <MarkerPicsCarousel markerPhotos={marker?.photos || []} currentPhotoIndex={currentMarkerPhotoIndex} maxPhotoIndex={maxPhotoIndex} setIndex={setCurrentMarkerPhotoIndex} />
+              <img id="modal-image"
+                src={marker?.photos[currentMarkerPhotoIndex]?.previewUrl as string || marker?.photos[currentMarkerPhotoIndex]?.temporaryAccessUrl as string}
+                alt="Photo de chantier"
+                className="w-full h-auto rounded"
+              />
+
+              <MarkerPicsCarousel
+                markerPhotos={marker?.photos || []}
+                currentPhotoIndex={currentMarkerPhotoIndex}
+                maxPhotoIndex={maxPhotoIndex}
+                setIndex={setCurrentMarkerPhotoIndex} 
+              />
             </div>
 
             <div className="p-4">
@@ -97,7 +109,7 @@ function PicModal({isActive, marker, handleClose, handleSetTitle, handleSetPhoto
               <button className='px-4 py-2 bg-red-500 text-white font-medium rounded-md cursor-pointer' onClick={() => handleDeleteMarker(marker as MarkerType)}>Supprimer</button>
               <div className="flex items-center gap-4">
                 <CTA type='button' color='secondary' text="Ajouter plus de photos" onClick={() => addMorePhotosInputRef.current?.click()}/>
-                <button className='px-4 py-2 bg-green-500 text-white font-medium rounded-md cursor-pointer' onClick={handleClose}>Valider</button>
+                <button className='px-4 py-2 bg-green-500 text-white font-medium rounded-md cursor-pointer' onClick={() => handleAddMarker(marker as MarkerType)}>Valider</button>
               </div>
             </div>
           </div>
