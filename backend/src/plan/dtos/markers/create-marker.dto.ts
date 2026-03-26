@@ -5,7 +5,7 @@ export type MarkerPhotoType = {
 
 export class CreateMarkerDto {
   title: string;
-  x: number;
-  y: number;
+  coordX: number;
+  coordY: number;
   photosMetaData: MarkerPhotoType[];
 }

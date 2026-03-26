@@ -54,3 +54,34 @@ export async function addMarker(formData: FormData, projectId: string, planId: s
 
   return response;
 }
+
+export async function getMarkers(planId: string) {
+  const response = await getApi(`/api/plans/${planId}/markers`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  return response;
+}
+
+export async function deleteMarker(markerId: string) {
+  const response = await getApi(`/api/markers/${markerId}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  return response;
+}
+
+export async function updateMarker(markerId: string, formData: FormData) {
+  const response = await getApi(`/api/markers/${markerId}`, {
+    method: "PUT",
+    body: formData,
+  });
+
+  return response;
+}

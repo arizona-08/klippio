@@ -52,8 +52,8 @@ export type FolderType = {
 
 export type MarkerType = {
   id?: number,
-  x: number,
-  y: number,
+  coordX: number,
+  coordY: number,
   title: string,
   photos: MarkerPhotoType[]
 }

@@ -9,7 +9,7 @@ import ProjectFolders from '../ProjectFolders/ProjectFolders'
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { Document, Page, pdfjs } from 'react-pdf';
 import { usePlanStore } from '@/stores/AllPlansStore'
-import { addMarker, getLastOpenedPlan } from '@/proxy/plan/plan-functions'
+import { addMarker, getLastOpenedPlan, getMarkers } from '@/proxy/plan/plan-functions'
 import { MarkerPhotoType, MarkerType } from '@/types/project'
 // Configuration obligatoire du worker pour react-pdf (compatible Next.js)
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -84,8 +84,8 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
           if(!e.target) return;
 
           const newMarker: MarkerType = {
-              x: currentClickCoords.current.x,
-              y: currentClickCoords.current.y,
+              coordX: currentClickCoords.current.x,
+              coordY: currentClickCoords.current.y,
               title: '',
               photos: [
                 {
@@ -117,8 +117,8 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
 
     const markertoRegister = {
       title: marker.title,
-      x: marker.x,
-      y: marker.y,
+      coordX: marker.coordX,
+      coordY: marker.coordY,
       photosMetaData: marker.photos.map(photo => ({
         label: photo.label,
         comment: photo.comment,
@@ -208,9 +208,23 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
       }
     }
 
+    async function fetchMarkersForCurrentPlan() {
+      const response = await getMarkers(currentPlan?.id as string);
+      if(response.ok){
+        const result = await response.json();
+        const fetchedMarkers = result.markers;
+        console.log("Marqueurs récupérés :", fetchedMarkers);
+        setMarkers(fetchedMarkers);
+      } else {
+        console.error("Erreur lors de la récupération des marqueurs :", response.statusText);
+      }
+    }
+
     fetchLastOpenedPlan();
+    fetchMarkersForCurrentPlan();
   }, [currentFileUrl])
 
+  
   return (
     <div className="relative w-full h-[calc(100vh-88px)] bg-gray-100 overflow-hidden flex flex-col">
       
@@ -268,7 +282,7 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
                       <div
                         key={index}
                         className="marker absolute w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-sm cursor-pointer border-2 border-white shadow-lg transform -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform z-10"
-                        style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
+                        style={{ left: `${marker.coordX}%`, top: `${marker.coordY}%` }}
                         onClick={(e) => handleMarkerClick(e, marker)}
                       >
                         {index + 1}

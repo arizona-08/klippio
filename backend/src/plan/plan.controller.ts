@@ -1,4 +1,4 @@
-import { Controller, Post, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator, Req, Param, UseGuards, Body, Get, UploadedFiles } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator, Req, Param, UseGuards, Body, Get, UploadedFiles, Delete } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import type { User } from 'src/user/interfaces/user.interface';
@@ -51,6 +51,8 @@ export class PlanController {
     return {lastPlan};
   }
 
+  // --------MARKERS---------
+
   @Post(':projectId/:planId/marker')
   @UseInterceptors(FilesInterceptor('photos'))
   async addMarker(
@@ -71,5 +73,21 @@ export class PlanController {
       files
     );
     return result;
+  }
+
+  @Get(':planId/markers')
+  async getMarkers(@Param('planId') planId: string) {
+    const markers = await this.planService.getMarkers(planId);
+    return {markers};
+  }
+
+  @Delete(':projectId/:planId/markers/:markerId')
+  async deleteMarker(
+    @Param('projectId') projectId: string,
+    @Param('planId') planId: string,
+    @Param('markerId') markerId: string
+  ) {
+    // await this.planService.deleteMarker(markerId);
+    return { message: 'Marqueur supprimé avec succès' };
   }
 }

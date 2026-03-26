@@ -90,8 +90,8 @@ export class PlanService {
       const insertedMarker = await this.prismaService.marker.create({
         data: {
           title: markerData.title,
-          coordX: markerData.x,
-          coordY: markerData.y,
+          coordX: markerData.coordX,
+          coordY: markerData.coordY,
           planId,
         }
       });
@@ -126,12 +126,52 @@ export class PlanService {
 
       return { 
         ...insertedMarker,
-        x: insertedMarker.coordX,
-        y: insertedMarker.coordY,
+        coordX: insertedMarker.coordX,
+        coordY: insertedMarker.coordY,
         photos: markerPhotosData
       };
     } catch (error) {
       throw new InternalServerErrorException("Error when adding marker and its photos : " + error.message);
     }
   }
+
+  async getMarkers(planId: string) {
+    const markers = await this.prismaService.marker.findMany({
+      where: { planId },
+      include: {
+        markerPhotos: true
+      }
+    });
+
+    const updatedMarkers = await Promise.all(markers.map(async (marker) => {
+      const updatedPhotos = await Promise.all(marker.markerPhotos.map(async (photo) => {
+        const newTemporaryAccessUrl = await this.amazonS3Service.generatePresignedUrl(photo.photoStorageKey, 3600);
+        return {
+          ...photo,
+          label: photo.photoLabel,
+          temporaryAccessUrl: newTemporaryAccessUrl,
+        }
+      }));
+    
+      return {
+        ...marker,
+        coordX: marker.coordX,
+        coordY: marker.coordY,
+        photos: updatedPhotos,
+      }
+    }));
+
+    return updatedMarkers;
+
+  }
+
+  // async deleteMarker(projectId: string, planId: string, markerId: string) {
+  //   await this.prismaService.markerPhoto.deleteMany({
+  //     where: { markerId },
+  //   });
+
+  //   await this.prismaService.marker.delete({
+  //     where: { id: Number(markerId) },
+  //   });
+  // }
 }
