@@ -51,7 +51,7 @@ export type FolderType = {
 }
 
 export type MarkerType = {
-  id?: number,
+  id?: string,
   coordX: number,
   coordY: number,
   title: string,

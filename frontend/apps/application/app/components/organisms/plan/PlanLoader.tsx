@@ -9,7 +9,7 @@ import ProjectFolders from '../ProjectFolders/ProjectFolders'
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { Document, Page, pdfjs } from 'react-pdf';
 import { usePlanStore } from '@/stores/AllPlansStore'
-import { addMarker, getLastOpenedPlan, getMarkers } from '@/proxy/plan/plan-functions'
+import { addMarker, deleteMarker, getLastOpenedPlan, getMarkers } from '@/proxy/plan/plan-functions'
 import { MarkerPhotoType, MarkerType } from '@/types/project'
 // Configuration obligatoire du worker pour react-pdf (compatible Next.js)
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -184,11 +184,18 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
     
   }
 
-  function handleDeleteMarker(marker: MarkerType){
+  async function handleDeleteMarker(marker: MarkerType){
     // Appel API pour supprimer le marqueur de la BDD
-    setMarkers(prevMarkers => prevMarkers.filter(m => m.id !== marker.id));
-    setIsModalActive(false);
+    if(!marker.id) return;
     
+    const response = await deleteMarker(marker.id);
+    if(!response.ok){
+      console.error("Erreur lors de la suppression du marqueur :", response.statusText);
+      return;
+    } else {
+      setMarkers(prevMarkers => prevMarkers.filter(m => m.id !== marker.id));
+      setIsModalActive(false);
+    }
   }
 
   useEffect(() => {

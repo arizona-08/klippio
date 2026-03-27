@@ -81,13 +81,12 @@ export class PlanController {
     return {markers};
   }
 
-  @Delete(':projectId/:planId/markers/:markerId')
-  async deleteMarker(
-    @Param('projectId') projectId: string,
-    @Param('planId') planId: string,
-    @Param('markerId') markerId: string
-  ) {
-    // await this.planService.deleteMarker(markerId);
-    return { message: 'Marqueur supprimé avec succès' };
+  @Delete(':markerId')
+  async deleteMarker( @Param('markerId') markerId: string ) {
+    await this.planService.deleteMarker(markerId);
+    return {
+      success: true,
+      message: 'Marqueur supprimé avec succès'
+    };
   }
 }

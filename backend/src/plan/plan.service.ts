@@ -165,13 +165,18 @@ export class PlanService {
 
   }
 
-  // async deleteMarker(projectId: string, planId: string, markerId: string) {
-  //   await this.prismaService.markerPhoto.deleteMany({
-  //     where: { markerId },
-  //   });
+  async deleteMarker(markerId: string) {
+    try{
+      await this.prismaService.markerPhoto.deleteMany({
+        where: { markerId },
+      });
 
-  //   await this.prismaService.marker.delete({
-  //     where: { id: Number(markerId) },
-  //   });
-  // }
+      await this.prismaService.marker.delete({
+        where: { id: markerId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException("Error when deleting marker and its photos : " + error.message);
+    }
+    
+  }
 }

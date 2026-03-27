@@ -67,7 +67,7 @@ export async function getMarkers(planId: string) {
 }
 
 export async function deleteMarker(markerId: string) {
-  const response = await getApi(`/api/markers/${markerId}`, {
+  const response = await getApi(`/api/plans/${markerId}`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
@@ -78,7 +78,7 @@ export async function deleteMarker(markerId: string) {
 }
 
 export async function updateMarker(markerId: string, formData: FormData) {
-  const response = await getApi(`/api/markers/${markerId}`, {
+  const response = await getApi(`/api/plans/${markerId}`, {
     method: "PUT",
     body: formData,
   });
