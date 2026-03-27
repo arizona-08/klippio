@@ -148,6 +148,10 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
     }
   }
 
+  async function updateMarker(marker: MarkerType){
+
+  }
+
   function handleMarkerClick(event: React.MouseEvent, marker: MarkerType) {
     event.stopPropagation();
     setIsModalActive(true);
@@ -323,6 +327,7 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
         handleSetTitle={handleSetTitle}
         handleSetPhotoText={handleSetPhotoText}
         handleAddMarker={handleAddMarker}
+        handleUpdateMarker={updateMarker}
         handleDeleteMarker={handleDeleteMarker}
         handleClose={handleCloseModal}
       />

@@ -11,12 +11,13 @@ interface PicModalInterface{
   handleSetTitle: (e: React.ChangeEvent<HTMLInputElement>, marker: MarkerType) => void;
   handleSetPhotoText: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, markerPhoto: MarkerPhotoType, markerPhotoIndex: number) => void;
   handleAddMarker: (marker: MarkerType) => void;
+  handleUpdateMarker: (marker: MarkerType) => void;
   handleDeleteMarker: (marker: MarkerType) => void;
 }
 
 function PicModal({isActive, marker, handleClose, handleSetTitle, handleSetPhotoText, handleAddMarker, handleDeleteMarker}: PicModalInterface) {
   const [currentMarkerPhotoIndex, setCurrentMarkerPhotoIndex] = React.useState(0);
-  const [maxPhotoIndex, setMaxPhotoIndex] = React.useState(marker?.photos.length ? marker.photos.length - 1 : 0);
+  const maxPhotoIndex = marker?.photos.length ? marker.photos.length - 1 : 0;
 
   const addMorePhotosInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -39,7 +40,6 @@ function PicModal({isActive, marker, handleClose, handleSetTitle, handleSetPhoto
         }
 
         marker.photos.push(newPhoto);
-        setMaxPhotoIndex(prev => prev + 1);
         setCurrentMarkerPhotoIndex(marker.photos.length - 1);
       }
 
@@ -109,6 +109,7 @@ function PicModal({isActive, marker, handleClose, handleSetTitle, handleSetPhoto
               <button className='px-4 py-2 bg-red-500 text-white font-medium rounded-md cursor-pointer' onClick={() => handleDeleteMarker(marker as MarkerType)}>Supprimer</button>
               <div className="flex items-center gap-4">
                 <CTA type='button' color='secondary' text="Ajouter plus de photos" onClick={() => addMorePhotosInputRef.current?.click()}/>
+                  {/* Vérifier si id pour savoir si creéation ou update */}
                 <button className='px-4 py-2 bg-green-500 text-white font-medium rounded-md cursor-pointer' onClick={() => handleAddMarker(marker as MarkerType)}>Valider</button>
               </div>
             </div>
