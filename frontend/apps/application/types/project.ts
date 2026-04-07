@@ -59,6 +59,7 @@ export type MarkerType = {
 }
 
 export type MarkerPhotoType = {
+  id?: string
   label: string
   comment: string
   previewUrl: string | ArrayBuffer | null

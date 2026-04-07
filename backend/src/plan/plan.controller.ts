@@ -1,10 +1,11 @@
-import { Controller, Post, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator, Req, Param, UseGuards, Body, Get, UploadedFiles, Delete } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator, Req, Param, UseGuards, Body, Get, UploadedFiles, Delete, Put } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import type { User } from 'src/user/interfaces/user.interface';
 import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
 import { PlanService } from './plan.service';
 import { CreateMarkerDto } from './dtos/markers/create-marker.dto';
+import { UpdateMarkerDto } from './dtos/markers/update-marker.dto';
 
 @UseGuards(AuthenticatedGuard) // Assure que seul un utilisateur connecté peut accéder à ce contrôleur
 @Controller('/api/plans')
@@ -79,6 +80,21 @@ export class PlanController {
   async getMarkers(@Param('planId') planId: string) {
     const markers = await this.planService.getMarkers(planId);
     return {markers};
+  }
+
+  @Put(':projectId/:planId/:markerId')
+  @UseInterceptors(FilesInterceptor('newPhotos'))
+  async editMarker(
+    @Param('projectId') projectId: string,
+    @Param('markerId') markerId: string,
+    @Body('markerData') stringifiedMarkerData: string,
+    @UploadedFiles() files: Express.Multer.File[],
+    @CurrentUser() user: User,
+  ) {
+    const userId = user.id;
+    const parsedMarkerData: UpdateMarkerDto = JSON.parse(stringifiedMarkerData);
+    const result = await this.planService.editMarker(userId, projectId, markerId, parsedMarkerData, files);
+    return result;
   }
 
   @Delete(':markerId')

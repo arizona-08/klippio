@@ -9,284 +9,59 @@ import { ProjectType } from '@/types/project';
 import { PlusIcon } from 'lucide-react';
 import { getProjects } from '@/proxy/projects/project-functions';
 
-function ProjectsSection() {
+interface ProjectsSectionProps {
+  // Define any props if needed
+  projects?: ProjectType[]; // Optionally accept projects as props
+}
 
-  // const projects: ProjectType[] = [
-  //   {
-  //     id: "projet-1",
-  //     name: 'Projet 1',
-  //     address: '123 Rue de la Paix',
-  //     zipcode: '75000',
-  //     city: 'Paris',
-  //     thumbnailUrl: '',
-  //     numberOfPlans: 3,
-  //     numberOfPhotos: 15,
-
-  //     collaborators: [
-  //       {
-  //         firstname: 'John',
-  //         lastname: 'Doe',
-  //         email: 'john@test.com',
-  //         role: 'owner',
-  //       },
-  //       {
-  //         firstname: 'Jane',
-  //         lastname: 'Smith',
-  //         email: 'jane@test.com',
-  //         role: 'editor',
-  //         invitationStatus: 'pending'
-  //       },
-  //       {
-  //         firstname: 'Bob',
-  //         lastname: 'Johnson',
-  //         email: 'bob@test.com',
-  //         role: 'viewer',
-  //         invitationStatus: 'accepted'
-  //       }
-  //     ] 
-  //   },
-  //   {
-  //     id: "projet-2",
-  //     name: 'Projet 2',
-  //     address: '456 Avenue des Champs',
-  //     zipcode: '75008',
-  //     city: 'Paris',
-  //     thumbnailUrl: '',
-  //     numberOfPlans: 2,
-  //     numberOfPhotos: 7,
-
-  //     collaborators: [
-  //       {
-  //         firstname: 'John',
-  //         lastname: 'Doe',
-  //         email: 'john@test.com',
-  //         role: 'owner',
-  //       },
-  //       {
-  //         firstname: 'Jane',
-  //         lastname: 'Smith',
-  //         email: 'jane@test.com',
-  //         role: 'editor',
-  //         invitationStatus: 'declined'
-  //       },
-  //       {
-  //         firstname: 'Bob',
-  //         lastname: 'Johnson',
-  //         email: 'bob@test.com',
-  //         role: 'viewer',
-  //         invitationStatus: 'pending'
-  //       }
-  //     ] 
-  //   },
-  //   {
-  //     id: "projet-3",
-  //     name: 'Projet 3',
-  //     address: '789 Boulevard Saint-Michel',
-  //     zipcode: '75005',
-  //     city: 'Paris',
-  //     thumbnailUrl: '',
-  //     numberOfPlans: 4,
-  //     numberOfPhotos: 26,
-
-  //     collaborators: [
-  //       {
-  //         firstname: 'John',
-  //         lastname: 'Doe',
-  //         email: 'john@test.com',
-  //         role: 'owner',
-  //       },
-  //       {
-  //         firstname: 'Bob',
-  //         lastname: 'Johnson',
-  //         email: 'bob@test.com',
-  //         role: 'viewer',
-  //         invitationStatus: 'accepted'
-  //       }
-  //     ] 
-  //   },
-  //   {
-  //     id: "projet-4",
-  //     name: 'Projet 4',
-  //     address: '101 Rue de Rivoli',
-  //     zipcode: '75001',
-  //     city: 'Paris',
-  //     thumbnailUrl: '',
-  //     numberOfPlans: 4,
-  //     numberOfPhotos: 26,
-
-  //     collaborators: [
-  //       {
-  //         firstname: 'John',
-  //         lastname: 'Doe',
-  //         email: 'john@test.com',
-  //         role: 'owner',
-  //       }
-  //     ] 
-  //   },
-  //   {
-  //     id: "projet-5",
-  //     name: 'Projet 5',
-  //     address: '202 Avenue Montaigne',
-  //     zipcode: '75008',
-  //     city: 'Paris',
-  //     thumbnailUrl: '',
-  //     numberOfPlans: 4,
-  //     numberOfPhotos: 26,
-
-  //     collaborators: [
-  //       {
-  //         firstname: 'John',
-  //         lastname: 'Doe',
-  //         email: 'john@test.com',
-  //         role: 'owner',
-  //       },
-  //       {
-  //         firstname: 'Jane',
-  //         lastname: 'Smith',
-  //         email: 'jane@test.com',
-  //         role: 'editor',
-  //         invitationStatus: 'accepted'
-  //       },
-  //       {
-  //         firstname: 'Bob',
-  //         lastname: 'Johnson',
-  //         email: 'bob@test.com',
-  //         role: 'viewer',
-  //         invitationStatus: 'accepted'
-  //       }
-  //     ] 
-  //   },
-  //   {
-  //     id: "projet-6",
-  //     name: 'Projet 6',
-  //     address: '303 Rue de la Paix',
-  //     zipcode: '75002',
-  //     city: 'Paris',
-  //     thumbnailUrl: '',
-  //     numberOfPlans: 4,
-  //     numberOfPhotos: 26,
-
-  //     collaborators: [
-  //       {
-  //         firstname: 'John',
-  //         lastname: 'Doe',
-  //         email: 'john@test.com',
-  //         role: 'owner',
-  //       },
-  //       {
-  //         firstname: 'Jane',
-  //         lastname: 'Smith',
-  //         email: 'jane@test.com',
-  //         role: 'editor',
-  //         invitationStatus: 'accepted'
-  //       },
-  //       {
-  //         firstname: 'Bob',
-  //         lastname: 'Johnson',
-  //         email: 'bob@test.com',
-  //         role: 'viewer',
-  //         invitationStatus: 'accepted'
-  //       }
-  //     ] 
-  //   },
-  //   {
-  //     id: "projet-7",
-  //     name: 'Projet 7',
-  //     address: '404 Rue de la Paix',
-  //     zipcode: '75003',
-  //     city: 'Paris',
-  //     thumbnailUrl: '',
-  //     numberOfPlans: 4,
-  //     numberOfPhotos: 26,
-
-  //     collaborators: [
-  //       {
-  //         firstname: 'John',
-  //         lastname: 'Doe',
-  //         email: 'john@test.com',
-  //         role: 'owner',
-  //       }
-  //     ] 
-  //   },
-  //   {
-  //     id: "projet-8",
-  //     name: 'Projet 8',
-  //     address: '505 Rue de la Paix',
-  //     zipcode: '75004',
-  //     city: 'Paris',
-  //     thumbnailUrl: '',
-  //     numberOfPlans: 4,
-  //     numberOfPhotos: 26,
-
-  //     collaborators: [
-  //       {
-  //         firstname: 'John',
-  //         lastname: 'Doe',
-  //         email: 'john@test.com',
-  //         role: 'owner',
-  //       }
-  //     ] 
-  //   },
-  // ]
-
+function ProjectsSection({ projects }: ProjectsSectionProps) {
   const [isProjectFormOpen, setIsProjectFormOpen] = React.useState(false);
+  const [masterProjectsList, setMasterProjectsList] = React.useState<ProjectType[]>(projects || []);
+  const [searchQueryText, setSearchQueryText] = React.useState('');
 
   const numberOfDisplayedProjects = 6; // à adapter selon le nombre de projets par page souhaité
-  const [paginationCount, setPaginationCount] = React.useState(1) // à adapter selon le nombre de projets par page souhaité
+  const paginationCount = Math.ceil((projects?.length || 0) / numberOfDisplayedProjects)
   
-  const [currentPage, setCurrentPage] = React.useState(1)
-  const [displayedProjects, setDisplayedProjects] = React.useState<ProjectType[]>([]);
+  const [currentPage, setCurrentPage] = React.useState(1);
 
+  const filteredProjectsList = masterProjectsList.filter(projectItem => 
+    projectItem.title.toLowerCase().includes(searchQueryText.toLowerCase()) ||
+    projectItem.address.toLowerCase().includes(searchQueryText.toLowerCase()) ||
+    projectItem.city.toLowerCase().includes(searchQueryText.toLowerCase())
+  );
 
-  useEffect(() => {
-    async function fetchProjects(){
-      const response = await getProjects();
-      const allProjects = await response.json();
-      setDisplayedProjects(allProjects.slice((currentPage - 1) * numberOfDisplayedProjects, currentPage * numberOfDisplayedProjects));
-      setPaginationCount(Math.ceil(allProjects.length / numberOfDisplayedProjects));
-      console.log(allProjects);
-    }
-
-    fetchProjects();
-  }, []);
+  const displayedProjects = filteredProjectsList.slice(
+    (currentPage - 1) * numberOfDisplayedProjects, 
+    currentPage * numberOfDisplayedProjects
+  );
 
   function previousPage(){
     setCurrentPage(prev => Math.max(prev - 1, 1))
-    if(currentPage > 1){
-      setDisplayedProjects(displayedProjects.slice((currentPage - 2) * numberOfDisplayedProjects, (currentPage - 1) * numberOfDisplayedProjects));
-    }
   }
 
   function nextPage(){
     setCurrentPage(prev => Math.min(prev + 1, paginationCount))
-    if(currentPage < paginationCount){
-      setDisplayedProjects(displayedProjects.slice(currentPage * numberOfDisplayedProjects, (currentPage + 1) * numberOfDisplayedProjects));
-    }
   }
 
   function jumpToPage(page: number) {
     setCurrentPage(page);
-    setDisplayedProjects(displayedProjects.slice((page - 1) * numberOfDisplayedProjects, page * numberOfDisplayedProjects));
   }
 
   function searchProject(query: string) {
-    if(!query || query.trim() === '') {
-      setDisplayedProjects(displayedProjects.slice((currentPage - 1) * numberOfDisplayedProjects, currentPage * numberOfDisplayedProjects));
-      setPaginationCount(Math.ceil(displayedProjects.length / numberOfDisplayedProjects));
-      setCurrentPage(1);
-      return;
-    }
-
+    setSearchQueryText(query);
     setCurrentPage(1);
+  }
 
-    const foundProjects = displayedProjects.filter(project => 
-      project.title.toLowerCase().includes(query.toLowerCase()) ||
-      project.address.toLowerCase().includes(query.toLowerCase()) ||
-      project.city.toLowerCase().includes(query.toLowerCase())
-    );
-    
-    setDisplayedProjects(foundProjects.slice((currentPage - 1) * numberOfDisplayedProjects, currentPage * numberOfDisplayedProjects));
-    setPaginationCount(Math.ceil(foundProjects.length / numberOfDisplayedProjects));
+  function addProjectToUi(project: ProjectType){
+    setMasterProjectsList((previousList) => {
+      const existingProject = previousList.some(p => p.id === project.id);
+
+      if(existingProject){
+        return previousList.map(p => p.id === project.id ? project : p);
+      }
+
+      return [project, ...previousList]
+    });
   }
 
   return (
@@ -311,7 +86,10 @@ function ProjectsSection() {
             </div>
 
             <div className={`absolute left-0 z-40 ${isProjectFormOpen ? 'visible opacity-100 top-full' : 'opacity-0 invisible top-20'} transition-all duration-150`}>
-              <ProjectForm closeForm={() => setIsProjectFormOpen(false)} />
+              <ProjectForm 
+                closeForm={() => setIsProjectFormOpen(false)}
+                onSuccess={addProjectToUi}
+              />
             </div>
           </div>
         </div>

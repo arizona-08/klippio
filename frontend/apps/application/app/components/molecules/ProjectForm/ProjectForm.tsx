@@ -11,9 +11,10 @@ interface ProjectFormProps {
   closeForm: () => void;
   edit?: boolean;
   projectToEdit?: ProjectType;
+  onSuccess: (project: ProjectType) => void; // Optional callback to update the UI after successful creation/modification
 }
 
-function ProjectForm({ closeForm, edit, projectToEdit }: ProjectFormProps) {
+function ProjectForm({ closeForm, edit, projectToEdit, onSuccess }: ProjectFormProps) {
   const [projectCredentials, setProjectCredentials] = React.useState<CreateProjectDTO>({
     title: '',
     address: '',
@@ -44,20 +45,6 @@ function ProjectForm({ closeForm, edit, projectToEdit }: ProjectFormProps) {
 
   const closeModifyForm = useModifyProjectStore((state) => state.closeModifyProjectModal);
 
-  // React.useEffect(() => {
-  //   function handleClickOutsideForm(event: MouseEvent) {
-  //     const target = event.target as HTMLElement;
-  //     if (!target.closest('.projectForm')) {
-  //       resetForm();
-  //       closeForm();
-  //       closeModifyForm();
-  //     }
-  //   }
-
-  //   document.addEventListener('mousedown', handleClickOutsideForm);
-  //   return () => document.removeEventListener('mousedown', handleClickOutsideForm);
-  // }, []);
-
   async function handleSubmit(e?: React.MouseEvent<HTMLButtonElement, MouseEvent>){ 
     e?.preventDefault();
     const pickedFunction = edit ? modifyProject : createProject;
@@ -69,6 +56,9 @@ function ProjectForm({ closeForm, edit, projectToEdit }: ProjectFormProps) {
         resetForm();
         closeForm();
         closeModifyForm();
+
+        const responseData = await response.json();
+        onSuccess(responseData);
       } else {
         // Handle error response, e.g., show an error message
         console.error('Failed to submit project form');

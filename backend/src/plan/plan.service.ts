@@ -2,6 +2,7 @@ import { Injectable, InternalServerErrorException } from "@nestjs/common";
 import { AmazonS3Service } from "src/amazon/amazon-s3.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateMarkerDto } from "./dtos/markers/create-marker.dto";
+import { UpdateMarkerDto } from "./dtos/markers/update-marker.dto";
 
 @Injectable()
 export class PlanService {
@@ -130,7 +131,7 @@ export class PlanService {
         coordY: insertedMarker.coordY,
         photos: markerPhotosData
       };
-    } catch (error) {
+    } catch (error: any) {
       throw new InternalServerErrorException("Error when adding marker and its photos : " + error.message);
     }
   }
@@ -165,6 +166,87 @@ export class PlanService {
 
   }
 
+  async editMarker(userId: number, projectId: string, markerId: string, markerData: UpdateMarkerDto, files: Express.Multer.File[]) {
+    console.log("hello");
+    //update des données du marker
+    try {
+      const updatedMarker = await this.prismaService.marker.update({
+        where: { id: markerId },
+        data: {
+          title: markerData.title,
+          coordX: markerData.coordX,
+          coordY: markerData.coordY,
+        }
+      });
+
+      console.log("hello * 2");
+
+      // Suppression des photos supprimées
+      if (markerData.deletedPhotoIdentifiers.length > 0) {
+        const photosToDelete = await this.prismaService.markerPhoto.findMany({
+          where: {
+            id: { in: markerData.deletedPhotoIdentifiers },
+            markerId,
+          }
+        });
+
+        await Promise.all(photosToDelete.map(photo => 
+          this.amazonS3Service.deleteImage(photo.photoStorageKey)
+        ));
+
+        await this.prismaService.markerPhoto.deleteMany({
+          where: {
+            id: { in: markerData.deletedPhotoIdentifiers },
+            markerId,
+          }
+        });
+      }
+
+      // Ajout des nouvelles photos
+      const newPhotosData = await Promise.all(markerData.newPhotosMetadata.map(async (photoMetaData, index) => {
+        const file = files[index];
+        const { storageKey, temporaryAccessUrl } = await this.amazonS3Service.uploadImage({
+          type: "MARKER_PICTURE",
+          file,
+          userId, // Pass the user ID if necessary
+          projectId, // Pass the project ID if necessary
+          markerId,
+        });
+
+        const insertedPhoto = await this.prismaService.markerPhoto.create({
+          data: {
+            photoLabel: photoMetaData.label,
+            comment: photoMetaData.comment,
+            photoStorageKey: storageKey,
+            temporaryAccessUrl: temporaryAccessUrl,
+            markerId,
+          }
+        });
+
+        console.log(insertedPhoto);
+
+
+        return {
+          ...insertedPhoto
+        };
+      }));
+
+      return {
+        success: true,
+        message: 'Marker updated successfully',
+        updatedMarker: {
+          ...updatedMarker,
+          coordX: updatedMarker.coordX,
+          coordY: updatedMarker.coordY,
+          photos: newPhotosData,
+        }
+      };
+    } catch (error: any) {
+      console.error("Error in editMarker service method: ", error);
+      throw new InternalServerErrorException("Error when editing marker and its photos : " + error.message);
+    }
+  }
+
   async deleteMarker(markerId: string) {
     try{
       await this.prismaService.markerPhoto.deleteMany({
@@ -174,7 +256,7 @@ export class PlanService {
       await this.prismaService.marker.delete({
         where: { id: markerId },
       });
-    } catch (error) {
+    } catch (error: any) {
       throw new InternalServerErrorException("Error when deleting marker and its photos : " + error.message);
     }
     

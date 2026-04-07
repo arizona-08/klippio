@@ -9,7 +9,7 @@ import ProjectFolders from '../ProjectFolders/ProjectFolders'
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { Document, Page, pdfjs } from 'react-pdf';
 import { usePlanStore } from '@/stores/AllPlansStore'
-import { addMarker, deleteMarker, getLastOpenedPlan, getMarkers } from '@/proxy/plan/plan-functions'
+import { addMarker, deleteMarker, editMarker, getLastOpenedPlan, getMarkers } from '@/proxy/plan/plan-functions'
 import { MarkerPhotoType, MarkerType } from '@/types/project'
 // Configuration obligatoire du worker pour react-pdf (compatible Next.js)
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -148,8 +148,63 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
     }
   }
 
-  async function updateMarker(marker: MarkerType){
+  async function updateMarkerPhoto(marker: MarkerType){
+    const updateMarkerFormData = new FormData();
 
+    const existingPhotos = marker.photos.filter(photo => photo.id);
+    const newPhotos = marker.photos.filter(photo => !photo.id);
+
+    const matchingMarker = markers.find(m => m.id === marker.id)
+    const keptPhotoIdentifiersSet = new Set(existingPhotos.map(photoItem => photoItem.id));
+
+    // 3. On extrait les identifiants supprimés de manière sécurisée
+    const deletedPhotoIdentifiers = matchingMarker?.photos
+      .map(photoItem => photoItem.id)
+      .filter(photoIdentifier => !keptPhotoIdentifiersSet.has(photoIdentifier)) || [];
+
+    const markerToUpdatePayload = {
+      title: marker.title,
+      coordX: marker.coordX,
+      coordY: marker.coordY,
+
+      // On envoie les métadonnées des photos existantes pour les mettre à jour
+      existingPhotosToUpdate: existingPhotos.map(photoItem => ({
+        identifier: photoItem.id,
+        label: photoItem.label,
+        comment: photoItem.comment,
+      })),
+
+      // On envoie les métadonnées des nouvelles photos
+      newPhotosMetadata: newPhotos.map(photoItem => ({
+        label: photoItem.label,
+        comment: photoItem.comment,
+      })),
+
+      deletedPhotoIdentifiers: deletedPhotoIdentifiers
+    }
+
+    updateMarkerFormData.append('markerData', JSON.stringify(markerToUpdatePayload));
+
+    newPhotos.forEach((photo) => {
+      updateMarkerFormData.append('newPhotos', photo.physicalFile);
+    });
+
+    try{
+      const response = await editMarker(projectId, currentPlan?.id as string, marker.id as string, updateMarkerFormData);
+      if(!response.ok){
+        console.error("Erreur lors de la mise à jour du marqueur :", response.statusText);
+        return;
+      } else {
+        const result = await response.json();
+        
+        setMarkers(prevMarkers => prevMarkers.map(m => m.id === marker.id ? result : m));
+        setTemporaryModalMarker(undefined);
+        handleCloseModal();
+      }
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du marqueur :", error);
+    }
+    
   }
 
   function handleMarkerClick(event: React.MouseEvent, marker: MarkerType) {
@@ -327,7 +382,7 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
         handleSetTitle={handleSetTitle}
         handleSetPhotoText={handleSetPhotoText}
         handleAddMarker={handleAddMarker}
-        handleUpdateMarker={updateMarker}
+        handleUpdateMarkerPhoto={updateMarkerPhoto}
         handleDeleteMarker={handleDeleteMarker}
         handleClose={handleCloseModal}
       />
