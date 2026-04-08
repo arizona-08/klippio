@@ -181,6 +181,24 @@ export class PlanService {
 
       console.log("hello * 2");
 
+      const updatedExistingPhotos = await Promise.all(markerData.existingPhotosToUpdate.map(async (photo) => {
+        const updatedPhoto = await this.prismaService.markerPhoto.update({
+          where: { id: photo.identifier },
+          data: {
+            photoLabel: photo.label,
+            comment: photo.comment,
+          }
+        });
+
+        const newTemporaryAccessUrl = await this.amazonS3Service.generatePresignedUrl(updatedPhoto.photoStorageKey, 3600);
+
+        return {
+          ...updatedPhoto,
+          label: updatedPhoto.photoLabel,
+          temporaryAccessUrl: newTemporaryAccessUrl,
+        };
+      }));
+
       // Suppression des photos supprimées
       if (markerData.deletedPhotoIdentifiers.length > 0) {
         const photosToDelete = await this.prismaService.markerPhoto.findMany({
@@ -227,7 +245,8 @@ export class PlanService {
 
 
         return {
-          ...insertedPhoto
+          ...insertedPhoto,
+          label: insertedPhoto.photoLabel,
         };
       }));
 
@@ -238,7 +257,7 @@ export class PlanService {
           ...updatedMarker,
           coordX: updatedMarker.coordX,
           coordY: updatedMarker.coordY,
-          photos: newPhotosData,
+          photos: [...updatedExistingPhotos, ...newPhotosData],
         }
       };
     } catch (error: any) {

@@ -196,8 +196,9 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
         return;
       } else {
         const result = await response.json();
+        const updatedMarker = result.updatedMarker;
         
-        setMarkers(prevMarkers => prevMarkers.map(m => m.id === marker.id ? result : m));
+        setMarkers(prevMarkers => prevMarkers.map(m => m.id === marker.id ? updatedMarker : m));
         setTemporaryModalMarker(undefined);
         handleCloseModal();
       }
