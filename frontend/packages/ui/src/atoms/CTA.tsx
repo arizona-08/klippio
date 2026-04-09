@@ -6,7 +6,7 @@ interface CTAProps {
   type: 'button' | 'link'
   text: string
   href?: string
-  color: 'primary' | 'secondary' | 'gray' | 'danger'
+  color: 'primary' | 'secondary' | 'gray' | 'danger' | 'danger_reverse'
   icon?: React.ReactNode
   iconImage?: {
     src: string,
@@ -24,6 +24,7 @@ function CTA({ type, text, href, color, icon, iconImage, iconReverse, onClick, d
     secondary: `border-1 border-primary text-primary hover:bg-primary hover:text-white transition-colors duration-150 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
     gray: `bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all duration-150 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
     danger: `bg-red-500 text-white hover:bg-red-600 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
+    danger_reverse: `bg-white text-red-500 border-1 border-red-500 hover:bg-red-500 hover:text-white transition-colors duration-150 ${disabled ? 'opacity-50 cursor-not-allowed' : ' cursor-pointer'}`,
   }
 
   if(type === 'button') {

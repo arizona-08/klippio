@@ -160,7 +160,7 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
     // 3. On extrait les identifiants supprimés de manière sécurisée
     const deletedPhotoIdentifiers = matchingMarker?.photos
       .map(photoItem => photoItem.id)
-      .filter(photoIdentifier => !keptPhotoIdentifiersSet.has(photoIdentifier)) || [];
+      .filter(photoIdentifier => !keptPhotoIdentifiersSet.has(photoIdentifier) && photoIdentifier !== undefined) || [];
 
     const markerToUpdatePayload = {
       title: marker.title,

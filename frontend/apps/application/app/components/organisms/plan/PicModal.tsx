@@ -51,6 +51,18 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
     }
   }
 
+  function handleDeleteMarkerPhoto(marker: MarkerType, photoIndex: number) {
+    if (photoIndex < 0 || photoIndex >= marker.photos.length) return;
+    console.log("clicked delete on photo index : ", photoIndex)
+
+    const updatedPhotos = marker.photos.filter(markerPhoto => marker.photos[photoIndex].id !== markerPhoto.id)
+    marker.photos = [...updatedPhotos]
+
+    if (currentMarkerPhotoIndex >= marker.photos.length) {
+      setCurrentMarkerPhotoIndex(Math.max(0, marker.photos.length - 1));
+    }
+  }
+
   return (
     <>
       {isActive && (  
@@ -126,6 +138,15 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
                     onChange={(e) => handleSetPhotoText(e, marker?.photos[currentMarkerPhotoIndex] as MarkerPhotoType, currentMarkerPhotoIndex)}
                   ></textarea>
                 </div>
+              </div>
+
+              <div className="px-6 my-5">
+                <CTA
+                  type='button'
+                  color='danger_reverse'
+                  text='Supprimer la photo'
+                  onClick={() => handleDeleteMarkerPhoto(marker as MarkerType, currentMarkerPhotoIndex)}
+                />
               </div>
             </div>
 
