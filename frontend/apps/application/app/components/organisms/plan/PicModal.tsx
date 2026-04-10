@@ -17,6 +17,16 @@ interface PicModalInterface {
 }
 
 function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhotoText, handleAddMarker, handleUpdateMarkerPhoto, handleDeleteMarker }: PicModalInterface) {
+  // Au début du composant
+const [localPhotos, setLocalPhotos] = React.useState<MarkerPhotoType[]>(marker?.photos || []);
+
+// On synchronise localPhotos quand le marqueur change (ex: ouverture de la modale)
+React.useEffect(() => {
+  if (marker?.photos) {
+    setLocalPhotos([...marker.photos]);
+  }
+}, [marker]);
+
   const [currentMarkerPhotoIndex, setCurrentMarkerPhotoIndex] = React.useState(0);
   const maxPhotoIndex = marker?.photos.length ? marker.photos.length - 1 : 0;
 
@@ -51,17 +61,18 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
     }
   }
 
-  function handleDeleteMarkerPhoto(marker: MarkerType, photoIndex: number) {
-    if (photoIndex < 0 || photoIndex >= marker.photos.length) return;
-    console.log("clicked delete on photo index : ", photoIndex)
+ function handleDeleteMarkerPhoto(photoIndex: number) {
+  // 1. On crée une copie sans l'élément supprimé
+  const updatedPhotos = localPhotos.filter((_, index) => index !== photoIndex);
+  
+  // 2. On met à jour l'état LOCAL (le SAS)
+  setLocalPhotos(updatedPhotos);
 
-    const updatedPhotos = marker.photos.filter(markerPhoto => marker.photos[photoIndex].id !== markerPhoto.id)
-    marker.photos = [...updatedPhotos]
-
-    if (currentMarkerPhotoIndex >= marker.photos.length) {
-      setCurrentMarkerPhotoIndex(Math.max(0, marker.photos.length - 1));
-    }
+  // 3. Gestion de l'index du carrousel
+  if (currentMarkerPhotoIndex >= updatedPhotos.length) {
+    setCurrentMarkerPhotoIndex(Math.max(0, updatedPhotos.length - 1));
   }
+}
 
   return (
     <>
@@ -94,7 +105,7 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
                 <div className="relative w-full h-[400px] border-4 border-white shadow-lg rounded-xl overflow-hidden bg-gray-50">
                   <Image 
                     id="modal-image"
-                    src={marker?.photos[currentMarkerPhotoIndex]?.previewUrl as string || marker?.photos[currentMarkerPhotoIndex]?.temporaryAccessUrl as string || "https://sample-videos.com/img/Sample-jpg-image-1mb.jpg"}
+                    src={localPhotos[currentMarkerPhotoIndex]?.previewUrl as string || localPhotos[currentMarkerPhotoIndex]?.temporaryAccessUrl as string}
                     alt="Photo de chantier"
                     fill
                     className="object-cover"
@@ -104,7 +115,7 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
 
                 <div className="mt-4">
                   <MarkerPicsCarousel
-                    markerPhotos={marker?.photos || []}
+                    markerPhotos={localPhotos}
                     currentPhotoIndex={currentMarkerPhotoIndex}
                     maxPhotoIndex={maxPhotoIndex}
                     setIndex={setCurrentMarkerPhotoIndex}
@@ -120,8 +131,8 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
                     type="text"
                     name='pic-label'
                     placeholder='Ajouter un label précis...'
-                    value={marker?.photos[currentMarkerPhotoIndex]?.label || ''} 
-                    onChange={(e) => handleSetPhotoText(e, marker?.photos[currentMarkerPhotoIndex] as MarkerPhotoType, currentMarkerPhotoIndex)}
+                    value={localPhotos[currentMarkerPhotoIndex]?.label || ''} 
+                    onChange={(e) => handleSetPhotoText(e, localPhotos[currentMarkerPhotoIndex] as MarkerPhotoType, currentMarkerPhotoIndex)}
                     className='w-full p-3 border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-primary'
                   />
                 </div>
@@ -134,8 +145,8 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
                     rows={4}
                     placeholder='Observations ou détails...'
                     className='w-full p-3 border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-primary'
-                    value={marker?.photos[currentMarkerPhotoIndex]?.comment || ''} 
-                    onChange={(e) => handleSetPhotoText(e, marker?.photos[currentMarkerPhotoIndex] as MarkerPhotoType, currentMarkerPhotoIndex)}
+                    value={localPhotos[currentMarkerPhotoIndex]?.comment || ''} 
+                    onChange={(e) => handleSetPhotoText(e, localPhotos[currentMarkerPhotoIndex] as MarkerPhotoType, currentMarkerPhotoIndex)}
                   ></textarea>
                 </div>
               </div>
@@ -145,7 +156,7 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
                   type='button'
                   color='danger_reverse'
                   text='Supprimer la photo'
-                  onClick={() => handleDeleteMarkerPhoto(marker as MarkerType, currentMarkerPhotoIndex)}
+                  onClick={() => handleDeleteMarkerPhoto(currentMarkerPhotoIndex)}
                 />
               </div>
             </div>
@@ -170,12 +181,17 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
                   color="primary" 
                   text="Valider les modifications" 
                   onClick={() => {
-                    if (marker && marker.id) {
-                      handleUpdateMarkerPhoto(marker as MarkerType);
-                    } else {
-                      handleAddMarker(marker as MarkerType);
+                    if (marker) {
+                      // On fusionne le marqueur original avec nos photos modifiées dans le SAS
+                      const updatedMarker = { ...marker, photos: localPhotos };
+                      
+                      if (marker.id) {
+                        handleUpdateMarkerPhoto(updatedMarker);
+                      } else {
+                        handleAddMarker(updatedMarker);
+                      }
                     }
-                  }} 
+                  }}
                 />
               </div>
             </div>
