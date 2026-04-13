@@ -12,13 +12,14 @@ function TopBar() {
   const openFolders = useProjectNodeStore((state) => state.open);
 
   const currentProject = useCurrentProjectStore((state) => state.currentProject);
+  const currentProjectTitle = useCurrentProjectStore((state) => state.currentProjectTitle);
 
   return (
     <div className="bg-gray-100 text-black p-4 flex items-center justify-between">
       <Link href={"/dashboard"}>
         <div className="flex items-center gap-4">
           <ArrowLeft />
-          <h3>{currentProject ? currentProject.title : 'Titre du projet'}</h3>
+          <h3>{(currentProject?.title || currentProjectTitle) || "Titre du projet"}</h3>
         </div>
       </Link>
       <div className="flex items-center gap-2 cursor-pointer" onClick={openFolders}>

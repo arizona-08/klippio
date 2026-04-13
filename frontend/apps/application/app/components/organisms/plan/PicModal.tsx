@@ -18,14 +18,14 @@ interface PicModalInterface {
 
 function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhotoText, handleAddMarker, handleUpdateMarkerPhoto, handleDeleteMarker }: PicModalInterface) {
   // Au début du composant
-const [localPhotos, setLocalPhotos] = React.useState<MarkerPhotoType[]>(marker?.photos || []);
+  const [localPhotos, setLocalPhotos] = React.useState<MarkerPhotoType[]>(marker?.photos || []);
 
-// On synchronise localPhotos quand le marqueur change (ex: ouverture de la modale)
-React.useEffect(() => {
-  if (marker?.photos) {
-    setLocalPhotos([...marker.photos]);
-  }
-}, [marker]);
+  // On synchronise localPhotos quand le marqueur change (ex: ouverture de la modale)
+  React.useEffect(() => {
+    if (marker?.photos) {
+      setLocalPhotos([...marker.photos]);
+    }
+  }, [marker]);
 
   const [currentMarkerPhotoIndex, setCurrentMarkerPhotoIndex] = React.useState(0);
   const maxPhotoIndex = marker?.photos.length ? marker.photos.length - 1 : 0;
@@ -50,8 +50,8 @@ React.useEffect(() => {
           physicalFile: file
         };
 
-        currentMarker.photos.push(newPhoto);
-        setCurrentMarkerPhotoIndex(currentMarker.photos.length - 1);
+        setLocalPhotos(prev => [...prev, newPhoto]);
+        setCurrentMarkerPhotoIndex(localPhotos.length);
       };
 
       reader.readAsDataURL(file);

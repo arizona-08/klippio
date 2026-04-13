@@ -11,6 +11,7 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import { usePlanStore } from '@/stores/AllPlansStore'
 import { addMarker, deleteMarker, editMarker, getLastOpenedPlan, getMarkers } from '@/proxy/plan/plan-functions'
 import { MarkerPhotoType, MarkerType } from '@/types/project'
+import { useCurrentProjectStore } from '@/stores/CurrentProjectStore'
 // Configuration obligatoire du worker pour react-pdf (compatible Next.js)
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 // import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
@@ -34,6 +35,9 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
 
   const setCurrentPlan = usePlanStore((state) => state.setCurrentPlan);
   const currentPlan = usePlanStore((state) => state.currentPlan);
+
+  const setCurrentProjectTitle = useCurrentProjectStore((state) => state.setCurrentProjectTitle);
+
 
   const planUploadContainerRef = React.useRef<HTMLDivElement | null>(null);
   const planContainerRef = React.useRef<HTMLDivElement | null>(null)
@@ -266,8 +270,11 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
           const result = await response.json();
           const lastPlan = result.lastPlan;
           if(lastPlan) {
+            console.log("hello")
             const isActuallyPdf = lastPlan.documentStorageKey.toLowerCase().endsWith('.pdf');
             displayPlan(lastPlan.id, lastPlan.name, lastPlan.documentStorageKey, lastPlan.temporaryAccessUrl, isActuallyPdf);
+            setCurrentProjectTitle(lastPlan.project.title);
+            console.log(lastPlan.project.title);
           }
         } else {
           console.error("Erreur lors de la récupération du dernier plan ouvert :", response.statusText);

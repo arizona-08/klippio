@@ -15,19 +15,19 @@ function VisualizerMenu({ option, selectOption }: VisualizerMenuProps) {
   }
 
   return (
-    <div className={`w-12 rounded-full bg-gray-200 px-2 py-4 flex flex-col items-center justify-center cursor-pointer fixed bottom-12 right-5 z-50 ${isMenuOpen ? 'h-55' : 'h-12'} transition-all duration-150 overflow-hidden`}>
+    <div className={`w-12 rounded-full bg-gray-50 border-2 border-gray-100 px-2 py-4 flex flex-col items-center justify-center cursor-pointer fixed bottom-12 right-5 z-50 ${isMenuOpen ? 'h-55' : 'h-12'} transition-all duration-150 overflow-hidden`}>
       <div className={`w-full elements flex flex-col items-center gap-2 h-50 ${isMenuOpen ? 'opacity-100 flex-1' : 'opacity-0 hidden'} transition-all duration-150`}>
-        <div className={`hover:bg-gray-300 p-1 rounded-full ${option === 'hand' ? 'bg-gray-300' : ''}`} onClick={() => selectOption('hand')} title='Main libre'>
-          <Hand />
+        <div className={`hover:text-white hover:bg-primary p-1 rounded-full ${option === 'hand' ? 'bg-primary text-white' : ''}`} onClick={() => selectOption('hand')} title='Main libre'>
+          <Hand className="stroke-1"/>
         </div>
-        <div className={`hover:bg-gray-300 p-1 rounded-full ${option === 'pin' ? 'bg-gray-300' : ''}`} onClick={() => selectOption('pin')} title='Ajouter un marqueur'>
-          <MapPin />
+        <div className={`hover:text-white hover:bg-primary p-1 rounded-full ${option === 'pin' ? 'bg-primary text-white' : ''}`} onClick={() => selectOption('pin')} title='Ajouter un marqueur'>
+          <MapPin className="stroke-1"/>
         </div>
-        <div className={`hover:bg-gray-300 p-1 rounded-full ${option === 'filter' ? 'bg-gray-300' : ''}`} onClick={() => selectOption('filter')} title='Filtrer les marqueurs'>
-          <ListFilter />
+        <div className={`hover:text-white hover:bg-primary p-1 rounded-full ${option === 'filter' ? 'bg-primary text-white' : ''}`} onClick={() => selectOption('filter')} title='Filtrer les marqueurs'>
+          <ListFilter className="stroke-1"/>
         </div>
-        <div className={`hover:bg-gray-300 p-1 rounded-full ${option === 'add' ? 'bg-gray-300' : ''}`} onClick={() => selectOption('add')} title='Ajouter un plan'>
-          <DiamondPlus />
+        <div className={`hover:text-white hover:bg-primary p-1 rounded-full ${option === 'add' ? 'bg-primary text-white' : ''}`} onClick={() => selectOption('add')} title='Ajouter un plan'>
+          <DiamondPlus className="stroke-1"/>
         </div>
       </div>
   

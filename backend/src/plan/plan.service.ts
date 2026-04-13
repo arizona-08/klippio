@@ -61,6 +61,14 @@ export class PlanService {
     const lastOpenedPlan = await this.prismaService.plan.findFirst({
       where: { projectId },
       orderBy: { lastOpenedAt: 'desc' },
+      include: {
+        project: {
+          select: {
+            id: true,
+            title: true,
+          }
+        }
+      }
     });
 
     if (!lastOpenedPlan) {
@@ -74,6 +82,7 @@ export class PlanService {
       name: lastOpenedPlan.name,
       documentStorageKey: lastOpenedPlan.documentStorageKey,
       temporaryAccessUrl: newTemporaryAccessUrl,
+      project: lastOpenedPlan.project,
     };
    }
 
