@@ -8,7 +8,7 @@ import { UpdateMarkerDto } from "./dtos/markers/update-marker.dto";
 export class PlanService {
   constructor(private readonly amazonS3Service: AmazonS3Service, private readonly prismaService: PrismaService){}
 
-  async uploadPlan(name: string, projectId: string, userId: number, file: Express.Multer.File) {
+  async uploadPlan(name: string, projectId: string, folderId: string,  userId: number, file: Express.Multer.File) {
     const { storageKey, temporaryAccessUrl } = await this.amazonS3Service.uploadImage({
       type: "PLAN",
       file,
@@ -24,6 +24,7 @@ export class PlanService {
           documentStorageKey: storageKey,
           temporaryAccessUrl,
           name,
+          folderId,
         },
       });
 
@@ -67,6 +68,13 @@ export class PlanService {
             id: true,
             title: true,
           }
+        },
+
+        folder: {
+          select: {
+            id: true,
+            name: true,
+          }
         }
       }
     });
@@ -83,6 +91,7 @@ export class PlanService {
       documentStorageKey: lastOpenedPlan.documentStorageKey,
       temporaryAccessUrl: newTemporaryAccessUrl,
       project: lastOpenedPlan.project,
+      folder: lastOpenedPlan.folder,
     };
    }
 

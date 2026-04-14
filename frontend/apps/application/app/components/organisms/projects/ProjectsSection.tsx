@@ -100,22 +100,31 @@ function ProjectsSection({ projects }: ProjectsSectionProps) {
 
       </div>
 
-      <ul className="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 mt-4 py-6">
-          {displayedProjects.map(project => (
-            <ProjectCard key={project.id} project={project} />
-          ))}
-      </ul>
-
-      <div className="pagination-container flex items-center justify-between mt-8 pb-8 max-w-130 mx-auto">
-        <button className="pagination-button px-3 py-1 mx-1 rounded-md bg-primary-light text-primary hover:bg-primary hover:text-white transition-all duration-150" onClick={previousPage}>Previous</button>
-        <div className="space-x-4">
-          {[...Array(paginationCount)].map((_, index) => (
-            <button key={index} className={`pagination-button px-3 py-1 rounded-md  hover:bg-primary hover:text-white transition-all duration-150 ${currentPage === index + 1 ? 'bg-primary text-white' : 'bg-primary-light text-primary'}`} onClick={() => jumpToPage(index + 1)}>{index + 1}</button>
-          ))}
-          
+      {filteredProjectsList.length === 0 ? (
+        <div className="text-center py-8">
+          <h3 className="text-xl font-medium text-gray-700">Aucun projet trouvé</h3>
+          <p className="text-gray-500">Essayez d'ajuster votre recherche ou créez un nouveau projet.</p>
         </div>
-        <button className="pagination-button px-3 py-1 mx-1 rounded-md bg-primary-light text-primary hover:bg-primary hover:text-white transition-all duration-150" onClick={nextPage}>Next</button>
-      </div>
+      ) : (
+        <>
+          <ul className="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 mt-4 py-6">
+              {displayedProjects.map(project => (
+                <ProjectCard key={project.id} project={project} />
+              ))}
+          </ul>
+
+          <div className="pagination-container flex items-center justify-between mt-8 pb-8 max-w-130 mx-auto">
+            <button className="pagination-button px-3 py-1 mx-1 rounded-md bg-primary-light text-primary hover:bg-primary hover:text-white transition-all duration-150" onClick={previousPage}>Previous</button>
+            <div className="space-x-4">
+              {[...Array(paginationCount)].map((_, index) => (
+                <button key={index} className={`pagination-button px-3 py-1 rounded-md  hover:bg-primary hover:text-white transition-all duration-150 ${currentPage === index + 1 ? 'bg-primary text-white' : 'bg-primary-light text-primary'}`} onClick={() => jumpToPage(index + 1)}>{index + 1}</button>
+              ))}
+              
+            </div>
+            <button className="pagination-button px-3 py-1 mx-1 rounded-md bg-primary-light text-primary hover:bg-primary hover:text-white transition-all duration-150" onClick={nextPage}>Next</button>
+          </div>
+        </>
+      )}
     </div>
   )
 }

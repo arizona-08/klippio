@@ -1,25 +1,26 @@
 'use client';
 import { useProjectNodeStore } from '@/stores/ProjectNodesStore';
-import { FileType, FolderType } from '@/types/project'
+import { FolderType, PlanType } from '@/types/project'
+import { formatDate } from '@/utils/date';
 import { EllipsisVertical, File, Folder } from 'lucide-react'
 import React from 'react'
 
 interface ProjectNodeProps {
-  node: FileType | FolderType
-  setNode: (node: FileType | FolderType) => void ;
+  type: 'folder' | 'plan';
+  node: FolderType | PlanType
+  selectNode: (node: FolderType | PlanType) => void ;
 }
 
 
-function ProjectNode({ node, setNode }: ProjectNodeProps) {
+function ProjectNode({ node, selectNode, type }: ProjectNodeProps) {
 
-  
   return (
-    <li className="relative w-full h-full flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer" onClick={() => setNode(node)}>
+    <li className="relative w-full h-full flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer" onClick={() => selectNode(node)}>
       <div className="flex gap-4 items-center">
-        {node.type === 'folder' ? <Folder className="text-primary fill-primary"/> : <File className="text-gray-400"/>}
+        {type === 'folder' ? <Folder className="text-primary fill-primary"/> : <File className="text-gray-400"/>}
         <div className="">
           <p className="text-lg font-medium leading-tight">{node.name}</p>
-          <p>Modifié le {node.lastModified.toLocaleDateString()}</p>
+          <p>Modifié le {type === 'folder' ? formatDate((node as FolderType).lastModifiedAt) || '' : formatDate((node as PlanType).lastOpenedAt) || ''}</p>
         </div>
       </div>
 

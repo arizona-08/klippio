@@ -10,8 +10,9 @@ import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { Document, Page, pdfjs } from 'react-pdf';
 import { usePlanStore } from '@/stores/AllPlansStore'
 import { addMarker, deleteMarker, editMarker, getLastOpenedPlan, getMarkers } from '@/proxy/plan/plan-functions'
-import { MarkerPhotoType, MarkerType } from '@/types/project'
+import { FolderType, MarkerPhotoType, MarkerType } from '@/types/project'
 import { useCurrentProjectStore } from '@/stores/CurrentProjectStore'
+import { getProjectRootFolder } from '@/proxy/folders/folder-functions'
 // Configuration obligatoire du worker pour react-pdf (compatible Next.js)
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 // import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
@@ -44,6 +45,9 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
   const photoInputRef = React.useRef<HTMLInputElement | null>(null);
 
   const [option, setOption] = React.useState<SelectOption>('hand');
+
+  //État pour gérer le dossier actif
+  const [activeFolder, setActiveFolder] = React.useState<FolderType | null>(null); 
 
   function selectOption(option: SelectOption) {
     setOption(option);
@@ -294,13 +298,28 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
       }
     }
 
+
     fetchLastOpenedPlan();
     fetchMarkersForCurrentPlan();
   }, [currentFileUrl])
 
+  useEffect(() => {
+    async function fetchProjectRootFolder(){
+      const response = await getProjectRootFolder(projectId);
+      if(response.ok){
+        const result = await response.json();
+        setActiveFolder(result);
+      } else {
+        console.error("Erreur lors de la récupération du dossier racine du projet :", response.statusText);
+      }
+    }
+
+    fetchProjectRootFolder();
+  }, [])
+
   
   return (
-    <div className="relative w-full h-[calc(100vh-88px)] bg-gray-100 overflow-hidden flex flex-col">
+    <div className="relative w-full h-full bg-gray-100 overflow-hidden flex flex-col">
       
       {!currentFileUrl ? (
         <div id="plan-upload-container" className="w-full max-w-sm relative top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-50 p-6 rounded-lg border border-gray-200" ref={planUploadContainerRef}>
@@ -402,7 +421,7 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
         handleUploadPlan={displayPlan}
       />
 
-      <ProjectFolders />
+      <ProjectFolders activeFolder={activeFolder} projectId={projectId} />
     </div>
   )
 }

@@ -10,7 +10,7 @@ function DashboardLayout({children}: DashboardLayoutProps) {
     <>
       <div className="flex flex-col h-screen lg:flex-row overflow-hidden">
         <AppMenu />
-        <main className='w-full overflow-y-auto relative'>
+        <main className='w-full flex-1 min-h-0 overflow-y-auto relative'>
           {children}
         </main>
       </div>

@@ -14,7 +14,7 @@ async function VisualizePage({ params } : { params: Promise<{ project_id: string
       <div className="flex-1 overflow-auto flex flex-col">
         <TopBar />
 
-        <div className="relative p-4 flex-1">
+        <div className="relative flex-1 min-h-0">
           <PlanLoader projectId={project_id} />
         </div>
       </div>

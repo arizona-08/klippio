@@ -32,7 +32,8 @@ export class PlanController {
     
     const userId = user.id;
     const fileName = body.name;
-    const uploadedPlanInfo = await this.planService.uploadPlan(fileName, projectId, userId, file);
+    const folderId = body.folderId;
+    const uploadedPlanInfo = await this.planService.uploadPlan(fileName, projectId, folderId, userId, file);
 
     return {
       message: 'Fichier sauvegardé avec succès',
@@ -105,4 +106,6 @@ export class PlanController {
       message: 'Marqueur supprimé avec succès'
     };
   }
+
+
 }

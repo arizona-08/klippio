@@ -15,7 +15,7 @@ function TopBar() {
   const currentProjectTitle = useCurrentProjectStore((state) => state.currentProjectTitle);
 
   return (
-    <div className="bg-gray-100 text-black p-4 flex items-center justify-between">
+    <div className="bg-white text-black p-4 flex items-center justify-between">
       <Link href={"/dashboard"}>
         <div className="flex items-center gap-4">
           <ArrowLeft />

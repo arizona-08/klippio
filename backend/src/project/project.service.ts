@@ -3,6 +3,7 @@ import { create } from "domain";
 import { AuthenticatedGuard } from "src/auth/authenticated.guard";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateProjectDTO } from "./dtos/create-project.dto";
+import { CreateFolderDto } from "./dtos/create-folder.dto";
 
 @Injectable()
 export class ProjectService {
@@ -16,6 +17,14 @@ export class ProjectService {
           authorId: userId
         }
       });
+
+      await this.prismaService.folder.create({
+        data: {
+          name: "root",
+          isRoot: true,
+          projectId: createdProject.id
+        }
+      })
 
       return createdProject;
     } catch(error) {
@@ -76,6 +85,49 @@ export class ProjectService {
     return formattedProjects;
     } catch(error) {
       throw new Error("Failed to get projects");
+    }
+  }
+
+  async getProjectRootFolder(projectId: string) {
+    try {
+      const rootFolder = await this.prismaService.folder.findFirst({
+        where: {
+          projectId,
+          isRoot: true,
+        },
+        include: {
+          subfolders: true,
+          plans: true,
+        }
+      });
+
+      if (!rootFolder) {
+        throw new Error("Root folder not found for the project");
+      }
+
+      return rootFolder;
+    } catch (error) {
+      throw new Error("Failed to get project root folder");
+    }
+  }
+
+  async createFolder(createFolderDto: CreateFolderDto, projectId: string) {
+    try {
+      const { name, parentFolderId } = createFolderDto;
+
+      const newFolder = await this.prismaService.folder.create({
+        data: {
+          name,
+          projectId,
+          parentId: parentFolderId,
+          isRoot: false,
+
+        }
+      });
+
+      return newFolder;
+    } catch (error) {
+      throw new Error("Failed to create folder");
     }
   }
 }
