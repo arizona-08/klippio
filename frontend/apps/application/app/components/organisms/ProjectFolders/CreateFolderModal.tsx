@@ -31,7 +31,7 @@ function CreateFolderModal({ isOpen, onClose, onCreate }: CreateFolderModalProps
   return (
     <>
       <div className={`fixed inset-0 bg-black/35 backdrop-blur-sm z-60 ${isOpen ? 'block' : 'hidden'}`}></div>
-      <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 z-70 w-full max-w-md ${isOpen ? 'block' : 'hidden'}`}>
+      <div className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 z-70 w-full max-w-md ${isOpen ? 'block' : 'hidden'}`}>
         <h2 className="text-xl font-semibold mb-4">Créer un nouveau dossier</h2>
 
         <form>

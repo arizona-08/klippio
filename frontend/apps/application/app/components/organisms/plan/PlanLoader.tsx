@@ -319,7 +319,7 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
 
   
   return (
-    <div className="relative w-full h-full bg-gray-100 overflow-hidden flex flex-col">
+    <div className="relative w-full h-full bg-gray-100  flex flex-col">
       
       {!currentFileUrl ? (
         <div id="plan-upload-container" className="w-full max-w-sm relative top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-50 p-6 rounded-lg border border-gray-200" ref={planUploadContainerRef}>

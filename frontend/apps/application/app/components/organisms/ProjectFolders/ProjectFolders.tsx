@@ -1,6 +1,6 @@
 'use client';
 
-import { FolderType } from '@/types/project'
+import { FolderType, PlanType } from '@/types/project'
 import { ArrowLeft, FilePlusCorner, FolderPlus, GripHorizontal } from 'lucide-react'
 import React, { useEffect } from 'react'
 import ProjectNode from '../../molecules/ProjectNode/ProjectNode'
@@ -44,6 +44,18 @@ function ProjectFolders({ activeFolder, projectId }: ProjectFoldersProps) {
     
   }
 
+  async function onDeleteNode(nodeId: string, type: 'folder' | 'plan'){
+    if(type === "folder") {
+
+    }
+  }
+
+  async function onRenameNode(nodeId: string, newName: string, type: 'folder' | 'plan'){
+    if(type === "folder"){
+
+    }
+  }
+
   return (
     <>
       <CreateFolderModal isOpen={isCreateFolderModalOpen} onClose={() => setIsCreateFolderModalOpen(false)} onCreate={handleOnCreateFolder}/>
@@ -69,17 +81,30 @@ function ProjectFolders({ activeFolder, projectId }: ProjectFoldersProps) {
         </div>
         {
           isNotEmptyFolder ? (
-            <ul>
+            <ul className="overflow-y-auto max-h-80">
               {activeFolder?.subfolders.map(subfolder => (
-                <ProjectNode key={subfolder.id} node={subfolder} type='folder' selectNode={onSelectNode}/>
+                <ProjectNode
+                  key={subfolder.id}
+                  node={subfolder}
+                  type='folder'
+                  selectNode={onSelectNode}
+                  handleOnDelete={onDeleteNode}
+                  handleOnRename={onRenameNode}
+                />
               ))}
 
               {activeFolder?.plans.map(plan => (
-                <ProjectNode key={plan.id} node={plan} type='plan' selectNode={onSelectNode}/>
+                <ProjectNode
+                  key={plan.id}
+                  node={plan}
+                  type='plan'
+                  selectNode={onSelectNode}
+                  handleOnDelete={onDeleteNode}
+                  handleOnRename={onRenameNode}
+                />
               ))}
             </ul>
           ) : (
-
             <div className='text-center mt-12'>
               <p>Aucun dossier ou fichier.</p>
             </div>
