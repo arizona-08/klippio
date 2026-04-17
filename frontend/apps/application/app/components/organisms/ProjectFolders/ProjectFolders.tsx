@@ -7,14 +7,17 @@ import ProjectNode from '../../molecules/ProjectNode/ProjectNode'
 import { CTA } from '@repo/ui';
 import { useProjectNodeStore } from '@/stores/ProjectNodesStore';
 import CreateFolderModal from './CreateFolderModal';
-import { createFolder } from '@/proxy/folders/folder-functions';
+import { createFolder, deleteFolder, renameFolder } from '@/proxy/folders/folder-functions';
 
 interface ProjectFoldersProps {
   activeFolder: FolderType | null
   projectId: string;
+  updateUIOnCreateFolder(newFolder: FolderType): void;
+  updateUIOnDeleteNode(nodeId: string, type: 'folder' | 'plan'): void;
+  updateUIOnRenameNode(nodeId: string, newName: string, type: 'folder' | 'plan'): void;
 }
 
-function ProjectFolders({ activeFolder, projectId }: ProjectFoldersProps) {
+function ProjectFolders({ activeFolder, projectId, updateUIOnCreateFolder, updateUIOnDeleteNode, updateUIOnRenameNode }: ProjectFoldersProps) {
 
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = React.useState(false);
   //fetch les infos de activeFolderId pour afficher le nom du dossier actif et son contenu (dossiers + plans)
@@ -35,7 +38,7 @@ function ProjectFolders({ activeFolder, projectId }: ProjectFoldersProps) {
 
     const result = await response.json();
     const createdFolder = result;
-    activeFolder?.subfolders.push(createdFolder); //fonctionnera pas car pas réactif
+    updateUIOnCreateFolder(createdFolder);
     setIsCreateFolderModalOpen(false);
 
   }
@@ -46,13 +49,29 @@ function ProjectFolders({ activeFolder, projectId }: ProjectFoldersProps) {
 
   async function onDeleteNode(nodeId: string, type: 'folder' | 'plan'){
     if(type === "folder") {
+      const response = await deleteFolder(nodeId, projectId);
 
+      if(!response.ok){
+        console.error("Failed to delete folder");
+        return;
+      }
+
+      updateUIOnDeleteNode(nodeId, type);
     }
+
+    // gérer la suppression d'un plan
   }
 
   async function onRenameNode(nodeId: string, newName: string, type: 'folder' | 'plan'){
     if(type === "folder"){
+      const response = await renameFolder(nodeId, newName, projectId);
 
+      if(!response.ok){
+        console.error("Failed to rename folder");
+        return;
+      }
+
+      updateUIOnRenameNode(nodeId, newName, type);
     }
   }
 

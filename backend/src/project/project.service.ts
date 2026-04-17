@@ -130,4 +130,68 @@ export class ProjectService {
       throw new Error("Failed to create folder");
     }
   }
+
+  async deleteFolder(folderId: string, projectId: string) {
+    try {
+      // Vérifier que le dossier existe et appartient au projet
+      const folder = await this.prismaService.folder.findFirst({
+        where: {
+          id: folderId,
+          projectId,
+        }
+      });
+
+      if (!folder) {
+        throw new Error("Folder not found in the project");
+      }
+
+      //supprimer le dossier et tous les sous-dossiers/plans dans le S3 et la bdd
+
+      // Supprimer le dossier
+      await this.prismaService.folder.delete({
+        where: {
+          id: folderId,
+        }
+      });
+
+      return {
+        success: true,
+        message: "Folder deleted successfully"
+      };
+    } catch (error) {
+      throw new Error("Failed to delete folder");
+    }
+  }
+
+  async renameFolder(folderId: string, newName: string, projectId: string) {
+    try {
+      // Vérifier que le dossier existe et appartient au projet
+      const folder = await this.prismaService.folder.findFirst({
+        where: {
+          id: folderId,
+          projectId,
+        }
+      });
+
+      if (!folder) {
+        throw new Error("Folder not found in the project");
+      }
+
+      // Renommer le dossier
+      const updatedFolder = await this.prismaService.folder.update({
+        where: {
+          id: folderId,
+        },
+        data: {
+          name: newName,
+        }
+      });
+
+      //renommer le dossier dans le S3
+
+      return updatedFolder;
+    } catch (error) {
+      throw new Error("Failed to rename folder");
+    }
+  }
 }

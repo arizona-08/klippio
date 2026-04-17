@@ -38,8 +38,8 @@ export async function createFolder(name: string, projectId: string, parentFolder
   return response;
 }
 
-export async function renameFolder(folderId: string, newName: string){
-  const response = await fetchFromClient(`/api/folders/${folderId}/rename`, {
+export async function renameFolder(folderId: string, newName: string, projectId: string){
+  const response = await fetchFromClient(`/api/projects/${projectId}/folders/${folderId}/rename`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -52,8 +52,8 @@ export async function renameFolder(folderId: string, newName: string){
   return response;
 }
 
-export async function deleteFolder(folderId: string){
-  const response = await fetchFromClient(`/api/folders/${folderId}/delete`, {
+export async function deleteFolder(folderId: string, projectId: string){
+  const response = await fetchFromClient(`/api/projects/${projectId}/folders/${folderId}/delete`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",

@@ -317,6 +317,36 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
     fetchProjectRootFolder();
   }, [])
 
+  function updateUIOnCreateFolder(newFolder: FolderType){
+    if(activeFolder && activeFolder.id === newFolder.parentId){
+      setActiveFolder(prev => {
+        if(!prev) return prev;
+        return { ...prev, subfolders: [...prev.subfolders, newFolder] }
+      });
+    }
+  }
+
+  function updateUIOnDeleteNode(nodeId: string, type: 'folder' | 'plan'){
+    setActiveFolder(prev => {
+      if(!prev) return prev;
+      if(type === 'folder'){
+        return { ...prev, subfolders: prev.subfolders.filter(folder => folder.id !== nodeId) }
+      } else {
+        return { ...prev, plans: prev.plans.filter(plan => plan.id !== nodeId) }
+      }
+    })
+  }
+
+  function updateUIOnRenameNode(nodeId: string, newName: string, type: 'folder' | 'plan'){
+    setActiveFolder(prev => {
+      if(!prev) return prev;
+      if(type === 'folder'){
+        return { ...prev, subfolders: prev.subfolders.map(folder => folder.id === nodeId ? { ...folder, name: newName } : folder) }
+      } else {
+        return { ...prev, plans: prev.plans.map(plan => plan.id === nodeId ? { ...plan, name: newName } : plan) }
+      }
+    })
+  }
   
   return (
     <div className="relative w-full h-full bg-gray-100  flex flex-col">
@@ -421,7 +451,13 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
         handleUploadPlan={displayPlan}
       />
 
-      <ProjectFolders activeFolder={activeFolder} projectId={projectId} />
+      <ProjectFolders
+        activeFolder={activeFolder}
+        projectId={projectId}
+        updateUIOnCreateFolder={updateUIOnCreateFolder}
+        updateUIOnDeleteNode={updateUIOnDeleteNode}
+        updateUIOnRenameNode={updateUIOnRenameNode}
+      />
     </div>
   )
 }

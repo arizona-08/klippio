@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from "@nestjs/common";
 import { AuthenticatedGuard } from "src/auth/authenticated.guard";
 import { CreateProjectDTO } from "./dtos/create-project.dto";
 import { ProjectService } from "./project.service";
@@ -34,5 +34,16 @@ export class ProjectController {
   @Post(':projectId/folders/create')
   async createFolder(@Param('projectId') projectId: string, @Body() createFolderDto: CreateFolderDto) {
     return this.projectService.createFolder(createFolderDto, projectId);
+  }
+
+  @Delete(':projectId/folders/:folderId/delete')
+  async deleteFolder(@Param('projectId') projectId: string, @Param('folderId') folderId: string) {
+    return this.projectService.deleteFolder(folderId, projectId);
+  }
+
+  @Patch(':projectId/folders/:folderId/rename')
+  async renameFolder(@Param('projectId') projectId: string, @Param('folderId') folderId: string, @Body() body: { newName: string }) {
+    const { newName } = body;
+    return this.projectService.renameFolder(folderId, newName, projectId);
   }
 }
