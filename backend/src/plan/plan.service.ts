@@ -48,7 +48,10 @@ export class PlanService {
 
     const updatedPlan = await this.prismaService.plan.update({
       where: { id: planId },
-      data: { temporaryAccessUrl: newTemporaryAccessUrl },
+      data: { 
+        temporaryAccessUrl: newTemporaryAccessUrl,
+        lastOpenedAt: new Date(), // Met à jour la date de dernière ouverture
+      },
     });
 
     return {

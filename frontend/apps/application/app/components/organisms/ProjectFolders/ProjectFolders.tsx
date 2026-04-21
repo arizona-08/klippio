@@ -9,11 +9,13 @@ import { useProjectNodeStore } from '@/stores/ProjectNodesStore';
 import CreateFolderModal from './CreateFolderModal';
 import { createFolder, deleteFolder, renameFolder } from '@/proxy/folders/folder-functions';
 import { on } from 'events';
+import AddPlanModal from '../plan/AddPlanModal';
 
 interface ProjectFoldersProps {
   activeFolder: FolderType | null
   projectId: string;
   updateUIOnCreateFolder(newFolder: FolderType): void;
+  updateUIOnAddPlan(newPlan: PlanType): void;
   updateUIOnDeleteNode(nodeId: string, type: 'folder' | 'plan'): void;
   updateUIOnRenameNode(nodeId: string, newName: string, type: 'folder' | 'plan'): void;
   triggerNavigateToFolder(folderId: string): void;
@@ -24,6 +26,7 @@ function ProjectFolders({
   activeFolder,
   projectId,
   updateUIOnCreateFolder,
+  updateUIOnAddPlan,
   updateUIOnDeleteNode,
   updateUIOnRenameNode,
   triggerNavigateToFolder,
@@ -32,6 +35,7 @@ function ProjectFolders({
 {
 
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = React.useState(false);
+  const [isAddPlanModalOpen, setIsAddPlanModalOpen] = React.useState(false);
   //fetch les infos de activeFolderId pour afficher le nom du dossier actif et son contenu (dossiers + plans)
 
   const isNotEmptyFolder = activeFolder ? (activeFolder.subfolders.length > 0 || activeFolder.plans.length > 0) : false;
@@ -61,6 +65,7 @@ function ProjectFolders({
 
   function onLoadPlan(planId: string){
     triggerLoadPlan(planId);
+    closeFolders();
   }
 
   async function onDeleteNode(nodeId: string, type: 'folder' | 'plan'){
@@ -94,6 +99,15 @@ function ProjectFolders({
   return (
     <>
       <CreateFolderModal isOpen={isCreateFolderModalOpen} onClose={() => setIsCreateFolderModalOpen(false)} onCreate={handleOnCreateFolder}/>
+      <AddPlanModal 
+        isActive={isAddPlanModalOpen}
+        projectId={projectId}
+        activeFolderId={activeFolder ? activeFolder.id : undefined}
+        onClose={() => setIsAddPlanModalOpen(false)}
+        handleUploadPlan={() => {}}
+        addPlanToList={updateUIOnAddPlan}
+        createAndUploadPlan={false}
+      />
       <div className={`fixed inset-0 dark-layer bg-black/20 backdrop-blur-sm z-50 ${isProjectsFolderModalOpen ? 'block' : 'hidden'}`}></div>
       <div className={`fixed left-0 bottom-0 w-full h-150 bg-white py-8 px-4 rounded-t-lg z-50 md:max-w-150 md:h-fit md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 ${isProjectsFolderModalOpen ? 'block' : 'hidden'}`}>
         <div className="w-full flex items-center justify-center mb-2">
@@ -106,7 +120,7 @@ function ProjectFolders({
               <h2 className="text-xl font-semibold ">Sélectionner un plan</h2>
             </div>
             <div className="create-actions flex-1 flex items-center justify-end gap-1">
-              <div className="p-1 hover:bg-gray-100 rounded-md">
+              <div className="p-1 hover:bg-gray-100 rounded-md" onClick={() => setIsAddPlanModalOpen(true)}>
                 <FilePlusCorner className="h-6 w-6"/>
               </div>
 

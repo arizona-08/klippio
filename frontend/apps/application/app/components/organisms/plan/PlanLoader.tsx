@@ -10,7 +10,7 @@ import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { Document, Page, pdfjs } from 'react-pdf';
 import { usePlanStore } from '@/stores/AllPlansStore'
 import { addMarker, deleteMarker, editMarker, fetchPlan, getLastOpenedPlan, getMarkers } from '@/proxy/plan/plan-functions'
-import { FolderType, MarkerPhotoType, MarkerType } from '@/types/project'
+import { FolderType, MarkerPhotoType, MarkerType, PlanType } from '@/types/project'
 import { useCurrentProjectStore } from '@/stores/CurrentProjectStore'
 import { getFolder, getProjectRootFolder } from '@/proxy/folders/folder-functions'
 // Configuration obligatoire du worker pour react-pdf (compatible Next.js)
@@ -338,6 +338,15 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
     }
   }
 
+  function updateUIOnAddPlan(newPlan: PlanType){
+    if(activeFolder){
+      setActiveFolder(prev => {
+        if(!prev) return prev;
+        return { ...prev, plans: [...prev.plans, newPlan] }
+      });
+    }
+  }
+
   function updateUIOnDeleteNode(nodeId: string, type: 'folder' | 'plan'){
     setActiveFolder(prev => {
       if(!prev) return prev;
@@ -374,7 +383,7 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
       const response = await fetchPlan(planId);
       if(response.ok){
         const result = await response.json();
-        const plan = result.plan;
+        const plan = result;
         const isActuallyPdf = plan.documentStorageKey.toLowerCase().endsWith('.pdf');
         displayPlan({
           planId: plan.id,
@@ -490,12 +499,14 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
         activeFolderId={activeFolder?.id}
         onClose={() => setIsAddPlanModalActive(false)}
         handleUploadPlan={displayPlan}
+        createAndUploadPlan={true}
       />
 
       <ProjectFolders
         activeFolder={activeFolder}
         projectId={projectId}
         updateUIOnCreateFolder={updateUIOnCreateFolder}
+        updateUIOnAddPlan={updateUIOnAddPlan}
         updateUIOnDeleteNode={updateUIOnDeleteNode}
         updateUIOnRenameNode={updateUIOnRenameNode}
         triggerNavigateToFolder={onNavigateToFolder}
