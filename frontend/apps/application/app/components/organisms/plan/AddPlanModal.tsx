@@ -7,14 +7,22 @@ import { convertFileSizeInMo } from '@/utils/files'
 import { PlanTypeDto } from '@/types/project'
 import { uploadPlan } from '@/proxy/plan/plan-functions'
 
+export type UploadPlanCredentials = {
+  planId: string,
+  planName: string,
+  storageKey: string,
+  temporaryAccessUrl: string,
+  isPdfDocument: boolean
+}
 interface AddPlanModalProps {
   isActive: boolean
   projectId: string;
+  activeFolderId: string | undefined;
   onClose: () => void;
-  handleUploadPlan: (planId: string, planName: string, storageKey: string, temporaryAccessUrl: string, isPdfDocument: boolean) => void;
+  handleUploadPlan: (credentials: UploadPlanCredentials) => void;
 }
 
-function AddPlanModal({ isActive, projectId, onClose, handleUploadPlan }: AddPlanModalProps) {
+function AddPlanModal({ isActive, projectId, activeFolderId, onClose, handleUploadPlan }: AddPlanModalProps) {
   const [plan, setPlan] = React.useState<PlanTypeDto | null>(null);
   
   const photoinputRef = React.useRef<HTMLInputElement | null>(null);
@@ -41,6 +49,7 @@ function AddPlanModal({ isActive, projectId, onClose, handleUploadPlan }: AddPla
     const formData = new FormData();
     formData.append('file', plan.file);
     formData.append('name', plan.name);
+    formData.append('folderId', activeFolderId || '');
 
     const response = await uploadPlan(formData, projectId);
     if(!response.ok){
@@ -49,7 +58,13 @@ function AddPlanModal({ isActive, projectId, onClose, handleUploadPlan }: AddPla
     } else {
       const result = await response.json();
       const uploadedPlan = result.uploadedPlan;
-      handleUploadPlan(uploadedPlan.id, uploadedPlan.name, uploadedPlan.documentStorageKey, uploadedPlan.temporaryAccessUrl, plan.file.type === 'application/pdf');
+      handleUploadPlan({
+        planId: uploadedPlan.id,
+        planName: uploadedPlan.name,
+        storageKey: uploadedPlan.documentStorageKey,
+        temporaryAccessUrl: uploadedPlan.temporaryAccessUrl,
+        isPdfDocument: plan.file.type === 'application/pdf'
+      });
       onClose();
     }
 

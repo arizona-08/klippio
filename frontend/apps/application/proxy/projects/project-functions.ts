@@ -14,8 +14,8 @@ export async function createProject(data: CreateProjectDTO){
   return response;
 }
 
-export async function modifyProject(data: CreateProjectDTO){
-  const response = await fetchFromClient("/api/projects/modify", {
+export async function modifyProject(data: CreateProjectDTO, projectId: string){
+  const response = await fetchFromClient(`/api/projects/${projectId}/update`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json"

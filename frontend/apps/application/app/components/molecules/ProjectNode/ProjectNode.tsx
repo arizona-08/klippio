@@ -10,13 +10,14 @@ import RenameNodeModal from '../../organisms/ProjectFolders/RenameNodeModal';
 interface ProjectNodeProps {
   type: 'folder' | 'plan';
   node: FolderType | PlanType
-  selectNode: (node: FolderType | PlanType) => void ;
   handleOnDelete: (nodeId: string, type: 'folder' | 'plan') => void;
   handleOnRename: (nodeId: string, newName: string,  type: 'folder' | 'plan') => void;
+  navigateToFolder?: (folderId: string) => void;
+  loadPlan?: (planId: string) => void;
 }
 
 
-function ProjectNode({ node, selectNode, type, handleOnDelete, handleOnRename }: ProjectNodeProps) {
+function ProjectNode({ node, type, handleOnDelete, handleOnRename, navigateToFolder, loadPlan }: ProjectNodeProps) {
   const [isActionCardOpen, setIsActionCardOpen] = React.useState(false);
   const [isRenameModalOpen, setIsRenameModalOpen] = React.useState(false);
   const triggerRef = React.useRef<HTMLDivElement>(null);
@@ -31,7 +32,19 @@ function ProjectNode({ node, selectNode, type, handleOnDelete, handleOnRename }:
         onRename={handleOnRename}
         closeRenameModal={() => setIsRenameModalOpen(false)}
       />
-      <li className="relative w-full h-full flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer" onClick={() => selectNode(node)}>
+      <li
+        className="relative w-full h-full flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
+        onClick={() => {
+          if(type === "folder") {
+            navigateToFolder?.(node.id);
+            console.log("Folder clicked");
+          } else {
+            loadPlan?.(node.id);
+            console.log("Plan clicked");
+          }
+          
+        }}
+      >
         <div className="flex gap-4 items-center">
           {type === 'folder' ? <Folder className="text-primary fill-primary"/> : <File className="text-gray-400"/>}
           <div className="">

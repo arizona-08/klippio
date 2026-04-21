@@ -2,17 +2,17 @@
 import React, { useEffect } from 'react'
 import PicModal from './PicModal'
 import { CTA } from '@repo/ui'
-import AddPlanModal from './AddPlanModal'
+import AddPlanModal, { UploadPlanCredentials } from './AddPlanModal'
 import VisualizerMenu, { SelectOption } from '../../molecules/VisualizerMenu/VisualizerMenu'
 import ProjectFolders from '../ProjectFolders/ProjectFolders'
 
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { Document, Page, pdfjs } from 'react-pdf';
 import { usePlanStore } from '@/stores/AllPlansStore'
-import { addMarker, deleteMarker, editMarker, getLastOpenedPlan, getMarkers } from '@/proxy/plan/plan-functions'
+import { addMarker, deleteMarker, editMarker, fetchPlan, getLastOpenedPlan, getMarkers } from '@/proxy/plan/plan-functions'
 import { FolderType, MarkerPhotoType, MarkerType } from '@/types/project'
 import { useCurrentProjectStore } from '@/stores/CurrentProjectStore'
-import { getProjectRootFolder } from '@/proxy/folders/folder-functions'
+import { getFolder, getProjectRootFolder } from '@/proxy/folders/folder-functions'
 // Configuration obligatoire du worker pour react-pdf (compatible Next.js)
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 // import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
@@ -53,11 +53,17 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
     setOption(option);
   }
 
-  function displayPlan(id: string, planName: string, storageKey: string, temporaryAccessUrl: string, isPdfDocument: boolean) {
+  function displayPlan({
+    planId,
+    planName,
+    storageKey,
+    temporaryAccessUrl,
+    isPdfDocument
+  }: UploadPlanCredentials) {
     
     setIsPdf(isPdfDocument);
     setCurrentFileUrl(temporaryAccessUrl);
-    setCurrentPlan({ id, name: planName, storageKey: storageKey, temporaryAccessUrl, isPdfDocument: isPdfDocument });
+    setCurrentPlan({ id: planId, name: planName, storageKey: storageKey, temporaryAccessUrl, isPdfDocument: isPdfDocument });
 
     setMarkers([]);
   }
@@ -274,9 +280,14 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
           const result = await response.json();
           const lastPlan = result.lastPlan;
           if(lastPlan) {
-            console.log("hello")
             const isActuallyPdf = lastPlan.documentStorageKey.toLowerCase().endsWith('.pdf');
-            displayPlan(lastPlan.id, lastPlan.name, lastPlan.documentStorageKey, lastPlan.temporaryAccessUrl, isActuallyPdf);
+            displayPlan({
+              planId: lastPlan.id,
+              planName: lastPlan.name,
+              storageKey: lastPlan.documentStorageKey,
+              temporaryAccessUrl: lastPlan.temporaryAccessUrl,
+              isPdfDocument: isActuallyPdf
+            });
             setCurrentProjectTitle(lastPlan.project.title);
             console.log(lastPlan.project.title);
           }
@@ -291,7 +302,6 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
       if(response.ok){
         const result = await response.json();
         const fetchedMarkers = result.markers;
-        console.log("Marqueurs récupérés :", fetchedMarkers);
         setMarkers(fetchedMarkers);
       } else {
         console.error("Erreur lors de la récupération des marqueurs :", response.statusText);
@@ -304,18 +314,20 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
   }, [currentFileUrl])
 
   useEffect(() => {
-    async function fetchProjectRootFolder(){
-      const response = await getProjectRootFolder(projectId);
-      if(response.ok){
-        const result = await response.json();
-        setActiveFolder(result);
-      } else {
-        console.error("Erreur lors de la récupération du dossier racine du projet :", response.statusText);
+    if(!activeFolder) {
+      async function fetchProjectRootFolder(){
+        const response = await getProjectRootFolder(projectId);
+        if(response.ok){
+          const result = await response.json();
+          setActiveFolder(result);
+        } else {
+          console.error("Erreur lors de la récupération du dossier racine du projet :", response.statusText);
+        }
       }
+  
+      fetchProjectRootFolder();
     }
-
-    fetchProjectRootFolder();
-  }, [])
+  }, [activeFolder?.id])
 
   function updateUIOnCreateFolder(newFolder: FolderType){
     if(activeFolder && activeFolder.id === newFolder.parentId){
@@ -346,6 +358,34 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
         return { ...prev, plans: prev.plans.map(plan => plan.id === nodeId ? { ...plan, name: newName } : plan) }
       }
     })
+  }
+
+  async function onNavigateToFolder(folderId: string){
+    const response = await getFolder(folderId, projectId);
+    if(response.ok){
+      const result = await response.json();
+      setActiveFolder(result);
+    } else {
+      console.error("Erreur lors de la récupération du dossier :", response.statusText);
+    }
+  }
+
+  async function onLoadPlan(planId: string){
+      const response = await fetchPlan(planId);
+      if(response.ok){
+        const result = await response.json();
+        const plan = result.plan;
+        const isActuallyPdf = plan.documentStorageKey.toLowerCase().endsWith('.pdf');
+        displayPlan({
+          planId: plan.id,
+          planName: plan.name,
+          storageKey: plan.documentStorageKey,
+          temporaryAccessUrl: plan.temporaryAccessUrl,
+          isPdfDocument: isActuallyPdf
+        });
+      } else {
+        console.error("Erreur lors du chargement du plan :", response.statusText);
+      }
   }
   
   return (
@@ -447,6 +487,7 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
       <AddPlanModal
         projectId={projectId}
         isActive={isAddPlanModalActive}
+        activeFolderId={activeFolder?.id}
         onClose={() => setIsAddPlanModalActive(false)}
         handleUploadPlan={displayPlan}
       />
@@ -457,6 +498,8 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
         updateUIOnCreateFolder={updateUIOnCreateFolder}
         updateUIOnDeleteNode={updateUIOnDeleteNode}
         updateUIOnRenameNode={updateUIOnRenameNode}
+        triggerNavigateToFolder={onNavigateToFolder}
+        triggerLoadPlan={onLoadPlan}
       />
     </div>
   )

@@ -30,6 +30,7 @@ export class PlanService {
 
       return {...insertedPlan, temporaryAccessUrl};
     } catch (error) {
+      console.error("Error when saving plan info in database: ", error);
       throw new InternalServerErrorException("Erreur lors de l'enregistrement du plan en base de données");
     }
   }

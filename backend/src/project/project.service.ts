@@ -32,6 +32,37 @@ export class ProjectService {
     }
   }
 
+  async updateProject(projectId: string, createProjectDto: CreateProjectDTO, userId: number){
+    try{
+      const project = await this.prismaService.project.findUnique({
+        where: {
+          id: projectId,
+        }
+      });
+
+      if(!project){
+        throw new Error("Project not found");
+      }
+
+      if(project.authorId !== userId){
+        throw new Error("Unauthorized");
+      }
+
+      const updatedProject = await this.prismaService.project.update({
+        where: {
+          id: projectId,
+        },
+        data: {
+          ...createProjectDto,
+        }
+      });
+
+      return updatedProject;
+    } catch(error) {
+      throw new Error("Failed to update project");
+    }
+  }
+
   async getProjects(userId: number){
     try{
       const projects = await this.prismaService.project.findMany({
@@ -108,6 +139,29 @@ export class ProjectService {
       return rootFolder;
     } catch (error) {
       throw new Error("Failed to get project root folder");
+    }
+  }
+
+  async getFolder(folderId: string, projectId: string) {
+    try {
+      const folder = await this.prismaService.folder.findFirst({
+        where: {
+          id: folderId,
+          projectId,
+        },
+        include: {
+          subfolders: true,
+          plans: true,
+        }
+      });
+
+      if (!folder) {
+        throw new Error("Folder not found in the project");
+      }
+
+      return folder;
+    } catch (error) {
+      throw new Error("Failed to get folder");
     }
   }
 

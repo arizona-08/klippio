@@ -11,8 +11,8 @@ export async function getProjectRootFolder(projectId: string){
   return response;
 }
 
-export async function getFolder(folderId: string){
-  const response = await fetchFromClient(`/api/folders/${folderId}`, {
+export async function getFolder(folderId: string, projectId: string){
+  const response = await fetchFromClient(`/api/projects/${projectId}/folders/${folderId}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Req, UseGuards } from "@nestjs/common";
 import { AuthenticatedGuard } from "src/auth/authenticated.guard";
 import { CreateProjectDTO } from "./dtos/create-project.dto";
 import { ProjectService } from "./project.service";
@@ -24,11 +24,23 @@ export class ProjectController {
     return this.projectService.getProjects(userId);
   }
 
+  @UseGuards(AuthenticatedGuard)
+  @Put(':projectId/update')
+  async updateProject(@Param('projectId') projectId: string, @Body() createProjectDto: CreateProjectDTO, @CurrentUser() user: User){
+    const userId = user.id;
+    return this.projectService.updateProject(projectId, createProjectDto, userId);
+  }
+
     // ------ FOLDERS -------
 
   @Get(':projectId/folders/root-folder')
   async getProjectRootFolder(@Param('projectId') projectId: string) {
     return this.projectService.getProjectRootFolder(projectId);
+  }
+
+  @Get(':projectId/folders/:folderId')
+  async getFolder(@Param('projectId') projectId: string, @Param('folderId') folderId: string) {
+    return this.projectService.getFolder(folderId, projectId);
   }
 
   @Post(':projectId/folders/create')

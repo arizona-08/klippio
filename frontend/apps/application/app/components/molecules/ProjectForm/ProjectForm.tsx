@@ -47,10 +47,16 @@ function ProjectForm({ closeForm, edit, projectToEdit, onSuccess }: ProjectFormP
 
   async function handleSubmit(e?: React.MouseEvent<HTMLButtonElement, MouseEvent>){ 
     e?.preventDefault();
-    const pickedFunction = edit ? modifyProject : createProject;
+    
+    let pickedFunction;
+    if(edit && projectToEdit){
+      pickedFunction = () => modifyProject(projectCredentials, projectToEdit.id.toString());
+    } else {
+      pickedFunction = () => createProject(projectCredentials);
+    }
 
     try{
-      const response = await pickedFunction(projectCredentials);
+      const response = await pickedFunction();
 
       if(response.ok){
         resetForm();

@@ -8,6 +8,7 @@ import { CTA } from '@repo/ui';
 import { useProjectNodeStore } from '@/stores/ProjectNodesStore';
 import CreateFolderModal from './CreateFolderModal';
 import { createFolder, deleteFolder, renameFolder } from '@/proxy/folders/folder-functions';
+import { on } from 'events';
 
 interface ProjectFoldersProps {
   activeFolder: FolderType | null
@@ -15,9 +16,20 @@ interface ProjectFoldersProps {
   updateUIOnCreateFolder(newFolder: FolderType): void;
   updateUIOnDeleteNode(nodeId: string, type: 'folder' | 'plan'): void;
   updateUIOnRenameNode(nodeId: string, newName: string, type: 'folder' | 'plan'): void;
+  triggerNavigateToFolder(folderId: string): void;
+  triggerLoadPlan(planId: string): void;
 }
 
-function ProjectFolders({ activeFolder, projectId, updateUIOnCreateFolder, updateUIOnDeleteNode, updateUIOnRenameNode }: ProjectFoldersProps) {
+function ProjectFolders({ 
+  activeFolder,
+  projectId,
+  updateUIOnCreateFolder,
+  updateUIOnDeleteNode,
+  updateUIOnRenameNode,
+  triggerNavigateToFolder,
+  triggerLoadPlan
+}: ProjectFoldersProps)
+{
 
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = React.useState(false);
   //fetch les infos de activeFolderId pour afficher le nom du dossier actif et son contenu (dossiers + plans)
@@ -43,8 +55,12 @@ function ProjectFolders({ activeFolder, projectId, updateUIOnCreateFolder, updat
 
   }
 
-  function onSelectNode(){
-    
+  function onNavigateToFolder(folderId: string){
+    triggerNavigateToFolder(folderId);
+  }
+
+  function onLoadPlan(planId: string){
+    triggerLoadPlan(planId);
   }
 
   async function onDeleteNode(nodeId: string, type: 'folder' | 'plan'){
@@ -84,9 +100,11 @@ function ProjectFolders({ activeFolder, projectId, updateUIOnCreateFolder, updat
           <GripHorizontal className="text-gray-200"/>
         </div>
         <div className="mb-4 ">
-          <div className="flex items-center gap-4 cursor-pointer" onClick={() => {}}>
-            <ArrowLeft className={`${isRootFolder ? 'hidden' : 'block'}`}/>
-            <h2 className="text-xl font-semibold ">Sélectionner un plan</h2>
+          <div className="flex items-center gap-4">
+            <div className='flex items-center gap-4' onClick={() => onNavigateToFolder(activeFolder?.parentId || '')}>
+              <ArrowLeft className={`${isRootFolder ? 'hidden' : 'block'}`}/>
+              <h2 className="text-xl font-semibold ">Sélectionner un plan</h2>
+            </div>
             <div className="create-actions flex-1 flex items-center justify-end gap-1">
               <div className="p-1 hover:bg-gray-100 rounded-md">
                 <FilePlusCorner className="h-6 w-6"/>
@@ -106,7 +124,7 @@ function ProjectFolders({ activeFolder, projectId, updateUIOnCreateFolder, updat
                   key={subfolder.id}
                   node={subfolder}
                   type='folder'
-                  selectNode={onSelectNode}
+                  navigateToFolder={onNavigateToFolder}
                   handleOnDelete={onDeleteNode}
                   handleOnRename={onRenameNode}
                 />
@@ -117,7 +135,7 @@ function ProjectFolders({ activeFolder, projectId, updateUIOnCreateFolder, updat
                   key={plan.id}
                   node={plan}
                   type='plan'
-                  selectNode={onSelectNode}
+                  loadPlan={onLoadPlan}
                   handleOnDelete={onDeleteNode}
                   handleOnRename={onRenameNode}
                 />
