@@ -1,4 +1,4 @@
-import { Controller, Post, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator, Req, Param, UseGuards, Body, Get, UploadedFiles, Delete, Put } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator, Req, Param, UseGuards, Body, Get, UploadedFiles, Delete, Put, Patch } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import type { User } from 'src/user/interfaces/user.interface';
@@ -51,6 +51,11 @@ export class PlanController {
     const lastPlan = await this.planService.getLastOpenedPlan(projectId);
 
     return {lastPlan};
+  }
+
+  @Patch(':projectId/:planId/rename')
+  async renamePlan(@Param('planId') planId: string, @Param('projectId') projectId: string, @Body() body: { newName: string, }) {
+    return await this.planService.renamePlan(planId, body.newName, projectId);
   }
 
   // --------MARKERS---------

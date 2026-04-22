@@ -89,7 +89,8 @@ export class ProjectService {
               }
             }
           }
-        }
+        },
+        orderBy: {lastOpenedAt: "desc"}
       });
       
       const formattedProjects = projects.map((projectItem) => {
@@ -121,6 +122,25 @@ export class ProjectService {
 
   async getProjectRootFolder(projectId: string) {
     try {
+      const existingProject = await this.prismaService.project.findUnique({
+        where: {
+          id: projectId,
+        }
+      });
+
+      if (!existingProject) {
+        throw new Error("Project not found");
+      }
+
+      await this.prismaService.project.update({
+        where: {
+          id: projectId,
+        },
+        data: {
+          lastOpenedAt: new Date(),
+        }
+      });
+
       const rootFolder = await this.prismaService.folder.findFirst({
         where: {
           projectId,
@@ -144,6 +164,25 @@ export class ProjectService {
 
   async getFolder(folderId: string, projectId: string) {
     try {
+      const existingProject = await this.prismaService.project.findUnique({
+        where: {
+          id: projectId,
+        }
+      });
+
+      if (!existingProject) {
+        throw new Error("Project not found");
+      }
+
+      await this.prismaService.project.update({
+        where: {
+          id: projectId,
+        },
+        data: {
+          lastOpenedAt: new Date(),
+        }
+      });
+
       const folder = await this.prismaService.folder.findFirst({
         where: {
           id: folderId,

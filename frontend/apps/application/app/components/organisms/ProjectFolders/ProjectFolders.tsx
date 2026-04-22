@@ -10,6 +10,7 @@ import CreateFolderModal from './CreateFolderModal';
 import { createFolder, deleteFolder, renameFolder } from '@/proxy/folders/folder-functions';
 import { on } from 'events';
 import AddPlanModal from '../plan/AddPlanModal';
+import { renamePlan } from '@/proxy/plan/plan-functions';
 
 interface ProjectFoldersProps {
   activeFolder: FolderType | null
@@ -84,8 +85,8 @@ function ProjectFolders({
   }
 
   async function onRenameNode(nodeId: string, newName: string, type: 'folder' | 'plan'){
-    if(type === "folder"){
-      const response = await renameFolder(nodeId, newName, projectId);
+    const renameFunction = type === "folder" ? renameFolder : renamePlan;
+    const response = await renameFunction(nodeId, newName, projectId);
 
       if(!response.ok){
         console.error("Failed to rename folder");
@@ -93,7 +94,6 @@ function ProjectFolders({
       }
 
       updateUIOnRenameNode(nodeId, newName, type);
-    }
   }
 
   return (
@@ -115,7 +115,7 @@ function ProjectFolders({
         </div>
         <div className="mb-4 ">
           <div className="flex items-center gap-4">
-            <div className='flex items-center gap-4' onClick={() => onNavigateToFolder(activeFolder?.parentId || '')}>
+            <div className='flex items-center gap-4 cursor-pointer' onClick={() => onNavigateToFolder(activeFolder?.parentId || '')}>
               <ArrowLeft className={`${isRootFolder ? 'hidden' : 'block'}`}/>
               <h2 className="text-xl font-semibold ">Sélectionner un plan</h2>
             </div>

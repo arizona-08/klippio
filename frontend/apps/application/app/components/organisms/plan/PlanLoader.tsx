@@ -289,7 +289,6 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
               isPdfDocument: isActuallyPdf
             });
             setCurrentProjectTitle(lastPlan.project.title);
-            console.log(lastPlan.project.title);
           }
         } else {
           console.error("Erreur lors de la récupération du dernier plan ouvert :", response.statusText);

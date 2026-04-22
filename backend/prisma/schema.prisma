@@ -51,6 +51,7 @@ model Project {
   address             String
   zipcode             String
   city                String
+  lastOpenedAt        DateTime @default(now())
   
   author              User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   plans               Plan[]

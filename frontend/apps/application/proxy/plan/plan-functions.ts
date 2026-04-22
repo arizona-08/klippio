@@ -31,6 +31,16 @@ export async function getLastOpenedPlan(projectId: string) {
   return response;
 }
 
+export function renamePlan(planId: string, newName: string, projectId: string) {
+  return fetchFromClient(`/api/plans/${projectId}/${planId}/rename`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ newName }),
+  });
+}
+
 export async function deletePlan(planId: string) {
   const response = await fetchFromClient(`/api/plans/${planId}`, {
     method: "DELETE",

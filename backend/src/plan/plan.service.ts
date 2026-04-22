@@ -99,6 +99,21 @@ export class PlanService {
     };
    }
 
+  
+   async renamePlan(planId: string, newName: string, projectId: string) {
+    try {
+      const updatedPlan = await this.prismaService.plan.update({
+        where: { id: planId, projectId },
+        data: { name: newName },
+      });
+
+      return updatedPlan;
+    } catch (error) {
+      console.error("Error when renaming plan: ", error);
+      throw new InternalServerErrorException("Erreur lors du renommage du plan");
+    }
+  }
+
 
   //  --------------------------MARKERS------------------------------
 

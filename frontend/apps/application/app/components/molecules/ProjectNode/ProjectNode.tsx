@@ -54,7 +54,12 @@ function ProjectNode({ node, type, handleOnDelete, handleOnRename, navigateToFol
         </div>
 
         {/* dots & folder actions*/}
-        <div className="" onClick={() => setIsActionCardOpen(true)} ref={triggerRef}>
+        <div className="" onClick={(e) => {
+          e.stopPropagation();
+          setIsActionCardOpen(true)
+          }}
+          ref={triggerRef}
+        >
           <EllipsisVertical />
         </div>
 
