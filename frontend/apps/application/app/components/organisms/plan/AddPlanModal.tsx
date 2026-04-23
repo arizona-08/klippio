@@ -4,17 +4,29 @@ import Input from '../../atoms/Input'
 import { CTA } from '@repo/ui'
 import { Cross, Plus, X } from 'lucide-react'
 import { convertFileSizeInMo } from '@/utils/files'
-import { PlanTypeDto } from '@/types/project'
+import { PlanType, PlanTypeDto } from '@/types/project'
 import { uploadPlan } from '@/proxy/plan/plan-functions'
+
+export type UploadPlanCredentials = {
+  planId: string,
+  planName: string,
+  storageKey: string,
+  temporaryAccessUrl: string,
+  isPdfDocument: boolean
+}
+
 
 interface AddPlanModalProps {
   isActive: boolean
   projectId: string;
+  activeFolderId: string | undefined;
   onClose: () => void;
-  handleUploadPlan: (planId: string, planName: string, storageKey: string, temporaryAccessUrl: string, isPdfDocument: boolean) => void;
+  createAndUploadPlan: boolean;
+  handleUploadPlan?: (credentials: UploadPlanCredentials) => void;
+  addPlanToList?: (plan: PlanType) => void;
 }
 
-function AddPlanModal({ isActive, projectId, onClose, handleUploadPlan }: AddPlanModalProps) {
+function AddPlanModal({ isActive, projectId, activeFolderId, onClose, createAndUploadPlan, handleUploadPlan, addPlanToList }: AddPlanModalProps) {
   const [plan, setPlan] = React.useState<PlanTypeDto | null>(null);
   
   const photoinputRef = React.useRef<HTMLInputElement | null>(null);
@@ -41,6 +53,7 @@ function AddPlanModal({ isActive, projectId, onClose, handleUploadPlan }: AddPla
     const formData = new FormData();
     formData.append('file', plan.file);
     formData.append('name', plan.name);
+    formData.append('folderId', activeFolderId || '');
 
     const response = await uploadPlan(formData, projectId);
     if(!response.ok){
@@ -49,15 +62,51 @@ function AddPlanModal({ isActive, projectId, onClose, handleUploadPlan }: AddPla
     } else {
       const result = await response.json();
       const uploadedPlan = result.uploadedPlan;
-      handleUploadPlan(uploadedPlan.id, uploadedPlan.name, uploadedPlan.documentStorageKey, uploadedPlan.temporaryAccessUrl, plan.file.type === 'application/pdf');
+      handleUploadPlan?.({
+        planId: uploadedPlan.id,
+        planName: uploadedPlan.name,
+        storageKey: uploadedPlan.documentStorageKey,
+        temporaryAccessUrl: uploadedPlan.temporaryAccessUrl,
+        isPdfDocument: plan.file.type === 'application/pdf'
+      });
       onClose();
     }
+  }
 
-   
+  async function onAddPlanToList() {
+    if(!plan) return;
+    if(!plan.file) return;
+
+    const formData = new FormData();
+    formData.append('file', plan.file);
+    formData.append('name', plan.name);
+    formData.append('folderId', activeFolderId || '');
+
+    const response = await uploadPlan(formData, projectId);
+
+    if(!response.ok){
+      console.error(response.json());
+      return;
+    }
+
+    const result = await response.json();
+    const uploadedPlan = result.uploadedPlan;
+
+    addPlanToList?.({
+      id: uploadedPlan.id,
+      name: uploadedPlan.name,
+      lastOpenedAt: uploadedPlan.lastOpenedAt,
+      storageKey: uploadedPlan.documentStorageKey,
+      temporaryAccessUrl: uploadedPlan.temporaryAccessUrl,
+      folderId: uploadedPlan.folderId,
+      markers: uploadedPlan.markers
+    });
+
+    onClose();
   }
 
   return (
-    <div className={`bg-black/25 backdrop-blur-sm fixed inset-0 z-50 flex items-center justify-center p-4 ${isActive ? 'block' : 'hidden'}`}>
+    <div className={`bg-black/25 backdrop-blur-sm fixed inset-0 z-70 flex items-center justify-center p-4 ${isActive ? 'block' : 'hidden'}`}>
       <div className="w-full max-w-md bg-white p-4 rounded-md text-center">
         <h3 className="text-xl font-semibold mb-4">Ajouter un plan</h3>
         <Input
@@ -106,7 +155,13 @@ function AddPlanModal({ isActive, projectId, onClose, handleUploadPlan }: AddPla
             text='Confirmer'
             color='primary'
             disabled={isDisabled}
-            onClick={onConfirm}
+            onClick={async () => {
+              if(createAndUploadPlan){
+                await onConfirm();
+              } else {
+                await onAddPlanToList();
+              }
+            }}
           />
           </div>
         </div>

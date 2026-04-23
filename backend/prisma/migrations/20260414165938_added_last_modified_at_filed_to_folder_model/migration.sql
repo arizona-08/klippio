@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "public"."Folder" ADD COLUMN     "lastModifiedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;

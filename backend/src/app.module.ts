@@ -21,7 +21,7 @@ import { PlanModule } from './plan/plan.module';
     MailModule,
     AmazonS3Module,
     ProjectModule,
-    PlanModule
+    PlanModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -51,30 +51,32 @@ model Project {
   address             String
   zipcode             String
   city                String
+  lastOpenedAt        DateTime @default(now())
   
   author              User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   plans               Plan[]
+  folders             Folder[]
 }
 
 model Plan {
-  id          String   @id @default(uuid())
+  id                  String   @id @default(uuid())
   name                String
   documentStorageKey  String   
   temporaryAccessUrl  String?
   lastOpenedAt        DateTime @default(now())
-  projectId   String
+  projectId           String
+  folderId            String
 
   project             Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   markers             Marker[]
+  folder              Folder  @relation("FolderToPlans", fields: [folderId], references: [id])
 }
 
 model Marker {
-  id          String   @id @default(uuid())
-  coordX Float   
-  coordY   Float   
-  
+  id                  String   @id @default(uuid())
+  coordX              Float   
+  coordY              Float   
   title               String
-  comment             String?
   
   planId      String
 
@@ -84,8 +86,25 @@ model Marker {
 
 model MarkerPhoto {
   id          String   @id @default(uuid())
-  photoStorageKey     String   
+  photoStorageKey     String
+  photoLabel          String
+  comment             String?
+  temporaryAccessUrl  String?
   
-  markerId    String
+  markerId            String
   marker              Marker   @relation(fields: [markerId], references: [id], onDelete: Cascade)
+}
+
+model Folder {
+  id              String   @id @default(uuid())
+  name            String
+  isRoot          Boolean  @default(false)
+  lastModifiedAt  DateTime @default(now())
+  parentId        String?
+  projectId       String
+
+  parent      Folder?  @relation("FolderToSubfolders", fields: [parentId], references: [id], onDelete: Cascade)
+  subfolders  Folder[] @relation("FolderToSubfolders")
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  plans       Plan[]   @relation("FolderToPlans")
 }

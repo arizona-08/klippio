@@ -2,39 +2,31 @@
 import React, { useEffect } from 'react'
 import PicModal from './PicModal'
 import { CTA } from '@repo/ui'
-import AddPlanModal from './AddPlanModal'
+import AddPlanModal, { UploadPlanCredentials } from './AddPlanModal'
 import VisualizerMenu, { SelectOption } from '../../molecules/VisualizerMenu/VisualizerMenu'
 import ProjectFolders from '../ProjectFolders/ProjectFolders'
 
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { Document, Page, pdfjs } from 'react-pdf';
 import { usePlanStore } from '@/stores/AllPlansStore'
-import { getLastOpenedPlan } from '@/proxy/plan/plan-functions'
+import { addMarker, deleteMarker, editMarker, fetchPlan, getLastOpenedPlan, getMarkers } from '@/proxy/plan/plan-functions'
+import { FolderType, MarkerPhotoType, MarkerType, PlanType } from '@/types/project'
+import { useCurrentProjectStore } from '@/stores/CurrentProjectStore'
+import { getFolder, getProjectRootFolder } from '@/proxy/folders/folder-functions'
 // Configuration obligatoire du worker pour react-pdf (compatible Next.js)
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 // import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 // import 'react-pdf/dist/esm/Page/TextLayer.css';
-
-export type MarkerType = {
-  id: number,
-  x: number,
-  y: number,
-  title: string,
-  comment: string
-  photoUrl: string | ArrayBuffer | null
-}
 
 interface PlanLoaderProps {
   projectId: string;
 }
 
 function PlanLoader({ projectId }: PlanLoaderProps) {
-
   const [markers, setMarkers] = React.useState<MarkerType[]>([]);
   const currentClickCoords = React.useRef({x: 0, y: 0})
-  const [nextMarkerId, setNextMarkerId] = React.useState<number>(1);
   const [isModalActive, setIsModalActive] = React.useState<boolean>(false)
-  const [modalCurrentMarker, setModalCurrentMarker] = React.useState<MarkerType | undefined>(undefined)
+  const [temporaryModalMarker, setTemporaryModalMarker] = React.useState<MarkerType | undefined>(undefined)
   const [isAddPlanModalActive, setIsAddPlanModalActive] = React.useState<boolean>(false);
 
 
@@ -45,24 +37,35 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
   const setCurrentPlan = usePlanStore((state) => state.setCurrentPlan);
   const currentPlan = usePlanStore((state) => state.currentPlan);
 
+  const setCurrentProjectTitle = useCurrentProjectStore((state) => state.setCurrentProjectTitle);
+
+
   const planUploadContainerRef = React.useRef<HTMLDivElement | null>(null);
   const planContainerRef = React.useRef<HTMLDivElement | null>(null)
   const photoInputRef = React.useRef<HTMLInputElement | null>(null);
 
   const [option, setOption] = React.useState<SelectOption>('hand');
 
+  //État pour gérer le dossier actif
+  const [activeFolder, setActiveFolder] = React.useState<FolderType | null>(null); 
+
   function selectOption(option: SelectOption) {
     setOption(option);
   }
 
-  function displayPlan(id: string, planName: string, storageKey: string, temporaryAccessUrl: string, isPdfDocument: boolean) {
+  function displayPlan({
+    planId,
+    planName,
+    storageKey,
+    temporaryAccessUrl,
+    isPdfDocument
+  }: UploadPlanCredentials) {
     
     setIsPdf(isPdfDocument);
     setCurrentFileUrl(temporaryAccessUrl);
-    setCurrentPlan({ id, name: planName, storageKey: storageKey, temporaryAccessUrl, isPdfDocument: isPdfDocument });
+    setCurrentPlan({ id: planId, name: planName, storageKey: storageKey, temporaryAccessUrl, isPdfDocument: isPdfDocument });
 
     setMarkers([]);
-    setNextMarkerId(1);
   }
 
   function handlePlanClick(event: React.MouseEvent) {
@@ -95,22 +98,23 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
           if(!e.target) return;
 
           const newMarker: MarkerType = {
-              id: nextMarkerId,
-              x: currentClickCoords.current.x,
-              y: currentClickCoords.current.y,
+              coordX: currentClickCoords.current.x,
+              coordY: currentClickCoords.current.y,
               title: '',
-              comment: '',
-              photoUrl: e.target.result
+              photos: [
+                {
+                  label: '',
+                  comment: '',
+                  previewUrl: e.target.result as string,
+                  physicalFile: file
+                }
+              ]
           };
-
-          setMarkers([...markers, newMarker]);
 
           //permettre d'ajouter un titre et des commentaires dès l'ajout du marqueur
           setIsModalActive(true);
-          setModalCurrentMarker(newMarker)
+          setTemporaryModalMarker(newMarker);
 
-          setNextMarkerId(prevId => prevId + 1);
-          console.log(nextMarkerId)
         };
         reader.readAsDataURL(file);
 
@@ -120,33 +124,152 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
     }
   }
 
+  async function handleAddMarker(marker: MarkerType){
+    // Call API pour sauvegarder le marqueur dans la BDD et récupérer son ID généré
+
+    const markerFormData = new FormData();
+
+    const markertoRegister = {
+      title: marker.title,
+      coordX: marker.coordX,
+      coordY: marker.coordY,
+      photosMetaData: marker.photos.map(photo => ({
+        label: photo.label,
+        comment: photo.comment,
+      })),
+    }
+
+    markerFormData.append('markerData', JSON.stringify(markertoRegister));
+
+    marker.photos.forEach((photo) => {
+      markerFormData.append('photos', photo.physicalFile);
+    });
+
+    try{
+      const response = await addMarker(markerFormData, projectId, currentPlan?.id as string);
+      if(!response.ok){
+        console.error("Erreur lors de l'ajout du marqueur :", response.statusText);
+        return;
+      } else {
+        const result = await response.json();
+        
+        setMarkers(prevMarkers => [...prevMarkers, result]);
+        setTemporaryModalMarker(undefined);
+        handleCloseModal();
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'ajout du marqueur :", error);
+    }
+  }
+
+  async function updateMarkerPhoto(marker: MarkerType){
+    const updateMarkerFormData = new FormData();
+
+    const existingPhotos = marker.photos.filter(photo => photo.id);
+    const newPhotos = marker.photos.filter(photo => !photo.id);
+
+    const matchingMarker = markers.find(m => m.id === marker.id)
+    const keptPhotoIdentifiersSet = new Set(existingPhotos.map(photoItem => photoItem.id));
+
+    // 3. On extrait les identifiants supprimés de manière sécurisée
+    const deletedPhotoIdentifiers = matchingMarker?.photos
+      .map(photoItem => photoItem.id)
+      .filter(photoIdentifier => !keptPhotoIdentifiersSet.has(photoIdentifier) && photoIdentifier !== undefined) || [];
+
+    const markerToUpdatePayload = {
+      title: marker.title,
+      coordX: marker.coordX,
+      coordY: marker.coordY,
+
+      // On envoie les métadonnées des photos existantes pour les mettre à jour
+      existingPhotosToUpdate: existingPhotos.map(photoItem => ({
+        identifier: photoItem.id,
+        label: photoItem.label,
+        comment: photoItem.comment,
+      })),
+
+      // On envoie les métadonnées des nouvelles photos
+      newPhotosMetadata: newPhotos.map(photoItem => ({
+        label: photoItem.label,
+        comment: photoItem.comment,
+      })),
+
+      deletedPhotoIdentifiers: deletedPhotoIdentifiers
+    }
+
+    updateMarkerFormData.append('markerData', JSON.stringify(markerToUpdatePayload));
+
+    newPhotos.forEach((photo) => {
+      updateMarkerFormData.append('newPhotos', photo.physicalFile);
+    });
+
+    try{
+      const response = await editMarker(projectId, currentPlan?.id as string, marker.id as string, updateMarkerFormData);
+      if(!response.ok){
+        console.error("Erreur lors de la mise à jour du marqueur :", response.statusText);
+        return;
+      } else {
+        const result = await response.json();
+        const updatedMarker = result.updatedMarker;
+        
+        setMarkers(prevMarkers => prevMarkers.map(m => m.id === marker.id ? updatedMarker : m));
+        setTemporaryModalMarker(undefined);
+        handleCloseModal();
+      }
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du marqueur :", error);
+    }
+    
+  }
+
   function handleMarkerClick(event: React.MouseEvent, marker: MarkerType) {
     event.stopPropagation();
-    setModalCurrentMarker(marker)
     setIsModalActive(true);
+    setTemporaryModalMarker(marker);
   }
 
   function handleCloseModal(){
     setIsModalActive(false)
+    setTemporaryModalMarker(undefined);
   }
 
-  function handleSetText(e: React.ChangeEvent, marker: MarkerType){
-    const { name, value } = e.target as HTMLInputElement;
+  function handleSetTitle(e: React.ChangeEvent<HTMLInputElement>, marker: MarkerType){
+    const { value } = e.target as HTMLInputElement;
 
-    const updatedMarker  = { ...marker, [name === 'pic-title' ? 'title' : 'comment']: value };
-    setMarkers(prevMarkers => 
-      prevMarkers.map(markerItem => 
-        markerItem.id === marker.id ? { ...updatedMarker } : markerItem
-      )
-    );
-
-    setModalCurrentMarker(updatedMarker); 
+    const updatedMarker  = { ...marker, title: value };
+    setTemporaryModalMarker(updatedMarker);
   }
 
-  function handleDeleteMarker(marker: MarkerType){
-    setMarkers(prevMarkers => prevMarkers.filter(m => m.id !== marker.id));
-    setIsModalActive(false);
-    setModalCurrentMarker(undefined);
+  function handleSetPhotoText(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, markerPhoto: MarkerPhotoType, markerPhotoIndex: number){
+    if(!temporaryModalMarker) return;
+
+    const { name, value } = e.target as HTMLInputElement | HTMLTextAreaElement;
+
+    const updatedPhoto: MarkerPhotoType = { ...markerPhoto, [name === 'pic-label' ? 'label' : 'comment']: value };
+
+    setTemporaryModalMarker(prev => {
+      if(!prev) return prev;
+
+      const updatedPhotos = [...prev.photos];
+      updatedPhotos[markerPhotoIndex] = updatedPhoto;
+
+      return { ...prev, photos: updatedPhotos };
+    });
+    
+  }
+
+  async function handleDeleteMarker(marker: MarkerType){
+    // Appel API pour supprimer le marqueur de la BDD
+    if(!marker.id) return;
+    
+    const response = await deleteMarker(marker.id);
+    if(!response.ok){
+      console.error("Erreur lors de la suppression du marqueur :", response.statusText);
+      return;
+    } else {
+      setMarkers(prevMarkers => prevMarkers.filter(m => m.id !== marker.id));
+      setIsModalActive(false);
+    }
   }
 
   useEffect(() => {
@@ -158,7 +281,14 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
           const lastPlan = result.lastPlan;
           if(lastPlan) {
             const isActuallyPdf = lastPlan.documentStorageKey.toLowerCase().endsWith('.pdf');
-            displayPlan(lastPlan.id, lastPlan.name, lastPlan.documentStorageKey, lastPlan.temporaryAccessUrl, isActuallyPdf);
+            displayPlan({
+              planId: lastPlan.id,
+              planName: lastPlan.name,
+              storageKey: lastPlan.documentStorageKey,
+              temporaryAccessUrl: lastPlan.temporaryAccessUrl,
+              isPdfDocument: isActuallyPdf
+            });
+            setCurrentProjectTitle(lastPlan.project.title);
           }
         } else {
           console.error("Erreur lors de la récupération du dernier plan ouvert :", response.statusText);
@@ -166,12 +296,108 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
       }
     }
 
+    async function fetchMarkersForCurrentPlan() {
+      const response = await getMarkers(currentPlan?.id as string);
+      if(response.ok){
+        const result = await response.json();
+        const fetchedMarkers = result.markers;
+        setMarkers(fetchedMarkers);
+      } else {
+        console.error("Erreur lors de la récupération des marqueurs :", response.statusText);
+      }
+    }
+
+
     fetchLastOpenedPlan();
+    fetchMarkersForCurrentPlan();
   }, [currentFileUrl])
 
-  console.log(currentFileUrl);
+  useEffect(() => {
+    if(!activeFolder) {
+      async function fetchProjectRootFolder(){
+        const response = await getProjectRootFolder(projectId);
+        if(response.ok){
+          const result = await response.json();
+          setActiveFolder(result);
+        } else {
+          console.error("Erreur lors de la récupération du dossier racine du projet :", response.statusText);
+        }
+      }
+  
+      fetchProjectRootFolder();
+    }
+  }, [activeFolder?.id])
+
+  function updateUIOnCreateFolder(newFolder: FolderType){
+    if(activeFolder && activeFolder.id === newFolder.parentId){
+      setActiveFolder(prev => {
+        if(!prev) return prev;
+        return { ...prev, subfolders: [...prev.subfolders, newFolder] }
+      });
+    }
+  }
+
+  function updateUIOnAddPlan(newPlan: PlanType){
+    if(activeFolder){
+      setActiveFolder(prev => {
+        if(!prev) return prev;
+        return { ...prev, plans: [...prev.plans, newPlan] }
+      });
+    }
+  }
+
+  function updateUIOnDeleteNode(nodeId: string, type: 'folder' | 'plan'){
+    setActiveFolder(prev => {
+      if(!prev) return prev;
+      if(type === 'folder'){
+        return { ...prev, subfolders: prev.subfolders.filter(folder => folder.id !== nodeId) }
+      } else {
+        return { ...prev, plans: prev.plans.filter(plan => plan.id !== nodeId) }
+      }
+    })
+  }
+
+  function updateUIOnRenameNode(nodeId: string, newName: string, type: 'folder' | 'plan'){
+    setActiveFolder(prev => {
+      if(!prev) return prev;
+      if(type === 'folder'){
+        return { ...prev, subfolders: prev.subfolders.map(folder => folder.id === nodeId ? { ...folder, name: newName } : folder) }
+      } else {
+        return { ...prev, plans: prev.plans.map(plan => plan.id === nodeId ? { ...plan, name: newName } : plan) }
+      }
+    })
+  }
+
+  async function onNavigateToFolder(folderId: string){
+    const response = await getFolder(folderId, projectId);
+    if(response.ok){
+      const result = await response.json();
+      setActiveFolder(result);
+    } else {
+      console.error("Erreur lors de la récupération du dossier :", response.statusText);
+    }
+  }
+
+  async function onLoadPlan(planId: string){
+      const response = await fetchPlan(planId);
+      if(response.ok){
+        const result = await response.json();
+        const plan = result;
+        const isActuallyPdf = plan.documentStorageKey.toLowerCase().endsWith('.pdf');
+        displayPlan({
+          planId: plan.id,
+          planName: plan.name,
+          storageKey: plan.documentStorageKey,
+          temporaryAccessUrl: plan.temporaryAccessUrl,
+          isPdfDocument: isActuallyPdf
+        });
+      } else {
+        console.error("Erreur lors du chargement du plan :", response.statusText);
+      }
+  }
+  
   return (
-    <div className="relative w-full h-[calc(100vh-88px)] bg-gray-100 overflow-hidden flex flex-col">
+    <div className="relative w-full h-full bg-gray-100  flex flex-col">
       
       {!currentFileUrl ? (
         <div id="plan-upload-container" className="w-full max-w-sm relative top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-50 p-6 rounded-lg border border-gray-200" ref={planUploadContainerRef}>
@@ -227,10 +453,10 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
                       <div
                         key={index}
                         className="marker absolute w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-sm cursor-pointer border-2 border-white shadow-lg transform -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform z-10"
-                        style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
+                        style={{ left: `${marker.coordX}%`, top: `${marker.coordY}%` }}
                         onClick={(e) => handleMarkerClick(e, marker)}
                       >
-                        {marker.id}
+                        {index + 1}
                       </div>
                     ))}
                 </div>
@@ -257,8 +483,11 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
 
       <PicModal
         isActive={isModalActive}
-        marker={modalCurrentMarker}
-        handleSetText={handleSetText}
+        marker={temporaryModalMarker}
+        handleSetTitle={handleSetTitle}
+        handleSetPhotoText={handleSetPhotoText}
+        handleAddMarker={handleAddMarker}
+        handleUpdateMarkerPhoto={updateMarkerPhoto}
         handleDeleteMarker={handleDeleteMarker}
         handleClose={handleCloseModal}
       />
@@ -266,11 +495,22 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
       <AddPlanModal
         projectId={projectId}
         isActive={isAddPlanModalActive}
+        activeFolderId={activeFolder?.id}
         onClose={() => setIsAddPlanModalActive(false)}
         handleUploadPlan={displayPlan}
+        createAndUploadPlan={true}
       />
 
-      <ProjectFolders />
+      <ProjectFolders
+        activeFolder={activeFolder}
+        projectId={projectId}
+        updateUIOnCreateFolder={updateUIOnCreateFolder}
+        updateUIOnAddPlan={updateUIOnAddPlan}
+        updateUIOnDeleteNode={updateUIOnDeleteNode}
+        updateUIOnRenameNode={updateUIOnRenameNode}
+        triggerNavigateToFolder={onNavigateToFolder}
+        triggerLoadPlan={onLoadPlan}
+      />
     </div>
   )
 }

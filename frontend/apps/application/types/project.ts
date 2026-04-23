@@ -33,19 +33,41 @@ export type CurrentPlanType = {
   isPdfDocument: boolean;
 }
 
-export type FileType = {
+export type PlanType = {
   id: string;
-  parentId?: string;
-  type: 'file';
   name: string;
-  lastModified: Date;
+  storageKey: string;
+  temporaryAccessUrl: string;
+  lastOpenedAt: string;
+  folderId: string;
+
+  markers: MarkerType[];
 }
+
 
 export type FolderType = {
   id: string;
   parentId?: string;
-  type: 'folder' | 'root';
+  isRoot: boolean;
   name: string;
-  lastModified: Date;
-  children?: Array<FolderType | FileType>;
+  lastModifiedAt: string;
+  subfolders: FolderType[];
+  plans: PlanType[];
+}
+
+export type MarkerType = {
+  id?: string,
+  coordX: number,
+  coordY: number,
+  title: string,
+  photos: MarkerPhotoType[]
+}
+
+export type MarkerPhotoType = {
+  id?: string
+  label: string
+  comment: string
+  previewUrl: string | ArrayBuffer | null
+  physicalFile: File
+  temporaryAccessUrl?: string
 }

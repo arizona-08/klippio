@@ -63,7 +63,7 @@ function RegisterForm() {
     }
 
     if(response.status === 201){
-      router.push('/app/auth/login');
+      router.push('/auth/login');
     }
   }
 

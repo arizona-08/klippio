@@ -1,4 +1,4 @@
-import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Injectable, InternalServerErrorException, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -90,6 +90,22 @@ export class AmazonS3Service {
     } catch (signatureError) {
       this.loggerInstance.error("Erreur lors de la génération de l'URL présignée", signatureError);
       throw new InternalServerErrorException("Impossible de générer l'accès au fichier sécurisé");
+    }
+  }
+
+  async deleteImage(storageKey: string) {
+    const bucketName = this.configurationService.getOrThrow<string>('AMAZON_S3_BUCKET_NAME');
+
+    const deleteCommand = new DeleteObjectCommand({
+      Bucket: bucketName,
+      Key: storageKey,
+    });
+
+    try {
+      await this.amazonClient.send(deleteCommand);
+    } catch (deleteError) {
+      this.loggerInstance.error("Erreur lors de la suppression de l'image sur Amazon S3", deleteError);
+      throw new InternalServerErrorException("Impossible de supprimer le fichier sur Amazon S3");
     }
   }
 }

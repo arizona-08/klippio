@@ -1,9 +1,10 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Req, UseGuards } from "@nestjs/common";
 import { AuthenticatedGuard } from "src/auth/authenticated.guard";
 import { CreateProjectDTO } from "./dtos/create-project.dto";
 import { ProjectService } from "./project.service";
 import { CurrentUser } from "src/auth/decorators/current-user.decorator";
 import type { User } from "src/user/interfaces/user.interface";
+import { CreateFolderDto } from "./dtos/create-folder.dto";
 
 @Controller('api/projects')
 export class ProjectController {
@@ -21,5 +22,40 @@ export class ProjectController {
   async getProjects(@CurrentUser() user: User){
     const userId = user.id;
     return this.projectService.getProjects(userId);
+  }
+
+  @UseGuards(AuthenticatedGuard)
+  @Put(':projectId/update')
+  async updateProject(@Param('projectId') projectId: string, @Body() createProjectDto: CreateProjectDTO, @CurrentUser() user: User){
+    const userId = user.id;
+    return this.projectService.updateProject(projectId, createProjectDto, userId);
+  }
+
+    // ------ FOLDERS -------
+
+  @Get(':projectId/folders/root-folder')
+  async getProjectRootFolder(@Param('projectId') projectId: string) {
+    return this.projectService.getProjectRootFolder(projectId);
+  }
+
+  @Get(':projectId/folders/:folderId')
+  async getFolder(@Param('projectId') projectId: string, @Param('folderId') folderId: string) {
+    return this.projectService.getFolder(folderId, projectId);
+  }
+
+  @Post(':projectId/folders/create')
+  async createFolder(@Param('projectId') projectId: string, @Body() createFolderDto: CreateFolderDto) {
+    return this.projectService.createFolder(createFolderDto, projectId);
+  }
+
+  @Delete(':projectId/folders/:folderId/delete')
+  async deleteFolder(@Param('projectId') projectId: string, @Param('folderId') folderId: string) {
+    return this.projectService.deleteFolder(folderId, projectId);
+  }
+
+  @Patch(':projectId/folders/:folderId/rename')
+  async renameFolder(@Param('projectId') projectId: string, @Param('folderId') folderId: string, @Body() body: { newName: string }) {
+    const { newName } = body;
+    return this.projectService.renameFolder(folderId, newName, projectId);
   }
 }
