@@ -64,6 +64,17 @@ function ProjectsSection({ projects }: ProjectsSectionProps) {
     });
   }
 
+  async function handleSortChange(sortOption: {value: string, order: 'asc' | 'desc'}){
+    const response = await getProjects({sortBy: sortOption.value, order: sortOption.order});
+    const sortedProjects = await response.json();
+    if(!response.ok){
+      console.error('Erreur lors du tri des projets');
+    } else {
+      setMasterProjectsList(sortedProjects);
+    }
+    console.log('Tri sélectionné :', sortOption);
+  }
+
   return (
     <div className=''>
       {/* <DeleteProjectModal /> */}
@@ -95,7 +106,7 @@ function ProjectsSection({ projects }: ProjectsSectionProps) {
         </div>
 
         <div className="flex items-center justify-end gap-4 mt-4">
-          <ProjectSorter />
+          <ProjectSorter onSortChange={handleSortChange} />
         </div>
 
       </div>

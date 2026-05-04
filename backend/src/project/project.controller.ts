@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Req, UseGuards } from "@nestjs/common";
 import { AuthenticatedGuard } from "src/auth/authenticated.guard";
 import { CreateProjectDTO } from "./dtos/create-project.dto";
 import { ProjectService } from "./project.service";
@@ -19,9 +19,13 @@ export class ProjectController {
 
   @UseGuards(AuthenticatedGuard)
   @Get('all')
-  async getProjects(@CurrentUser() user: User){
+  async getProjects(
+    @CurrentUser() user: User,
+    @Query('sortBy') sortBy: "createdAt" | "lastOpenedAt" | "title",
+    @Query('order') order: 'asc' | 'desc'
+  ) {
     const userId = user.id;
-    return this.projectService.getProjects(userId);
+    return this.projectService.getProjects(userId, sortBy, order);
   }
 
   @UseGuards(AuthenticatedGuard)
