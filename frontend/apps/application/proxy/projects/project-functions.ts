@@ -26,8 +26,8 @@ export async function modifyProject(data: CreateProjectDTO, projectId: string){
   return response;
 }
 
-export async function getProjects(){
-  const response = await fetchFromClient("/api/projects/all", {
+export async function getProjects(sortOptions?: { sortBy: string, order: 'asc' | 'desc' } ){
+  const response = await fetchFromClient(`/api/projects/all${sortOptions ? `?sortBy=${sortOptions.sortBy}&order=${sortOptions.order}` : ''}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json"

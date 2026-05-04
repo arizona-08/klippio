@@ -63,7 +63,11 @@ export class ProjectService {
     }
   }
 
-  async getProjects(userId: number){
+  async getProjects(
+    userId: number,
+    sortBy: "createdAt" | "lastOpenedAt" | "title",
+    order: 'asc' | 'desc'
+  ) {
     try{
       const projects = await this.prismaService.project.findMany({
         where: {
@@ -90,7 +94,10 @@ export class ProjectService {
             }
           }
         },
-        orderBy: {lastOpenedAt: "desc"}
+        orderBy: {
+          // lastOpenedAt: "desc"
+          [sortBy]: order,
+        }
       });
       
       const formattedProjects = projects.map((projectItem) => {
@@ -115,7 +122,8 @@ export class ProjectService {
     });
 
     return formattedProjects;
-    } catch(error) {
+    } catch(error: any) {
+      console.error(error);
       throw new Error("Failed to get projects");
     }
   }

@@ -8,6 +8,7 @@ import Logo from '@repo/ui/src/atoms/Logo'
 import AppMenuLink from '../../atoms/AppMenuLink'
 import Image from 'next/image'
 import { logout } from '@/proxy/auth/auth-functions'
+import { LogInIcon } from 'lucide-react'
 
 function AppMenu() {
   const {user, setUser} = useUser();
@@ -33,6 +34,8 @@ function AppMenu() {
   const [burgerActive, setIsBurgerActive] = React.useState<boolean>(false);
   const [isSidebarOpen, setIsSidebarOpen] = React.useState<boolean>(true);
 
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = React.useState(false);
+
   function toggleBurgerActive(){
     setIsBurgerActive(!burgerActive);
   }
@@ -56,9 +59,25 @@ function AppMenu() {
     <div className=''>
       {/* Mobile menu */}
       <div className="lg:hidden relative">
-        <div className="flex items-center gap-4 p-4 relative z-50 bg-white">
-          <BurgerMenu handleOnClick={toggleBurgerActive} isActive={burgerActive}/>
-          <Logo type='long' color='black' />
+        <div className="flex items-center justify-between bg-white relative z-50 p-4">
+          <div className="flex items-center gap-4  ">
+            <BurgerMenu handleOnClick={toggleBurgerActive} isActive={burgerActive}/>
+            <Logo type='long' color='black' />
+          </div>
+
+          {/* Profile picture placeholder */}
+          <div className="relative w-8 h-8 rounded-full bg-gray-300 z-50 px-4" onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}>
+            <div className={`absolute top-full mt-2 right-0 bg-white border border-gray-300 rounded-md shadow-lg w-40 ${isProfileMenuOpen ? "visible opacity-100" : "invisible opacity-0"} transition-all duration-150`}>
+              <Link href="/profile" className='block px-4 py-2 text-sm hover:bg-gray-100'>Mon Profil</Link>
+              <button onClick={() => {
+                handleLogout();
+                setIsProfileMenuOpen(false);
+                }} className='flex items-center gap-2 w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-red-500'>
+                <LogInIcon className='text-red-500' size={16} />
+                Déconnexion
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className={`absolute top-full bg-primary w-full min-w-80 left-0 ${burgerActive ? 'translate-y-0' : '-translate-y-full'} transition-all z-40`}>
