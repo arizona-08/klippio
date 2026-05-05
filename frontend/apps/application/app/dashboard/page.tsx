@@ -4,7 +4,8 @@ import ProjectsSection from '../components/organisms/projects/ProjectsSection'
 import { get } from 'http'
 import { getProjectsServerSide } from '@/proxy/projects/project-functions';
 import ProjectsSectionLoader from '../components/molecules/ProjectsSectionLoader';
-import ProjectCardSkeleton from '../components/skeletons/ProjectCardSkeleton';
+import ProjectCardSkeleton from '../components/skeletons/ProjectsListSkeleton/ProjectCardSkeleton';
+import DisplayProjectsListSkeleton from '../components/skeletons/ProjectsListSkeleton/ProjectListSkeleton';
 
 async function DashboardRoot() {
   
@@ -16,22 +17,12 @@ async function DashboardRoot() {
       </div>
       
       <Suspense fallback={<DisplayProjectsListSkeleton />}>
-        <ProjectsSectionLoader/>
+        <ProjectsSectionLoader mode="basic" />
       </Suspense>
     </div>
   )
 }
 
-function DisplayProjectsListSkeleton() {
-  return (
-    <div>
-      <ul className="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 mt-4 py-6">
-        {[...Array(6)].map((_, index) => (
-          <ProjectCardSkeleton key={index} />
-        ))}
-      </ul>
-    </div>
-  )
-}
+
 
 export default DashboardRoot

@@ -1,12 +1,16 @@
-import { getProjectsServerSide } from "@/proxy/projects/project-functions";
+import { getArchivedProjectsServerSide, getProjectsServerSide } from "@/proxy/projects/project-functions";
 import ProjectsSection from "../organisms/projects/ProjectsSection";
 
-// Ce composant s'occupe de la partie "lente"
-async function ProjectsSectionLoader() {
-  const projectsResponse = await getProjectsServerSide();
+interface ProjectsSectionLoaderProps {
+  mode: 'basic' | 'archive';
+}
+async function ProjectsSectionLoader({ mode }: ProjectsSectionLoaderProps) {
+  const isBasicMode = mode === 'basic';
+  const fetchFunction = isBasicMode ? getProjectsServerSide : getArchivedProjectsServerSide;
+  const projectsResponse = await fetchFunction();
   const projectsData = await projectsResponse.json();
   
-  return <ProjectsSection projects={projectsData} />;
+  return <ProjectsSection projects={projectsData} mode={mode} />;
 }
 
 export default ProjectsSectionLoader;

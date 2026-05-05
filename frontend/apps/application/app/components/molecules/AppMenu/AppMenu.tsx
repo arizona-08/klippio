@@ -16,17 +16,17 @@ function AppMenu() {
   const appMenuLinks = [
     {
       label: 'Mes Projets',
-      href: '/dashboard/plans',
+      href: '/dashboard/',
       iconSrc: "/icons/book_green.svg"
     },
     {
       label: 'Mes Archives',
-      href: '/dashboard/plans',
+      href: '/dashboard/archives',
       iconSrc: "/icons/archive_green.svg"
     },
     {
       label: 'Mon Équipe',
-      href: '/dashboard/plans',
+      href: '/dashboard/teams',
       iconSrc: "/icons/users_green.svg"
     }
   ]
@@ -91,24 +91,6 @@ function AppMenu() {
                 />
               ))}
             </ul>
-            {/* {!user && (
-              <>
-                <Link href="/auth/register" onClick={toggleBurgerActive} className='inline-block p-3 text-center rounded-lg bg-pink-500'>M'inscrire</Link>
-                <Link href="/auth/login" onClick={toggleBurgerActive} className='inline-block p-3 text-center rounded-lg bg-purple-500'>Me connecter</Link>
-              </>
-            )}
-
-            {user && (
-              <>
-                <Link href="/" onClick={toggleBurgerActive} className='inline-block p-3 text-center rounded-lg bg-pink-500'>Mes plans</Link>
-                <button
-                  className='inline-block bg-slate-200 border border-slate-500 rounded-md p-2 text-red-500'
-                  onClick={handleLogout}
-                >
-                  Déconnexion
-                </button>
-              </>
-            )} */}
           </div>
         </div>
 
@@ -153,26 +135,30 @@ function AppMenu() {
           </div>
         </div>
 
-        <div className="personal-infos flex items-center gap-2 mt-auto text-white hover:bg-white/20 p-2 rounded-md transition-all duration-150">
-          <div className="pp-container w-10 h-10 shrink-0 rounded-full bg-gray-300">
+        <div className="personal-infos  mt-auto text-white hover:bg-white/20 p-2 rounded-md transition-all duration-150">
+          <Link href="/dashboard/profile" className='flex items-center gap-2'>
+          
+            <div className="pp-container w-10 h-10 shrink-0 rounded-full bg-gray-300">
 
-          </div>
+            </div>
 
-          <div className={`user-infos max-w-2/5 ${isSidebarOpen ? '' : 'hidden'}`}>
-            <p className="line-clamp-1 text-sm font-medium">Jonathan Assi</p>
-            <p className="line-clamp-1 text-xs opacity-85">assijonathan2@gmail.com</p>
-          </div>
+            <div className={`user-infos max-w-2/5 ${isSidebarOpen ? '' : 'hidden'}`}>
+              
+              <p className="line-clamp-1 text-sm font-medium">Jonathan Assi</p>
+              <p className="line-clamp-1 text-xs opacity-85">assijonathan2@gmail.com</p>
+            </div>
 
-          <div className={`logout-button ml-auto bg-white p-1 rounded-md ${isSidebarOpen ? '' : 'hidden'}`}>
-            <Image
-              src="/icons/logout.svg"
-              alt="logout icon"
-              width={16}
-              height={16}
-              className='cursor-pointer'
-              onClick={handleLogout}
-            />
-          </div>
+            <div className={`logout-button ml-auto bg-white p-1 rounded-md ${isSidebarOpen ? '' : 'hidden'}`}>
+              <Image
+                src="/icons/logout.svg"
+                alt="logout icon"
+                width={16}
+                height={16}
+                className='cursor-pointer'
+                onClick={handleLogout}
+              />
+            </div>
+          </Link>
         </div>
       </div>
     </div>

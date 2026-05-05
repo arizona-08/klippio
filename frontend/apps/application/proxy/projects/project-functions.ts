@@ -37,11 +37,33 @@ export async function getProjects(sortOptions?: { sortBy: string, order: 'asc' |
   return response;
 }
 
+export async function getArchivedProjects(sortOptions?: { sortBy: string, order: 'asc' | 'desc' } ){
+  const response = await fetchFromClient(`/api/projects/archived${sortOptions ? `?sortBy=${sortOptions.sortBy}&order=${sortOptions.order}` : ''}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json"
+    },
+  });
+
+  return response;
+}
+
 
 // ----- SERVER SIDE FUNCTIONS ------
 
 export async function getProjectsServerSide(){
   const response = await fetchFromServer("/api/projects/all", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json"
+    },
+  });
+
+  return response;
+}
+
+export async function getArchivedProjectsServerSide(){
+  const response = await fetchFromServer("/api/projects/archived", {
     method: "GET",
     headers: {
       "Content-Type": "application/json"
