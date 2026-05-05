@@ -82,7 +82,7 @@ function ProjectsSection({ projects, mode }: ProjectsSectionProps) {
   return (
     <div className=''>
       {/* <DeleteProjectModal /> */}
-      <div className="top-projects-bar sticky top-20 z-20 p-4  w-full bg-white">
+      <div className="top-projects-bar sticky top-20 z-20 p-4  w-full">
         <div className="flex flex-col gap-4 md:flex-row-reverse md:items-center md:justify-between">
           <div className="w-full md:max-w-80">
             <SearchBar onSearch={searchProject} />

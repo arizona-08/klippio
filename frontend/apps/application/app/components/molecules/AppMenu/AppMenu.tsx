@@ -144,8 +144,8 @@ function AppMenu() {
 
             <div className={`user-infos max-w-2/5 ${isSidebarOpen ? '' : 'hidden'}`}>
               
-              <p className="line-clamp-1 text-sm font-medium">Jonathan Assi</p>
-              <p className="line-clamp-1 text-xs opacity-85">assijonathan2@gmail.com</p>
+              <p className="line-clamp-1 text-sm font-medium">{user?.firstname} {user?.lastname}</p>
+              <p className="line-clamp-1 text-xs opacity-85">{user?.email}</p>
             </div>
 
             <div className={`logout-button ml-auto bg-white p-1 rounded-md ${isSidebarOpen ? '' : 'hidden'}`}>
