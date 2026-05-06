@@ -5,6 +5,9 @@ export type ProjectType = {
   zipcode: string;
   city: string;
   thumbnailUrl: string;
+  createdAt?: string;
+  lastOpenedAt?: string;
+  isArchived?: boolean;
 
   numberOfPlans: number;
   numberOfPhotos: number;

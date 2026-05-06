@@ -102,10 +102,10 @@ function AppMenu() {
 
       
       {/* Desktop menu */}
-      <div className={`hidden lg:flex flex-col gap-2 bg-primary h-screen py-6 shrink-0 ${isSidebarOpen ? 'w-64' : 'w-14'} transition-all duration-150`}>
+      <div className={`hidden lg:flex flex-col gap-2 bg-primary h-screen py-6 shrink-0 ${isSidebarOpen ? 'w-64' : 'w-16'} transition-all duration-150`}>
 
         <div className="top-header px-3">
-          <div className={`header relative w-full shrink-0 flex items-center  ${isSidebarOpen ? 'justify-between' : 'group'}`}>
+          <div className={`header relative w-full shrink-0 flex items-center ${isSidebarOpen ? 'justify-between' : 'justify-center group'}`}>
             <div className={`shrink-0 ${isSidebarOpen ? '' : 'group-hover:hidden'}`}>
               <Logo type={isSidebarOpen ? 'long' : 'icon'} color='white' />
             </div>
@@ -122,8 +122,8 @@ function AppMenu() {
             </div>
           </div>
 
-          <div className="navlinks-container flex flex-col gap-4 mt-8 w-full overflow-x-hidden">
-            <ul className={`flex flex-col items-start gap-3 min-w-40 shrink-0 `}>
+          <div className="navlinks-container flex flex-col gap-4 mt-8 w-full min-w-0">
+            <ul className={`flex flex-col gap-3 min-w-0 ${isSidebarOpen ? 'items-start' : 'items-center'}`}>
                 {appMenuLinks.map((menuLink, index) => (
                   <AppMenuLink
                     key={index}
@@ -135,8 +135,8 @@ function AppMenu() {
           </div>
         </div>
 
-        <div className="personal-infos  mt-auto text-white hover:bg-white/20 p-2 rounded-md transition-all duration-150">
-          <Link href="/dashboard/profile" className='flex items-center gap-2'>
+        <div className={`personal-infos mt-auto text-white hover:bg-white/20 p-2 rounded-md transition-all duration-150 ${isSidebarOpen ? '' : 'flex justify-center'}`}>
+          <Link href="/dashboard/profile" className={`flex items-center gap-2 ${isSidebarOpen ? '' : 'justify-center w-full'}`}>
           
             <div className="pp-container w-10 h-10 shrink-0 rounded-full bg-gray-300">
 

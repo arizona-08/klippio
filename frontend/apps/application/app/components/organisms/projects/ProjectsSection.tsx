@@ -8,6 +8,7 @@ import ProjectForm from '../../molecules/ProjectForm/ProjectForm';
 import { ProjectType } from '@/types/project';
 import { PlusIcon } from 'lucide-react';
 import { getArchivedProjects, getProjects } from '@/proxy/projects/project-functions';
+import DeleteProjectModal from '../../molecules/ProjectModals/DeleteProjectModal';
 
 interface ProjectsSectionProps {
   // Define any props if needed
@@ -124,7 +125,7 @@ function ProjectsSection({ projects, mode }: ProjectsSectionProps) {
         <>
           <ul className="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 mt-4 py-6">
               {displayedProjects.map(project => (
-                <ProjectCard key={project.id} project={project} />
+                <ProjectCard key={project.id} project={project} mode={mode} />
               ))}
           </ul>
 
