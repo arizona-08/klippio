@@ -18,8 +18,11 @@ function AppMenuLink({ menuLink, hideText }: AppMenuLinkProps) {
   const { label, href, icon } = menuLink;
   const pathname = usePathname();
 
+  const pathNameParts = pathname.split('/');
+  const isActive = pathNameParts[2] === href.split('/')[2]; // Compare the second segment of the path
+
   return (
-    <li className={`w-full shrink-0 hover:bg-white/20 p-1 rounded-md ${hideText ? 'flex justify-center' : ''}`}>
+    <li className={`relative overflow-hidden w-full shrink-0 hover:bg-white/10 p-1 rounded-md ${hideText ? 'flex justify-center' : ''} ${isActive ? 'bg-white/20 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-white' : ''}`}>
       <Link href={href} className={`flex items-center w-full ${hideText ? 'justify-center gap-0' : 'gap-4'}`}>
         <div className="w-[30px] h-[30px] rounded-sm flex justify-center items-center">
           {icon}

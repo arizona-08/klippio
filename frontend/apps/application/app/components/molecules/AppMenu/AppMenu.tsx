@@ -9,8 +9,11 @@ import AppMenuLink from '../../atoms/AppMenuLink'
 import Image from 'next/image'
 import { logout } from '@/proxy/auth/auth-functions'
 import { Archive, Book, LogInIcon, User, Users } from 'lucide-react'
+import { useSidebarStore } from '@/stores/SidebarStore'
+import useViewportWidth from '@/app/hooks/useViewportWidth'
 
 function AppMenu() {
+  useViewportWidth()
   const {user, setUser} = useUser();
 
   const appMenuLinks = [
@@ -32,16 +35,14 @@ function AppMenu() {
   ]
   
   const [burgerActive, setIsBurgerActive] = React.useState<boolean>(false);
-  const [isSidebarOpen, setIsSidebarOpen] = React.useState<boolean>(true);
+  // const [isSidebarOpen, setIsSidebarOpen] = React.useState<boolean>(false);
+
+  const { isSidebarOpen, toggleSidebar } = useSidebarStore();
 
   const [isProfileMenuOpen, setIsProfileMenuOpen] = React.useState(false);
 
   function toggleBurgerActive(){
     setIsBurgerActive(!burgerActive);
-  }
-
-  function toggleSidebar(){
-    setIsSidebarOpen(!isSidebarOpen);
   }
 
   const router = useRouter();
@@ -110,7 +111,7 @@ function AppMenu() {
               <Logo type={isSidebarOpen ? 'long' : 'icon'} color='white' />
             </div>
 
-            <div className={`sticky top-0 right-0 z-10  hover:bg-white/20 p-1 rounded-md cursor-pointer transition-all duration-150 ${isSidebarOpen ? "" : "hidden group-hover:block"}`} onClick={toggleSidebar}>
+            <div className={`sticky top-0 right-0 z-10  hover:bg-white/20 p-1 rounded-md cursor-pointer transition-all duration-150 ${isSidebarOpen ? "" : "hidden group-hover:block"}`} >
               <Image
                 src="/icons/sidebar.svg"
                 alt="close icon"

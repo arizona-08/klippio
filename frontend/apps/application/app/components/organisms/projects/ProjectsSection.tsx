@@ -9,6 +9,7 @@ import { ProjectType } from '@/types/project';
 import { PlusIcon } from 'lucide-react';
 import { getArchivedProjects, getProjects } from '@/proxy/projects/project-functions';
 import DeleteProjectModal from '../../molecules/ProjectModals/DeleteProjectModal';
+import { useSidebarStore } from '@/stores/SidebarStore';
 
 interface ProjectsSectionProps {
   // Define any props if needed
@@ -80,11 +81,13 @@ function ProjectsSection({ projects, mode }: ProjectsSectionProps) {
     console.log('Tri sélectionné :', sortOption);
   }
 
+  const isSideBarOpen = useSidebarStore((state) => state.isVisibleAndOpen);
+
   return (
     <div className=''>
       {/* <DeleteProjectModal /> */}
-      <div className="top-projects-bar sticky top-20 z-20 p-4  w-full">
-        <div className="flex flex-col gap-4 md:flex-row-reverse md:items-center md:justify-between">
+      <div className="top-projects-bar sticky top-0 z-20 p-4  w-full">
+        <div className={`flex flex-col gap-4 ${isSideBarOpen ? '' : 'md:flex-row-reverse md:items-center md:justify-between'}`}>
           <div className="w-full md:max-w-80">
             <SearchBar onSearch={searchProject} />
           </div>
@@ -123,7 +126,7 @@ function ProjectsSection({ projects, mode }: ProjectsSectionProps) {
         </div>
       ) : (
         <>
-          <ul className="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 mt-4 py-6">
+          <ul className={`p-4 grid grid-cols-1 gap-6 mt-4 py-6 ${isSideBarOpen ? 'xl:grid-cols-2 2xl:grid-cols-3' : ' md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4'}`}>
               {displayedProjects.map(project => (
                 <ProjectCard key={project.id} project={project} mode={mode} />
               ))}

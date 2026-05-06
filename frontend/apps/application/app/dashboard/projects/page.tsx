@@ -20,7 +20,7 @@ function ProjectsPage() {
   ];
 
   return (
-    <div className="Dashboard-root-container">
+    <div className="Dashboard-root-container flex flex-col h-screen overflow-hidden">
       <section className="relative overflow-hidden border-b border-gray-100 bg-white">
         <div className="absolute -top-24 -right-16 h-56 w-56 rounded-full bg-emerald-100 blur-3xl" />
         <div className="absolute -bottom-16 left-10 h-40 w-40 rounded-full bg-emerald-50 blur-2xl" />
@@ -50,16 +50,16 @@ function ProjectsPage() {
         </div>
       </section>
 
-      <div className="px-4 pb-10 lg:px-8">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
-          <div className="min-w-0">
+      <div className="px-4 lg:px-8 flex-1 overflow-hidden">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px] h-full ">
+          <div className="min-w-0 overflow-y-auto ">
             <Suspense fallback={<DisplayProjectsListSkeleton />}>
               <ProjectsSectionLoader mode="basic" />
             </Suspense>
           </div>
 
-          <aside className="hidden lg:block">
-            <div className="sticky top-28 space-y-4">
+          <aside className="hidden lg:block lg:border-l lg:border-gray-100 lg:pl-6">
+            <div className="sticky top-4 space-y-4">
               <div className="rounded-2xl border border-gray-100 bg-white p-4">
                 <h2 className="text-sm font-semibold text-gray-900">Activite recente</h2>
                 <ul className="mt-3 space-y-3">
