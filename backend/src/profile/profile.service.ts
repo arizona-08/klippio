@@ -4,10 +4,15 @@ import { EditPersonalInfoDto } from "./dtos/edit-personal-info.dto";
 import { EditPasswordDto } from "./dtos/edit-password.dto";
 import { BlockedEncryptionTypes$ } from "@aws-sdk/client-s3";
 import bcrypt from 'bcrypt';
+import { AmazonS3Service } from "src/amazon/amazon-s3.service";
+import { EditUserPictureDto } from "./dtos/edit-profile-picture.dto";
 
 @Injectable()
 export class ProfileService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly amazonS3Service: AmazonS3Service
+  ) {}
 
   async editPersonalInfo(userId: number, body: EditPersonalInfoDto) {
     const { email, firstname, lastname } = body;
@@ -94,4 +99,51 @@ export class ProfileService {
       throw new BadRequestException(error.message || "Erreur lors de la mise à jour du mot de passe");
     }
   }
+
+  async editUserPicture(userId: number, file: Express.Multer.File, body: EditUserPictureDto) {
+    const { zoom, offsetX, offsetY, type } = body;
+
+    if (!file) {
+      throw new BadRequestException("Aucun fichier téléchargé");
+    }
+
+    const {storageKey, temporaryAccessUrl} = await this.amazonS3Service.uploadImage({
+      file: file,
+      type: `USER_${type}_PICTURE`,
+      userId: userId,
+    });
+
+    await this.prismaService.userPictures.upsert({
+      where: {
+        userId_type: {
+          userId: userId,
+          type: type,
+        },
+      },
+      update: {
+        storageKey: storageKey,
+        zoom: zoom,
+        offsetX: offsetX,
+        offsetY: offsetY,
+      },
+      create: {
+        userId: userId,
+        type: type,
+        storageKey: storageKey,
+        zoom: zoom,
+        offsetX: offsetX,
+        offsetY: offsetY,
+      },
+    });
+
+    
+
+    const message = type === "PROFILE" ? "Photo de profil mise à jour avec succès" : "Photo de bannière mise à jour avec succès";
+    return {
+      success: true,
+      message: message,
+      temporaryAccessUrl: temporaryAccessUrl,
+    };
+  }
+    
 }

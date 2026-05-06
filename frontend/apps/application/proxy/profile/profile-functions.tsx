@@ -33,9 +33,9 @@ export async function editPasswordInfo(credentials: {
   return response;
 }
 
-export async function editProfilePicture(formData: FormData) {
-  const response = await fetchFromClient("/api/profile/edit-profile-picture", {
-    method: "PUT",
+export async function editUserPicture(formData: FormData) {
+  const response = await fetchFromClient("/api/profile/edit-user-picture", {
+    method: "PATCH",
     body: formData,
   });
 
