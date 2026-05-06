@@ -7,14 +7,19 @@ import ProjectSorter from './ProjectFilter'
 import ProjectForm from '../../molecules/ProjectForm/ProjectForm';
 import { ProjectType } from '@/types/project';
 import { PlusIcon } from 'lucide-react';
-import { getProjects } from '@/proxy/projects/project-functions';
+import { getArchivedProjects, getProjects } from '@/proxy/projects/project-functions';
+import DeleteProjectModal from '../../molecules/ProjectModals/DeleteProjectModal';
+import { useSidebarStore } from '@/stores/SidebarStore';
 
 interface ProjectsSectionProps {
   // Define any props if needed
   projects?: ProjectType[]; // Optionally accept projects as props
+  mode: 'basic' | 'archive'; // Optionally accept a mode prop for different display modes
 }
 
-function ProjectsSection({ projects }: ProjectsSectionProps) {
+function ProjectsSection({ projects, mode }: ProjectsSectionProps) {
+  const isBasicMode = mode === 'basic';
+
   const [isProjectFormOpen, setIsProjectFormOpen] = React.useState(false);
   const [masterProjectsList, setMasterProjectsList] = React.useState<ProjectType[]>(projects || []);
   const [searchQueryText, setSearchQueryText] = React.useState('');
@@ -65,7 +70,8 @@ function ProjectsSection({ projects }: ProjectsSectionProps) {
   }
 
   async function handleSortChange(sortOption: {value: string, order: 'asc' | 'desc'}){
-    const response = await getProjects({sortBy: sortOption.value, order: sortOption.order});
+    const fetchFunction = isBasicMode ? getProjects : getArchivedProjects;
+    const response = await fetchFunction({sortBy: sortOption.value, order: sortOption.order});
     const sortedProjects = await response.json();
     if(!response.ok){
       console.error('Erreur lors du tri des projets');
@@ -75,16 +81,18 @@ function ProjectsSection({ projects }: ProjectsSectionProps) {
     console.log('Tri sélectionné :', sortOption);
   }
 
+  const isSideBarOpen = useSidebarStore((state) => state.isVisibleAndOpen);
+
   return (
     <div className=''>
       {/* <DeleteProjectModal /> */}
-      <div className="top-projects-bar sticky top-20 z-20 p-4  w-full bg-white">
-        <div className="flex flex-col gap-4 md:flex-row-reverse md:items-center md:justify-between">
+      <div className="top-projects-bar p-4 w-full">
+        <div className={`flex flex-col gap-4 ${isSideBarOpen ? '' : 'md:flex-row-reverse md:items-center md:justify-between'}`}>
           <div className="w-full md:max-w-80">
             <SearchBar onSearch={searchProject} />
           </div>
 
-          <div className='relative w-full flex flex-col md:inline-block'>
+          <div className={`relative ${isBasicMode ? 'w-full flex flex-col md:inline-block' : 'hidden'}`}>
             <div className="md:max-w-90">
               <CTA
                 type='button'
@@ -113,14 +121,14 @@ function ProjectsSection({ projects }: ProjectsSectionProps) {
 
       {filteredProjectsList.length === 0 ? (
         <div className="text-center py-8">
-          <h3 className="text-xl font-medium text-gray-700">Aucun projet trouvé</h3>
-          <p className="text-gray-500">Essayez d'ajuster votre recherche ou créez un nouveau projet.</p>
+          <h3 className="text-xl font-medium text-gray-700">Aucun projet {isBasicMode ? 'actif' : 'archivé'} trouvé</h3>
+          <p className="text-gray-500">Essayez d'ajuster votre recherche ou  {isBasicMode ? 'créez un nouveau projet.' : 'archivez un projet existant.'} </p>
         </div>
       ) : (
         <>
-          <ul className="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 mt-4 py-6">
+          <ul className={`p-4 grid grid-cols-1 gap-6 mt-4 py-6 ${isSideBarOpen ? 'xl:grid-cols-2 2xl:grid-cols-3' : ' md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4'}`}>
               {displayedProjects.map(project => (
-                <ProjectCard key={project.id} project={project} />
+                <ProjectCard key={project.id} project={project} mode={mode} />
               ))}
           </ul>
 

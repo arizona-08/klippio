@@ -29,6 +29,17 @@ export class ProjectController {
   }
 
   @UseGuards(AuthenticatedGuard)
+  @Get('archived')
+  async getArchivedProjects(
+    @CurrentUser() user: User,
+    @Query('sortBy') sortBy: "createdAt" | "lastOpenedAt" | "title",
+    @Query('order') order: 'asc' | 'desc'
+  ) {
+    const userId = user.id;
+    return this.projectService.getProjects(userId, sortBy, order, true);
+  }
+
+  @UseGuards(AuthenticatedGuard)
   @Put(':projectId/update')
   async updateProject(@Param('projectId') projectId: string, @Body() createProjectDto: CreateProjectDTO, @CurrentUser() user: User){
     const userId = user.id;

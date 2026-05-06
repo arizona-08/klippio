@@ -33,7 +33,7 @@ function LoginForm() {
 
     if(response.ok){
       setUser(result.user)
-      router.push('/dashboard')
+      router.push('/dashboard/projects')
     } else {
       setErrorMessage(result.message);
     }

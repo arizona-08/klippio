@@ -66,12 +66,14 @@ export class ProjectService {
   async getProjects(
     userId: number,
     sortBy: "createdAt" | "lastOpenedAt" | "title",
-    order: 'asc' | 'desc'
+    order: 'asc' | 'desc',
+    isArchived = false
   ) {
     try{
       const projects = await this.prismaService.project.findMany({
         where: {
-          authorId: userId
+          authorId: userId,
+          isArchived: isArchived,
         },
         select: {
           id: true,

@@ -5,7 +5,7 @@ function ProjectCardSkeleton() {
     <>
       <li className='w-full cursor-pointer border border-gray-200 rounded-md p-4 hover:shadow-sm hover:scale-101 transition-all duration-150 relative hover:z-10'>
         <div>
-          <div className="relative project-pic-container bg-gray-500 aspect-video rounded-md mb-4">
+          <div className="relative project-pic-container bg-gray-400 aspect-video rounded-md mb-4 animate-pulse">
             <div className="absolute top-5 right-5 bg-primary-light rounded-full h-4 w-6 animate-pulse"></div>
           </div>
 

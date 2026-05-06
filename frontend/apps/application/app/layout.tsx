@@ -22,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-      <body className={`min-h-screen relative overflow-x-hidden ${albertSans.className}`}>
+      <body className={`min-h-screen relative overflow-x-hidden ${albertSans.className} bg-white`}>
         <ModalOverlay />
         <AuthUserProvider>
           {children}
