@@ -27,6 +27,20 @@ function ProfilePage() {
       });
     }
   }, [user])
+
+
+  async function handleModifyPersonalInfo(e?: React.MouseEvent){
+    e?.preventDefault();
+
+  }
+
+  async function handleModifyProfilePicture(e?: React.MouseEvent){
+    e?.preventDefault();
+  }
+
+  async function handleModifyPassword(e?: React.MouseEvent){
+    e?.preventDefault();
+  }
   
   return (
     <div className="p-4">
@@ -93,7 +107,43 @@ function ProfilePage() {
                 color='primary'
                 text='Enregistrer'
                 type='button'
+                onClick={handleModifyPersonalInfo}
+              />
+            </div>
+          </form>
+        </div>
+      </section>
+
+      
+      <section className="mt-12 max-w-7xl flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:mx-auto">
+        <div>
+          <h2 className="font-medium">Photo de profil</h2>
+          <p className='text-sm text-gray-600 mt-1'>Mettez à jour votre photo de profil.</p>
+        </div>
+
+        <div className="bg-white rounded-md p-4 w-full md:max-w-2xl border border-gray-200">
+          <form
+            className='space-y-6'
+          >
+            
+            
+            <div className="w-32 h-32 rounded-full bg-gray-400 border-4 border-gray-200 mx-auto">
+
+            </div>
+
+            <div className="flex justify-end gap-6">
+              <CTA
+                color='secondary'
+                text='Choisir une photo'
+                type='button'
                 onClick={() => {}}
+              />
+              
+              <CTA
+                color='primary'
+                text='Enregistrer'
+                type='button'
+                onClick={handleModifyProfilePicture}
               />
             </div>
           </form>
@@ -134,7 +184,7 @@ function ProfilePage() {
                 color='primary'
                 text='Enregistrer'
                 type='button'
-                onClick={() => {}}
+                onClick={handleModifyPassword}
               />
             </div>
           </form>
