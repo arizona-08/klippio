@@ -1,6 +1,6 @@
 import { fetchFromClient } from "../api";
 
-export async function modifyPersonalInfo(credentials: {
+export async function editPersonalInfo(credentials: {
   firstname: string;
   lastname: string;
   email: string;
@@ -17,9 +17,10 @@ export async function modifyPersonalInfo(credentials: {
 }
 
 
-export async function modifyPasswordInfo(credentials: {
+export async function editPasswordInfo(credentials: {
   currentPassword: string;
   newPassword: string;
+  confirmationPassword: string;
 }) {
   const response = await fetchFromClient("/api/profile/edit-password", {
     method: "PUT",
@@ -32,7 +33,7 @@ export async function modifyPasswordInfo(credentials: {
   return response;
 }
 
-export async function modifyProfilePicture(formData: FormData) {
+export async function editProfilePicture(formData: FormData) {
   const response = await fetchFromClient("/api/profile/edit-profile-picture", {
     method: "PUT",
     body: formData,

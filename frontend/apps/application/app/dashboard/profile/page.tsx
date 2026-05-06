@@ -1,8 +1,10 @@
 'use client'
 import Input from '@/app/components/atoms/Input';
 import { useUser } from '@/app/Context/AuthContext/AuthUserProvider';
+import { editPasswordInfo, editPersonalInfo } from '@/proxy/profile/profile-functions';
 import { CTA } from '@repo/ui';
-import React, { use, useEffect } from 'react'
+import React, { useEffect } from 'react'
+import Toast from '@/app/components/molecules/Toast/Toast'
 
 function ProfilePage() {
   const {user, setUser} = useUser();
@@ -15,8 +17,24 @@ function ProfilePage() {
 
   const [passwordInfo, setPasswordInfo] = React.useState({
     currentPassword: '',
-    newPassword: ''
+    newPassword: '',
+    confirmationPassword: ''
   });
+
+  const [personalInfoToast, setPersonalInfoToast] = React.useState<{
+    message: string;
+    type: 'success' | 'error';
+  } | null>(null);
+
+  const [profilePictureToast, setProfilePictureToast] = React.useState<{
+    message: string;
+    type: 'success' | 'error';
+  } | null>(null);
+
+  const [passwordInfoToast, setPasswordInfoToast] = React.useState<{
+    message: string;
+    type: 'success' | 'error';
+  } | null>(null);
 
   useEffect(() => {
     if(user){
@@ -29,17 +47,55 @@ function ProfilePage() {
   }, [user])
 
 
-  async function handleModifyPersonalInfo(e?: React.MouseEvent){
+  async function handleEditPersonalInfo(e?: React.MouseEvent){
     e?.preventDefault();
-
+    const response = await editPersonalInfo(personalInfo);
+    if(response.ok){
+      const data = await response.json();
+      const updatedUser = data.updatedUser;
+      setUser(updatedUser);
+      console.log(data.message);
+      setPersonalInfoToast({
+        message: data.message,
+        type: 'success'
+      });
+    } else {
+      setPersonalInfoToast({
+        message: "Erreur lors de la mise à jour des informations personnelles",
+        type: 'error'
+      });
+    }
   }
 
-  async function handleModifyProfilePicture(e?: React.MouseEvent){
+  async function handleEditProfilePicture(e?: React.MouseEvent){
     e?.preventDefault();
+    
+    
   }
 
-  async function handleModifyPassword(e?: React.MouseEvent){
+  async function handleEditPassword(e?: React.MouseEvent){
     e?.preventDefault();
+    const response = await editPasswordInfo(passwordInfo);
+
+    const data = await response.json();
+    if(data.success) {
+      setPasswordInfoToast({
+        message: data.message,
+        type: 'success'
+      });
+
+      setPasswordInfo({
+        currentPassword: '',
+        newPassword: '',
+        confirmationPassword: ''
+      });
+    } else {
+      setPasswordInfoToast({
+        message: data.message,
+        type: 'error'
+      });
+    }  
+    
   }
   
   return (
@@ -65,6 +121,17 @@ function ProfilePage() {
         <div>
           <h2 className="font-medium">Informations personnelles</h2>
           <p className='text-sm text-gray-600 mt-1'>Mettez à jour vos informations personnelles à tout moment.</p>
+
+          {personalInfoToast && (
+            <div className="mt-4">
+              <Toast
+                message={personalInfoToast.message}
+                type={personalInfoToast.type}
+                durationMs={3000}
+                onClose={() => setPersonalInfoToast(null)}
+              />
+            </div>
+          )}
         </div>
 
         <div className="bg-white rounded-md p-4 w-full md:max-w-2xl border border-gray-200">
@@ -107,7 +174,7 @@ function ProfilePage() {
                 color='primary'
                 text='Enregistrer'
                 type='button'
-                onClick={handleModifyPersonalInfo}
+                onClick={handleEditPersonalInfo}
               />
             </div>
           </form>
@@ -119,13 +186,23 @@ function ProfilePage() {
         <div>
           <h2 className="font-medium">Photo de profil</h2>
           <p className='text-sm text-gray-600 mt-1'>Mettez à jour votre photo de profil.</p>
+
+          {profilePictureToast && (
+            <div className="mt-4">
+              <Toast
+                message={profilePictureToast.message}
+                type={profilePictureToast.type}
+                durationMs={3000}
+                onClose={() => setProfilePictureToast(null)}
+              />
+            </div>
+          )}
         </div>
 
         <div className="bg-white rounded-md p-4 w-full md:max-w-2xl border border-gray-200">
           <form
             className='space-y-6'
           >
-            
             
             <div className="w-32 h-32 rounded-full bg-gray-400 border-4 border-gray-200 mx-auto">
 
@@ -143,7 +220,7 @@ function ProfilePage() {
                 color='primary'
                 text='Enregistrer'
                 type='button'
-                onClick={handleModifyProfilePicture}
+                onClick={handleEditProfilePicture}
               />
             </div>
           </form>
@@ -155,6 +232,17 @@ function ProfilePage() {
         <div>
           <h2 className="font-medium">Sécurité</h2>
           <p className='text-sm text-gray-600 mt-1'>Changez votre mot de passe en toute sécurité.</p>
+
+          {passwordInfoToast && (
+            <div className="mt-4">
+              <Toast
+                message={passwordInfoToast.message}
+                type={passwordInfoToast.type}
+                durationMs={3000}
+                onClose={() => setPasswordInfoToast(null)}
+              />
+            </div>
+          )}
         </div>
 
         <div className="bg-white rounded-md p-4 w-full md:max-w-2xl border border-gray-200">
@@ -179,12 +267,21 @@ function ProfilePage() {
               onChange={(e) => setPasswordInfo({...passwordInfo, newPassword: e.target.value})}
             />
 
+            <Input
+              label='Confirmation du mot de passe'
+              type='password'
+              name='confirmation-password'
+              placeholder='Confirmez votre nouveau mot de passe'
+              value={passwordInfo.confirmationPassword}
+              onChange={(e) => setPasswordInfo({...passwordInfo, confirmationPassword: e.target.value})}
+            />
+
             <div className="flex justify-end">
               <CTA
                 color='primary'
                 text='Enregistrer'
                 type='button'
-                onClick={handleModifyPassword}
+                onClick={handleEditPassword}
               />
             </div>
           </form>
