@@ -8,7 +8,7 @@ import Logo from '@repo/ui/src/atoms/Logo'
 import AppMenuLink from '../../atoms/AppMenuLink'
 import Image from 'next/image'
 import { logout } from '@/proxy/auth/auth-functions'
-import { LogInIcon } from 'lucide-react'
+import { Archive, Book, LogInIcon, User, Users } from 'lucide-react'
 
 function AppMenu() {
   const {user, setUser} = useUser();
@@ -16,18 +16,18 @@ function AppMenu() {
   const appMenuLinks = [
     {
       label: 'Mes Projets',
-      href: '/dashboard/',
-      iconSrc: "/icons/book_green.svg"
+      href: '/dashboard/projects',
+      icon: <Book className='text-white'/>
     },
     {
       label: 'Mes Archives',
       href: '/dashboard/archives',
-      iconSrc: "/icons/archive_green.svg"
+      icon: <Archive className='text-white'/>
     },
     {
       label: 'Mon Équipe',
       href: '/dashboard/teams',
-      iconSrc: "/icons/users_green.svg"
+      icon: <Users className='text-white'/>
     }
   ]
   
@@ -122,7 +122,7 @@ function AppMenu() {
             </div>
           </div>
 
-          <div className="navlinks-container flex flex-col gap-4 mt-8 w-fit overflow-x-hidden">
+          <div className="navlinks-container flex flex-col gap-4 mt-8 w-full overflow-x-hidden">
             <ul className={`flex flex-col items-start gap-3 min-w-40 shrink-0 `}>
                 {appMenuLinks.map((menuLink, index) => (
                   <AppMenuLink

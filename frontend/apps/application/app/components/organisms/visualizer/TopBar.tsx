@@ -16,7 +16,7 @@ function TopBar() {
 
   return (
     <div className="bg-white text-black p-4 flex items-center justify-between">
-      <Link href={"/dashboard"}>
+      <Link href={"/dashboard/projects"}>
         <div className="flex items-center gap-4">
           <ArrowLeft />
           <h3>{(currentProject?.title || currentProjectTitle) || "Titre du projet"}</h3>
