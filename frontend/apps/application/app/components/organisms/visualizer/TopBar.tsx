@@ -19,7 +19,11 @@ function TopBar() {
       <Link href={"/dashboard/projects"}>
         <div className="flex items-center gap-4">
           <ArrowLeft />
-          <h3>{(currentProject?.title || currentProjectTitle) || "Titre du projet"}</h3>
+          <div className="flex flex-col">
+            <h3 className="font-semibold text-xl">{(currentProject?.title || currentProjectTitle) || "Titre du projet"}</h3>
+            <p className="text-gray-600 text-sm">Modifié le {currentProject?.lastOpenedAt ? new Date(currentProject.lastOpenedAt).toLocaleDateString() : 'Date non disponible'}</p>
+
+          </div>
         </div>
       </Link>
       <div className="flex items-center gap-2 cursor-pointer" onClick={openFolders}>
