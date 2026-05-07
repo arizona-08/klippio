@@ -46,6 +46,14 @@ export class AmazonS3Service {
       storageKey += `/thumbnail/${generatedFileName}`;
     }
 
+    if(type === "USER_PROFILE_PICTURE") {
+      storageKey += `/profile/${generatedFileName}`;
+    }
+
+    if(type === "USER_BANNER_PICTURE") {
+      storageKey += `/banner/${generatedFileName}`;
+    }
+
     const uploadCommand = new PutObjectCommand({
       Bucket: bucketName,
       Key: storageKey,

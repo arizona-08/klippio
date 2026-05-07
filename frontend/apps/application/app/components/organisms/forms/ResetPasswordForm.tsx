@@ -5,6 +5,7 @@ import React from 'react'
 import Input from '../../atoms/Input';
 import { CTA } from '@repo/ui';
 import { resetPassword } from '@/proxy/auth/auth-functions';
+import { useRouter } from 'next/navigation';
 
 interface ResetPasswordFormProps{
   token: string | undefined
@@ -19,6 +20,8 @@ function ResetPasswordForm({token}: ResetPasswordFormProps) {
 
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null)
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+
+  const route = useRouter();
 
   function setCredentialsInfo(e: React.ChangeEvent<HTMLInputElement>){
     setResetPasswordCredentials({...resetPasswordCredentials, [e.target.name]: e.target.value})
@@ -43,6 +46,7 @@ function ResetPasswordForm({token}: ResetPasswordFormProps) {
 
     if(response.ok){
       setSuccessMessage(result.message);
+      route.push('/auth/login');
     }
   }
 

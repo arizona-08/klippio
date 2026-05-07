@@ -7,8 +7,10 @@ import { CouldNotCreateUserError, PasswordDoNotMatchError } from "src/Error/User
 import { ForgetPasswordDTO } from "./dto/forget-password.dto";
 import { ResetPasswordDTO } from "./dto/reset-password.dto";
 import { CurrentUser } from "./decorators/current-user.decorator";
-import type { User } from "@prisma/client";
+
 import { MailNotSendedError } from "src/Error/MailError";
+import { profile } from "console";
+import type { User } from "src/user/interfaces/user.interface";
 
 
 @Controller('api/auth')
@@ -43,7 +45,12 @@ export class AuthController{
     session.userId = connectedUser.value.id;
     session.role = connectedUser.value.role;
 
-    return {message: 'Connexion réussie', user: connectedUser};
+    return {
+      message: 'Connexion réussie', 
+      user: {
+        ...connectedUser.value,
+      }
+    };
   }
 
   @UseGuards(AuthenticatedGuard)

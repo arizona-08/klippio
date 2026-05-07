@@ -6,10 +6,14 @@ import { ForgotPasswordTokens, User, UserFilter } from "./interfaces/user.interf
 import { CouldNotUpdateUserError, UserCreationError, UserNotFoundError } from "src/Error/UserError";
 import { err, ok, Result } from "src/Error/Result";
 import * as crypto from 'crypto';
+import { AmazonS3Service } from "src/amazon/amazon-s3.service";
 
 @Injectable()
 export class UserService{
-  constructor(private prisma: PrismaService){}
+  constructor(
+    private prisma: PrismaService,
+    private amazonS3Service: AmazonS3Service
+  ){}
 
   async findAllUsers(){
     const users = await this.prisma.user.findMany();
@@ -23,7 +27,7 @@ export class UserService{
       )
 
       return ok<User>(createdUser);
-    } catch(error){
+    } catch(error: any){
       return err(new UserCreationError(`Erreur lors de la création de l'utilisateur: ${error.message}`));
     }
     
@@ -39,12 +43,41 @@ export class UserService{
     const user = await this.prisma.user.findFirst({
       where: {
         [filter]: value
+      },
+      include: {
+        userPictures: {
+          select: {
+            storageKey: true,
+            zoom: true,
+            offsetX: true,
+            offsetY: true,
+            type: true
+          }
+        }
       }
     });
     
     if(!user) return err(new UserNotFoundError(`Utilisateur avec ${filter}: ${value} introuvable.`));
 
-    return ok(user)
+    const presignedPictures = await Promise.all(user.userPictures.map(async (picture) => {
+      if(!picture.storageKey) return null;
+      const presignedUrl = await this.amazonS3Service.generatePresignedUrl(picture.storageKey, 60 * 60);
+      return {
+        url: presignedUrl,
+        zoom: picture.zoom,
+        offsetX: picture.offsetX,
+        offsetY: picture.offsetY,
+        type: picture.type
+      }
+    }));
+
+    const userWithPresignedPictures: User = {
+      ...user,
+      profilePicture: presignedPictures.find(picture => picture?.type === 'PROFILE') || null,
+      bannerPicture: presignedPictures.find(picture => picture?.type === 'BANNER') || null
+    }
+
+    return ok(userWithPresignedPictures);
   }
 
   async updateUser(id: number, updateData: Partial<User>): Promise<Result<User, UserNotFoundError | CouldNotUpdateUserError>>{
@@ -75,7 +108,7 @@ export class UserService{
       });
 
       return ok(updatedUser);
-    } catch(error){
+    } catch(error: any){
       return err(new CouldNotUpdateUserError(`Erreur lors de la mise à jour de l'utilisateur: ${error.message}`));
     }
   }

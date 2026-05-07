@@ -9,6 +9,7 @@ import { MailModule } from './mail/mail.module';
 import { AmazonS3Module } from './amazon/amazon-s3.module';
 import { ProjectModule } from './project/project.module';
 import { PlanModule } from './plan/plan.module';
+import { ProfileModule } from './profile/profile.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { PlanModule } from './plan/plan.module';
     AmazonS3Module,
     ProjectModule,
     PlanModule,
+    ProfileModule
   ],
   controllers: [AppController],
   providers: [AppService],

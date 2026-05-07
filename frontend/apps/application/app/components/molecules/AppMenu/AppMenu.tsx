@@ -8,7 +8,7 @@ import Logo from '@repo/ui/src/atoms/Logo'
 import AppMenuLink from '../../atoms/AppMenuLink'
 import Image from 'next/image'
 import { logout } from '@/proxy/auth/auth-functions'
-import { Archive, Book, LogInIcon, User, Users } from 'lucide-react'
+import { Archive, Book, LogInIcon, LogOut, User, Users } from 'lucide-react'
 import { useSidebarStore } from '@/stores/SidebarStore'
 import useViewportWidth from '@/app/hooks/useViewportWidth'
 
@@ -69,7 +69,7 @@ function AppMenu() {
           {/* Profile picture placeholder */}
           <div className="relative w-8 h-8 rounded-full bg-gray-300 z-50 px-4" onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}>
             <div className={`absolute top-full mt-2 right-0 bg-white border border-gray-300 rounded-md shadow-lg w-40 ${isProfileMenuOpen ? "visible opacity-100" : "invisible opacity-0"} transition-all duration-150`}>
-              <Link href="/profile" className='block px-4 py-2 text-sm hover:bg-gray-100'>Mon Profil</Link>
+              <Link href="/dashboard/profile" className='flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100'> <User className='w-4 h-4'/> Mon Profil</Link>
               <button onClick={() => {
                 handleLogout();
                 setIsProfileMenuOpen(false);
@@ -123,7 +123,7 @@ function AppMenu() {
             </div>
           </div>
 
-          <div className="navlinks-container flex flex-col gap-4 mt-8 w-full min-w-0">
+          <div className="navlinks-container flex flex-col gap-4 mt-8 w-full min-w-0 border-b border-white/60 pb-4">
             <ul className={`flex flex-col gap-3 min-w-0 ${isSidebarOpen ? 'items-start' : 'items-center'}`}>
                 {appMenuLinks.map((menuLink, index) => (
                   <AppMenuLink
@@ -136,29 +136,23 @@ function AppMenu() {
           </div>
         </div>
 
-        <div className={`personal-infos mt-auto text-white hover:bg-white/20 p-2 rounded-md transition-all duration-150 ${isSidebarOpen ? '' : 'flex justify-center'}`}>
-          <Link href="/dashboard/profile" className={`flex items-center gap-2 ${isSidebarOpen ? '' : 'justify-center w-full'}`}>
+        <div className={`relative personal-infos mt-auto text-white px-2 rounded-md transition-all duration-150 ${isSidebarOpen ? '' : 'flex justify-center'} group`}>
+          <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-white rounded-md w-40 flex items-center justify-center gap-4 text-xs text-red-500 font-medium px-2 py-3 cursor-pointer opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all duration-150" onClick={handleLogout}>
+            <LogOut className="w-4 h-4" />
+            <p className={`${isSidebarOpen ? 'inline-block' : 'hidden'}`}>Me déconnecter</p>
+          </div>
+          <Link href="/dashboard/profile" className={`hover:bg-white/20 p-2 rounded-md flex items-center gap-4 ${isSidebarOpen ? '' : 'justify-center w-full'}`}>
           
-            <div className="pp-container w-10 h-10 shrink-0 rounded-full bg-gray-300">
+            <div className="pp-container w-12 h-12 shrink-0 rounded-full bg-gray-300">
 
             </div>
 
             <div className={`user-infos max-w-2/5 ${isSidebarOpen ? '' : 'hidden'}`}>
               
-              <p className="line-clamp-1 text-sm font-medium">{user?.firstname} {user?.lastname}</p>
-              <p className="line-clamp-1 text-xs opacity-85">{user?.email}</p>
+              <p className="line-clamp-1 font-medium">{user?.firstname} {user?.lastname}</p>
+              <p className="line-clamp-1 text-sm opacity-85">{user?.email}</p>
             </div>
 
-            <div className={`logout-button ml-auto bg-white p-1 rounded-md ${isSidebarOpen ? '' : 'hidden'}`}>
-              <Image
-                src="/icons/logout.svg"
-                alt="logout icon"
-                width={16}
-                height={16}
-                className='cursor-pointer'
-                onClick={handleLogout}
-              />
-            </div>
           </Link>
         </div>
       </div>

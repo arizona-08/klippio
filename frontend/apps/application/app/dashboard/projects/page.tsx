@@ -2,8 +2,11 @@ import ProjectsSectionLoader from '@/app/components/molecules/ProjectsSectionLoa
 import DisplayProjectsListSkeleton from '@/app/components/skeletons/ProjectsListSkeleton/ProjectListSkeleton'
 import React, { Suspense } from 'react'
 import Link from 'next/link'
+import { useUser } from '@/app/Context/AuthContext/AuthUserProvider';
+import UserGreetings from '@/app/components/molecules/UserGreetings';
 
 function ProjectsPage() {
+  
   const recentActivities = [
     {
       label: 'Projet "Mon nouveau projet" ouvert',
@@ -26,9 +29,7 @@ function ProjectsPage() {
         <div className="absolute -bottom-16 left-10 h-40 w-40 rounded-full bg-emerald-50 blur-2xl" />
 
         <div className="relative px-4 pt-6 pb-6 lg:px-8 lg:pt-8 lg:pb-8">
-          <span className="inline-flex w-fit items-center rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-sm text-emerald-700">
-            Bonjour User!
-          </span>
+          <UserGreetings />
 
           <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>

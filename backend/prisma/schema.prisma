@@ -28,6 +28,7 @@ model User {
   updatedAt                   DateTime  @default(now())
 
   projects                   Project[]
+  userPictures              UserPictures[]
 }
 
 
@@ -35,6 +36,24 @@ enum Role {
   ADMIN
   STANDARD
   PREMIUM
+}
+
+model UserPictures {
+  userId              Int     
+  type                UserPictureType
+  storageKey          String?
+  zoom                Float?
+  offsetX             Float?
+  offsetY             Float?
+
+  user                User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, type])
+}
+
+enum UserPictureType {
+  PROFILE
+  BANNER
 }
 
 model Session {
