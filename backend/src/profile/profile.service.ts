@@ -102,6 +102,9 @@ export class ProfileService {
 
   async editUserPicture(userId: number, file: Express.Multer.File, body: EditUserPictureDto) {
     const { zoom, offsetX, offsetY, type } = body;
+    const parsedZoom = parseFloat(zoom as unknown as string);
+    const parsedOffsetX = parseFloat(offsetX as unknown as string);
+    const parsedOffsetY = parseFloat(offsetY as unknown as string);
 
     if (!file) {
       throw new BadRequestException("Aucun fichier téléchargé");
@@ -122,17 +125,17 @@ export class ProfileService {
       },
       update: {
         storageKey: storageKey,
-        zoom: zoom,
-        offsetX: offsetX,
-        offsetY: offsetY,
+        zoom: parsedZoom,
+        offsetX: parsedOffsetX,
+        offsetY: parsedOffsetY,
       },
       create: {
         userId: userId,
         type: type,
         storageKey: storageKey,
-        zoom: zoom,
-        offsetX: offsetX,
-        offsetY: offsetY,
+        zoom: parsedZoom,
+        offsetX: parsedOffsetX,
+        offsetY: parsedOffsetY,
       },
     });
 

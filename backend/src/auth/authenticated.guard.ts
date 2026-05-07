@@ -1,10 +1,10 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class AuthenticatedGuard implements CanActivate {
-  constructor(private prisma: PrismaService) {}
+  constructor(private userService: UserService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
@@ -16,14 +16,14 @@ export class AuthenticatedGuard implements CanActivate {
     }
 
     // On récupère l'utilisateur
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const user = await this.userService.findOneBy('id', userId);
 
-    if (!user) {
+    if (!user.ok) {
       throw new UnauthorizedException();
     }
     
     // On attache l'utilisateur à la requête pour un accès facile plus tard
-    request.user = user; 
+    request.user = user.value; 
     // Le guard renvoie `true` si l'ID utilisateur est dans la session
     return request.session.userId !== undefined;
   }

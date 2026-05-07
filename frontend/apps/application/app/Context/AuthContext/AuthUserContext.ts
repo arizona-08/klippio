@@ -5,6 +5,18 @@ export type User = {
   lastname: string
   email: string;
   password: string;
+  profilePicture?: {
+    url: string;
+    zoom: number;
+    offsetX: number;
+    offsetY: number;
+  },
+  bannerPicture?: {
+    url: string;
+    zoom: number;
+    offsetX: number;
+    offsetY: number;
+  },
   role: "STANDARD" | "PREMIUM" | "ADMIN"  
 }
 

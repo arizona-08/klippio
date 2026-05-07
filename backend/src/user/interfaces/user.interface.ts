@@ -12,6 +12,18 @@ export interface User{
   forgotPasswordTokenExpiry?: Date | null;
   createdAt: Date;
   updatedAt: Date;
+  profilePicture?: {
+    url: string | null;
+    zoom: number | null;
+    offsetX: number | null;
+    offsetY: number | null;
+  } | null;
+  bannerPicture?: {
+    url: string | null;
+    zoom: number | null;
+    offsetX: number | null;
+    offsetY: number | null;
+  } | null;
 }
 
 export type UserFilter = 'id' | 'email' | 'firstname' | 'lastname' | 'role' | 'forgotPasswordTokenSelector';

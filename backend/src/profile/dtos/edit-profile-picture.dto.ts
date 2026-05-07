@@ -1,16 +1,16 @@
-import { IsNotEmpty, IsNumber } from "class-validator";
+import { IsNotEmpty, IsNumber, IsNumberString } from "class-validator";
 
 export class EditUserPictureDto {
   @IsNotEmpty()
-  @IsNumber()
+  @IsNumberString()
   zoom: number;
 
   @IsNotEmpty()
-  @IsNumber()
+  @IsNumberString()
   offsetX: number;
 
   @IsNotEmpty()
-  @IsNumber()
+  @IsNumberString()
   offsetY: number;
 
   @IsNotEmpty()

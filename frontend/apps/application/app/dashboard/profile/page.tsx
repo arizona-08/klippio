@@ -6,6 +6,7 @@ import { CTA } from '@repo/ui';
 import React, { useEffect } from 'react'
 import Toast from '@/app/components/molecules/Toast/Toast'
 import ProfilePicturePreview from '@/app/components/molecules/ProfilePicturePreview/ProfilePicturePreview';
+import PicturePreview from '@/app/components/molecules/ProfilePicturePreview/ProfilePicturePreview';
 
 function ProfilePage() {
   const {user, setUser} = useUser();
@@ -22,24 +23,65 @@ function ProfilePage() {
     confirmationPassword: ''
   });
 
-  const [isProfilePicturePreviewOpen, setIsProfilePicturePreviewOpen] = React.useState(false);
+  const [isPicturePreviewOpen, setIsPicturePreviewOpen] = React.useState(false);
 
   const [newProfilePicture, setNewProfilePicture] = React.useState<{
-    file: File;
+    file: File | string;
     zoom: number;
     offsetX: number;
     offsetY: number;
-  } | null>(null);
+  } | null>({
+    file: user?.profilePicture?.url || '',
+    zoom: user?.profilePicture?.zoom || 1,
+    offsetX: user?.profilePicture?.offsetX || 0,
+    offsetY: user?.profilePicture?.offsetY || 0
+  });
 
   const [newBannerPicture, setNewBannerPicture] = React.useState<{
-    file: File;
+    file: File | string;
     zoom: number;
     offsetX: number;
     offsetY: number;
-  } | null>(null);
+  } | null>({
+    file: user?.bannerPicture?.url || '',
+    zoom: user?.bannerPicture?.zoom || 1,
+    offsetX: user?.bannerPicture?.offsetX || 0,
+    offsetY: user?.bannerPicture?.offsetY || 0
+  });
 
   const [profilePictureImageUrl, setProfilePictureImageUrl] = React.useState<string | null>(null);
   const [bannerPictureImageUrl, setBannerPictureImageUrl] = React.useState<string | null>(null);
+
+  useEffect(() => {
+    setNewBannerPicture({
+      file: user?.bannerPicture?.url as string,
+      zoom: user?.bannerPicture?.zoom as number,
+      offsetX: user?.bannerPicture?.offsetX as number || 0,
+      offsetY: user?.bannerPicture?.offsetY as number || 0
+    });
+
+    setBannerPictureImageUrl(user?.bannerPicture?.url || null);
+
+    setNewProfilePicture({
+      file: user?.profilePicture?.url as string,
+      zoom: user?.profilePicture?.zoom as number || 1,
+      offsetX: user?.profilePicture?.offsetX as number || 0,
+      offsetY: user?.profilePicture?.offsetY as number || 0
+    });
+    setProfilePictureImageUrl(user?.profilePicture?.url || null);
+  }, [user])
+
+ 
+
+  const [pictureType, setPictureType] = React.useState<'PROFILE' | 'BANNER'>("PROFILE");
+
+  const resolvedBannerUrl = bannerPictureImageUrl
+    ?? (typeof newBannerPicture?.file === 'string' ? newBannerPicture.file : user?.bannerPicture?.url)
+    ?? null;
+
+  const resolvedProfileUrl = profilePictureImageUrl
+    ?? (typeof newProfilePicture?.file === 'string' ? newProfilePicture.file : user?.profilePicture?.url)
+    ?? null;
 
 
   const profilePictureInputRef = React.useRef<HTMLInputElement>(null);
@@ -51,6 +93,11 @@ function ProfilePage() {
   } | null>(null);
 
   const [profilePictureToast, setProfilePictureToast] = React.useState<{
+    message: string;
+    type: 'success' | 'error';
+  } | null>(null);
+
+    const [bannerPictureToast, setBannerPictureToast] = React.useState<{
     message: string;
     type: 'success' | 'error';
   } | null>(null);
@@ -91,40 +138,134 @@ function ProfilePage() {
     }
   }
 
-  async function handleChangeProfilePictureInput(e: React.ChangeEvent<HTMLInputElement>){
+  async function handleChangePictureInput(e: React.ChangeEvent<HTMLInputElement>, type: 'PROFILE' | 'BANNER'){
     e.preventDefault();
     const file = e.target.files?.[0];
     if(file){
-      console.log("Fichier sélectionné pour la photo de profil :", file);
-      setNewProfilePicture({
+
+      if(type === 'PROFILE'){
+        setNewProfilePicture({
         file: file,
         zoom: 1,
         offsetX: 0,
         offsetY: 0
       });
-      setIsProfilePicturePreviewOpen(true);
+      } else {
+        setNewBannerPicture({
+          file: file,
+          zoom: 1,
+          offsetX: 0,
+          offsetY: 0
+        });
+      }
+
+      setPictureType(type);
+      setIsPicturePreviewOpen(true);
+    }
+
+    // Reset to allow re-selecting the same file
+    e.target.value = '';
+  }
+
+  async function HandleOnConfirmPicturePreview(data: { zoom: number; offsetX: number; offsetY: number }, type: 'PROFILE' | 'BANNER'){
+    if(type === 'PROFILE' && newProfilePicture){
+      setNewProfilePicture({
+        ...newProfilePicture,
+        zoom: data.zoom,
+        offsetX: data.offsetX,
+        offsetY: data.offsetY
+      });
+      setProfilePictureImageUrl(URL.createObjectURL(newProfilePicture.file as File));
+    }
+
+    if(type === 'BANNER' && newBannerPicture){
+      setNewBannerPicture({
+        ...newBannerPicture,
+        zoom: data.zoom,
+        offsetX: data.offsetX,
+        offsetY: data.offsetY
+      });
+      setBannerPictureImageUrl(URL.createObjectURL(newBannerPicture.file as File));
     }
   }
 
-  async function handleEditProfilePicture(e?: React.MouseEvent){
+  async function handleEditPicture(e?: React.MouseEvent, type?: 'PROFILE' | 'BANNER'){
     e?.preventDefault();
     const formData = new FormData();
-    if(newProfilePicture?.file){
+
+    if(type === 'PROFILE' && newProfilePicture?.file){
       formData.append('file', newProfilePicture.file);
       formData.append('type', 'PROFILE');
+      formData.append('zoom', newProfilePicture.zoom.toString());
+      formData.append('offsetX', newProfilePicture.offsetX.toString());
+      formData.append('offsetY', newProfilePicture.offsetY.toString());
+    } else if(type === 'BANNER' && newBannerPicture?.file){
+      formData.append('file', newBannerPicture.file);
+      formData.append('type', 'BANNER');
+      formData.append('zoom', newBannerPicture.zoom.toString());
+      formData.append('offsetX', newBannerPicture.offsetX.toString());
+      formData.append('offsetY', newBannerPicture.offsetY.toString());
     } else {
-      console.error("Aucun nouveau fichier de photo de profil à télécharger.");
+      console.error("Aucun nouveau fichier de photo à télécharger.");
       return;
     }
 
     const response = await editUserPicture(formData);
     const data = await response.json();
 
+
     if(response.ok){
-      setProfilePictureToast({
-        message: data.message,
-        type: 'success'
-      });
+      if(type === 'PROFILE'){
+        setProfilePictureToast({
+            message: data.message,
+            type: 'success'
+          });
+
+        setUser({
+          firstname: user?.firstname || '',
+          lastname: user?.lastname || '',
+          email: user?.email || '',
+          password: user?.password || '',
+          profilePicture: {
+            url: data.profilePicture.url,
+            zoom: data.profilePicture.zoom,
+            offsetX: data.profilePicture.offsetX,
+            offsetY: data.profilePicture.offsetY
+          },
+          bannerPicture: {
+            url: user?.bannerPicture?.url || '',
+            zoom: user?.bannerPicture?.zoom || 1,
+            offsetX: user?.bannerPicture?.offsetX || 0,
+            offsetY: user?.bannerPicture?.offsetY || 0
+          },
+          role: user?.role || "STANDARD"
+        });
+      } else if(type === 'BANNER'){
+        setBannerPictureToast({
+          message: data.message,
+          type: 'success'
+        });
+        setUser({
+          firstname: user?.firstname || '',
+          lastname: user?.lastname || '',
+          email: user?.email || '',
+          password: user?.password || '',
+          profilePicture: {
+            url: user?.profilePicture?.url || '',
+            zoom: user?.profilePicture?.zoom || 1,
+            offsetX: user?.profilePicture?.offsetX || 0,
+            offsetY: user?.profilePicture?.offsetY || 0
+          },
+          bannerPicture: {
+            url: data.bannerPicture.url,
+            zoom: data.bannerPicture.zoom,
+            offsetX: data.bannerPicture.offsetX,
+            offsetY: data.bannerPicture.offsetY
+          },
+          role: user?.role || "STANDARD"
+        });
+      }
+      
       // Optionnel : mettre à jour l'URL de la photo de profil dans le contexte utilisateur si nécessaire
     } else {
       setProfilePictureToast({
@@ -133,58 +274,6 @@ function ProfilePage() {
       });
     }
     
-  }
-
-  async function handleChangeBannerPictureInput(e: React.ChangeEvent<HTMLInputElement>){
-    const file = e.target.files?.[0];
-    if(file){
-      setNewBannerPicture({
-        file: file,
-        zoom: 1,
-        offsetX: 0,
-        offsetY: 0
-      });
-    }
-  }
-
-  async function handleEditBannerPicture(e?: React.MouseEvent){
-    e?.preventDefault();
-    const formData = new FormData();
-    if(newBannerPicture?.file){
-      formData.append('file', newBannerPicture.file);
-      formData.append('type', 'BANNER');
-    } else {
-      console.error("Aucun nouveau fichier de photo de bannière à télécharger.");
-      return;
-    }
-
-    const response = await editUserPicture(formData);
-    const data = await response.json();
-
-    if(response.ok){
-      setProfilePictureToast({
-        message: data.message,
-        type: 'success'
-      });
-      // Optionnel : mettre à jour l'URL de la photo de bannière dans le contexte utilisateur si nécessaire
-    } else {
-      setProfilePictureToast({
-        message: data.message || "Erreur lors de la mise à jour de la photo de bannière",
-        type: 'error'
-      });
-    }
-  }
-
-  async function HandleOnConfirmPicturePreview(data: { zoom: number; offsetX: number; offsetY: number }){
-    if(newProfilePicture){
-      setNewProfilePicture({
-        ...newProfilePicture,
-        zoom: data.zoom,
-        offsetX: data.offsetX,
-        offsetY: data.offsetY
-      });
-      setProfilePictureImageUrl(URL.createObjectURL(newProfilePicture.file));
-    }
   }
 
   async function handleEditPassword(e?: React.MouseEvent){
@@ -214,20 +303,38 @@ function ProfilePage() {
   
   return (
     <>
-      <ProfilePicturePreview
-        isVisible={isProfilePicturePreviewOpen}
-        file={newProfilePicture?.file}
-        onClose={() => setIsProfilePicturePreviewOpen(false)}
+      <PicturePreview
+        isVisible={isPicturePreviewOpen}
+        type={pictureType}
+        file={pictureType === 'PROFILE' ? newProfilePicture?.file as File : newBannerPicture?.file as File}
+        onClose={() => setIsPicturePreviewOpen(false)}
         onConfirm={HandleOnConfirmPicturePreview}
       />
       <div className="p-4">
         {/* profile header */}
         <section className="relative w-full h-52 bg-gray-200 rounded-md mb-24">
+          <div className="absolute inset-0 overflow-hidden rounded-md">
+            {resolvedBannerUrl && (
+              <img
+                src={resolvedBannerUrl}
+                alt="Banniere de profil"
+                className="h-full w-full object-cover"
+                draggable={false}
+              />
+            )}
+          </div>
 
           <div className="absolute -bottom-18 left-2 flex items-center gap-2">
             {/* Profile picture */}
-            <div className="w-24 h-24 rounded-full bg-gray-400 border-4 border-white">
-
+            <div className="w-24 h-24 rounded-full bg-gray-400 border-4 border-white overflow-hidden">
+              {resolvedProfileUrl && (
+                <img
+                  src={resolvedProfileUrl}
+                  alt="Photo de profil"
+                  className="h-full w-full object-cover"
+                  draggable={false}
+                />
+              )}
             </div>
 
             <div className='mt-8'>
@@ -302,7 +409,76 @@ function ProfilePage() {
           </div>
         </section>
 
+        {/* Banner picture section */}
+        <section className="mt-12 max-w-7xl flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:mx-auto">
+          <div>
+            <h2 className="font-medium">Photo de banniere</h2>
+            <p className='text-sm text-gray-600 mt-1'>Mettez à jour votre photo de banniere.</p>
+
+            {bannerPictureToast && (
+              <div className="mt-4">
+                <Toast
+                  message={bannerPictureToast.message}
+                  type={bannerPictureToast.type}
+                  durationMs={3000}
+                  onClose={() => setBannerPictureToast(null)}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="bg-white rounded-md p-4 w-full md:max-w-2xl border border-gray-200">
+            <form
+              className='space-y-6'
+            >
+              
+              { bannerPictureImageUrl ? 
+              (
+                <>
+                  <div className="relative w-full h-32 rounded-lg bg-gray-400 border-4 border-gray-200 overflow-hidden mx-auto">
+                    <img
+                      src={bannerPictureImageUrl}
+                      alt="Apercu de la photo de profil"
+                      className="absolute left-1/2 top-1/2 select-none"
+                      style={{
+                        transform: `translate(-50%, -50%) translate(${newBannerPicture?.offsetX}px, ${newBannerPicture?.offsetY}px) scale(${newBannerPicture?. zoom})`
+                      }}
+                      draggable={false}
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="w-full h-32 rounded-lg bg-gray-400 border-4 border-gray-200 mx-auto"></div>
+                
+                </>
+              )}
+
+              <div className="flex justify-end gap-6">
+                <CTA
+                  color='secondary'
+                  text='Choisir une photo'
+                  type='button'
+                  onClick={(e) => {
+                    e?.preventDefault();
+                    bannerPictureInputRef.current?.click()
+                  }}
+                />
+                
+                <CTA
+                  color='primary'
+                  text='Enregistrer'
+                  type='button'
+                  onClick={(e) => handleEditPicture(e, "BANNER")}
+                />
+              </div>
+            </form>
+          </div>
+
+          
+        </section>
         
+        {/* Profile picture section */}
         <section className="mt-12 max-w-7xl flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:mx-auto">
           <div>
             <h2 className="font-medium">Photo de profil</h2>
@@ -362,29 +538,11 @@ function ProfilePage() {
                   color='primary'
                   text='Enregistrer'
                   type='button'
-                  onClick={handleEditProfilePicture}
+                  onClick={(e) => handleEditPicture(e, "PROFILE")}
                 />
               </div>
             </form>
           </div>
-
-          <input
-            type="file"
-            name="profile-picture"
-            id="profile-picture"
-            className='hidden'
-            onChange={handleChangeProfilePictureInput}
-            ref={profilePictureInputRef}
-          />
-
-          <input
-            type="file"
-            name="banner-picture"
-            id="banner-picture"
-            className='hidden'
-            onChange={handleChangeBannerPictureInput}
-            ref={bannerPictureInputRef}
-          />
         </section>
 
 
@@ -452,6 +610,23 @@ function ProfilePage() {
         
       </div>
     
+    <input
+      type="file"
+      name="profile-picture"
+      id="profile-picture"
+      className='hidden'
+      onChange={(e) =>{handleChangePictureInput(e, "PROFILE")}}
+      ref={profilePictureInputRef}
+    />
+
+    <input
+      type="file"
+      name="banner-picture"
+      id="banner-picture"
+      className='hidden'
+      onChange={(e) =>{handleChangePictureInput(e, "BANNER")}}
+      ref={bannerPictureInputRef}
+    />
     </>
   )
 }

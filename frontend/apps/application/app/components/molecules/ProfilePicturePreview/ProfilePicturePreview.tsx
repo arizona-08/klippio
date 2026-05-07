@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react'
 
-interface ProfilePicturePreviewProps {
+interface PicturePreviewProps {
+  type: 'PROFILE' | 'BANNER';
   file: File | undefined;
   isVisible: boolean;
   onClose: () => void;
-  onConfirm: (data: { zoom: number; offsetX: number; offsetY: number }) => void;
+  onConfirm: (data: { zoom: number; offsetX: number; offsetY: number }, type: 'PROFILE' | 'BANNER') => void;
 }
-function ProfilePicturePreview({ file, isVisible, onClose, onConfirm }: ProfilePicturePreviewProps) {
+function PicturePreview({ type, file, isVisible, onClose, onConfirm }: PicturePreviewProps) {
   const [zoom, setZoom] = useState(1.2)
   const [offsetX, setOffsetX] = useState(0)
   const [offsetY, setOffsetY] = useState(0)
@@ -80,7 +81,7 @@ function ProfilePicturePreview({ file, isVisible, onClose, onConfirm }: ProfileP
 
           <div className="mt-5 flex flex-col items-center gap-4">
             <div
-              className="relative h-60 w-60 overflow-hidden rounded-full border border-gray-200 bg-gray-100"
+              className={`relative overflow-hidden  border border-gray-200 bg-gray-100 ${type === 'BANNER' ? 'h-40 w-full rounded-lg' : 'h-60 w-60 rounded-full'}`}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
@@ -89,7 +90,7 @@ function ProfilePicturePreview({ file, isVisible, onClose, onConfirm }: ProfileP
               {imageUrl ? (
                 <img
                   src={imageUrl}
-                  alt="Apercu de la photo de profil"
+                  alt={type === 'BANNER' ? "Apercu de la photo de banniere" : "Apercu de la photo de profil"}
                   className="absolute left-1/2 top-1/2 select-none"
                   style={{
                     transform: `translate(-50%, -50%) translate(${offsetX}px, ${offsetY}px) scale(${zoom})`
@@ -109,7 +110,7 @@ function ProfilePicturePreview({ file, isVisible, onClose, onConfirm }: ProfileP
                 type="range"
                 min={1}
                 max={2}
-                step={0.01}
+                step={0.10}
                 value={zoom}
                 onChange={(event) => setZoom(Number(event.target.value))}
                 className="mt-2 w-full accent-emerald-600"
@@ -128,7 +129,7 @@ function ProfilePicturePreview({ file, isVisible, onClose, onConfirm }: ProfileP
             <button
               type="button"
               onClick={() => {
-                onConfirm?.({ zoom, offsetX, offsetY })
+                onConfirm?.({ zoom, offsetX, offsetY }, type)
                 onClose()
               }}
               className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
@@ -142,4 +143,4 @@ function ProfilePicturePreview({ file, isVisible, onClose, onConfirm }: ProfileP
   )
 }
 
-export default ProfilePicturePreview
+export default PicturePreview
