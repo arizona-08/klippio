@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 
 interface PicturePreviewProps {
   type: 'PROFILE' | 'BANNER';
-  file: File | undefined;
+  file: File | string | undefined;
   isVisible: boolean;
   onClose: () => void;
   onConfirm: (data: { zoom: number; offsetX: number; offsetY: number }, type: 'PROFILE' | 'BANNER') => void;
@@ -17,6 +17,9 @@ function PicturePreview({ type, file, isVisible, onClose, onConfirm }: PicturePr
   const imageUrl = useMemo(() => {
     if (!file) {
       return null
+    }
+    if (typeof file === 'string') {
+      return file
     }
     return URL.createObjectURL(file)
   }, [file])
