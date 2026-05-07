@@ -69,7 +69,7 @@ function AppMenu() {
           {/* Profile picture placeholder */}
           <div className="relative w-8 h-8 rounded-full bg-gray-300 z-50 px-4" onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}>
             <div className={`absolute top-full mt-2 right-0 bg-white border border-gray-300 rounded-md shadow-lg w-40 ${isProfileMenuOpen ? "visible opacity-100" : "invisible opacity-0"} transition-all duration-150`}>
-              <Link href="/profile" className='block px-4 py-2 text-sm hover:bg-gray-100'>Mon Profil</Link>
+              <Link href="/dashboard/profile" className='flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100'> <User className='w-4 h-4'/> Mon Profil</Link>
               <button onClick={() => {
                 handleLogout();
                 setIsProfileMenuOpen(false);

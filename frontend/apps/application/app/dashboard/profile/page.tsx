@@ -24,8 +24,22 @@ function ProfilePage() {
 
   const [isProfilePicturePreviewOpen, setIsProfilePicturePreviewOpen] = React.useState(false);
 
-  const [newProfilePictureFile, setNewProfilePictureFile] = React.useState<File | null>(null);
-  const [newBannerPictureFile, setNewBannerPictureFile] = React.useState<File | null>(null);
+  const [newProfilePicture, setNewProfilePicture] = React.useState<{
+    file: File;
+    zoom: number;
+    offsetX: number;
+    offsetY: number;
+  } | null>(null);
+
+  const [newBannerPicture, setNewBannerPicture] = React.useState<{
+    file: File;
+    zoom: number;
+    offsetX: number;
+    offsetY: number;
+  } | null>(null);
+
+  const [profilePictureImageUrl, setProfilePictureImageUrl] = React.useState<string | null>(null);
+  const [bannerPictureImageUrl, setBannerPictureImageUrl] = React.useState<string | null>(null);
 
 
   const profilePictureInputRef = React.useRef<HTMLInputElement>(null);
@@ -82,7 +96,12 @@ function ProfilePage() {
     const file = e.target.files?.[0];
     if(file){
       console.log("Fichier sélectionné pour la photo de profil :", file);
-      setNewProfilePictureFile(file);
+      setNewProfilePicture({
+        file: file,
+        zoom: 1,
+        offsetX: 0,
+        offsetY: 0
+      });
       setIsProfilePicturePreviewOpen(true);
     }
   }
@@ -90,8 +109,8 @@ function ProfilePage() {
   async function handleEditProfilePicture(e?: React.MouseEvent){
     e?.preventDefault();
     const formData = new FormData();
-    if(newProfilePictureFile){
-      formData.append('file', newProfilePictureFile);
+    if(newProfilePicture?.file){
+      formData.append('file', newProfilePicture.file);
       formData.append('type', 'PROFILE');
     } else {
       console.error("Aucun nouveau fichier de photo de profil à télécharger.");
@@ -119,15 +138,20 @@ function ProfilePage() {
   async function handleChangeBannerPictureInput(e: React.ChangeEvent<HTMLInputElement>){
     const file = e.target.files?.[0];
     if(file){
-      setNewBannerPictureFile(file);
+      setNewBannerPicture({
+        file: file,
+        zoom: 1,
+        offsetX: 0,
+        offsetY: 0
+      });
     }
   }
 
   async function handleEditBannerPicture(e?: React.MouseEvent){
     e?.preventDefault();
     const formData = new FormData();
-    if(newBannerPictureFile){
-      formData.append('file', newBannerPictureFile);
+    if(newBannerPicture?.file){
+      formData.append('file', newBannerPicture.file);
       formData.append('type', 'BANNER');
     } else {
       console.error("Aucun nouveau fichier de photo de bannière à télécharger.");
@@ -148,6 +172,18 @@ function ProfilePage() {
         message: data.message || "Erreur lors de la mise à jour de la photo de bannière",
         type: 'error'
       });
+    }
+  }
+
+  async function HandleOnConfirmPicturePreview(data: { zoom: number; offsetX: number; offsetY: number }){
+    if(newProfilePicture){
+      setNewProfilePicture({
+        ...newProfilePicture,
+        zoom: data.zoom,
+        offsetX: data.offsetX,
+        offsetY: data.offsetY
+      });
+      setProfilePictureImageUrl(URL.createObjectURL(newProfilePicture.file));
     }
   }
 
@@ -180,8 +216,9 @@ function ProfilePage() {
     <>
       <ProfilePicturePreview
         isVisible={isProfilePicturePreviewOpen}
-        file={newProfilePictureFile}
+        file={newProfilePicture?.file}
         onClose={() => setIsProfilePicturePreviewOpen(false)}
+        onConfirm={HandleOnConfirmPicturePreview}
       />
       <div className="p-4">
         {/* profile header */}
@@ -288,9 +325,27 @@ function ProfilePage() {
               className='space-y-6'
             >
               
-              <div className="w-32 h-32 rounded-full bg-gray-400 border-4 border-gray-200 mx-auto">
-
-              </div>
+              { profilePictureImageUrl ? 
+              (
+                <>
+                  <div className="relative w-32 h-32 rounded-full bg-gray-400 border-4 border-gray-200 overflow-hidden mx-auto">
+                    <img
+                      src={profilePictureImageUrl}
+                      alt="Apercu de la photo de profil"
+                      className="absolute left-1/2 top-1/2 select-none"
+                      style={{
+                        transform: `translate(-50%, -50%) translate(${newProfilePicture?.offsetX}px, ${newProfilePicture?.offsetY}px) scale(${newProfilePicture?. zoom})`
+                      }}
+                      draggable={false}
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="w-32 h-32 rounded-full bg-gray-400 border-4 border-gray-200 mx-auto"></div>
+                
+                </>
+              )}
 
               <div className="flex justify-end gap-6">
                 <CTA
