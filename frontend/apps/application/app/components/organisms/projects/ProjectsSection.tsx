@@ -110,21 +110,27 @@ function ProjectsSection({ projects, mode }: ProjectsSectionProps) {
   async function handleDeleteProject(projectIdToDelete: string | null){
     if(!projectIdToDelete) return;
 
-    // Appel à l'API pour supprimer le projet
-    const response = await deleteProject(projectIdToDelete);
-    const data = await response.json();
+    try{
+      const response = await deleteProject(projectIdToDelete);
+      const data = await response.json();
 
-    if(response.ok){
-      setMasterProjectsList((previousList) => previousList.filter(project => project.id !== projectIdToDelete));
+      if(response.ok){
+        setMasterProjectsList((previousList) => previousList.filter(project => project.id !== projectIdToDelete));
 
-      //récupérer Ids collaborateur
-      if (user) {
-        const deleteProjectActivityDescription = `${user.firstname} ${user.lastname} a supprimé le projet "${data.deletedProjectTitle}"`;
-        await createRecentActivity([user.id as number], deleteProjectActivityDescription);
+        //récupérer Ids collaborateur
+        if (user) {
+          const deleteProjectActivityDescription = `${user.firstname} ${user.lastname} a supprimé le projet "${data.deletedProjectTitle}"`;
+          await createRecentActivity([user.id as number], deleteProjectActivityDescription);
+        }
+      } else {
+        console.error('Erreur lors de la suppression du projet');
       }
-    } else {
-      console.error('Erreur lors de la suppression du projet');
+    } catch (error) {
+      // afficher une notification d'erreur à l'utilisateur
+      console.error('Erreur lors de la suppression du projet', error);
     }
+    // Appel à l'API pour supprimer le projet
+    
   }
 
   return (
