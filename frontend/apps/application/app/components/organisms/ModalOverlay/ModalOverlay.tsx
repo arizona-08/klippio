@@ -16,8 +16,7 @@ function ModalOverlay() {
 
   const isDeleteProjectModalVisible = useDeleteProjectModalStore((state) => state.isDeleteProjectModalOpen);
 
-  const isModifyProjectModalVisible = useModifyProjectStore((state) => state.isModifyProjectModalOpen);
-  const projectToModify = useModifyProjectStore((state) => state.projectToModify) as ProjectType | undefined;
+  
 
   const isShareProjectModalVisible = useShareProjectModalStore((state) => state.isShareProjectModalOpen);
   const isAddPlanModalVisible = useAddPlanModalStore((state) => state.isAddPlanModalOpen);
@@ -27,9 +26,7 @@ function ModalOverlay() {
       <div className={`fixed inset-0 bg-black/25 z-40 backdrop-blur-sm ${isOverlayVisible ? 'block' : 'hidden'}`}></div>
       <DeleteProjectModal isVisible={isDeleteProjectModalVisible}/>
 
-      <div className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50  ${isModifyProjectModalVisible ? 'block' : 'hidden'}`}>
-        <ProjectForm edit={true} projectToEdit={projectToModify} closeForm={() => useOverlayStore.getState().closeOverlay()}/>
-      </div>
+      
 
       <div className={`w-full max-w-125 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 ${isShareProjectModalVisible ? 'block' : 'hidden'}`}>
         <ShareProjectForm closeForm={() => useShareProjectModalStore.getState().closeShareProjectModal()}/>
