@@ -11,7 +11,7 @@ interface ProjectFormProps {
   closeForm: () => void;
   edit?: boolean;
   projectToEdit?: ProjectType;
-  onSuccess: (project: ProjectType) => void; // Optional callback to update the UI after successful creation/modification
+  onSuccess?: (project: ProjectType) => void; // Optional callback to update the UI after successful creation/modification
 }
 
 function ProjectForm({ closeForm, edit, projectToEdit, onSuccess }: ProjectFormProps) {
@@ -64,7 +64,7 @@ function ProjectForm({ closeForm, edit, projectToEdit, onSuccess }: ProjectFormP
         closeModifyForm();
 
         const responseData = await response.json();
-        onSuccess(responseData);
+        onSuccess?.(responseData);
       } else {
         // Handle error response, e.g., show an error message
         console.error('Failed to submit project form');

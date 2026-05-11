@@ -18,7 +18,7 @@ function ProjectCard({ project, mode }: ProjectCardProps) {
     ? 'bg-gray-200 text-gray-700'
     : 'bg-emerald-100 text-emerald-700';
   const collaboratorsCount = project.collaborators?.length || 0;
-  const activityDate = project.lastOpenedAt || project.createdAt;
+  const activityDate = project.updatedAt || project.lastOpenedAt;
   const activityLabel = activityDate ? formatDate(activityDate) : 'Recemment';
 
   function openMenu(){
@@ -76,7 +76,12 @@ function ProjectCard({ project, mode }: ProjectCardProps) {
           <div className="project-infos-container">
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-xl font-semibold">{project.title}</h2>
-              <ProjectManager project={project} isMenuOpen={isMenuOpen} openMenu={openMenu} closeMenu={closeMenu} />
+              <ProjectManager
+                project={project}
+                isMenuOpen={isMenuOpen}
+                openMenu={openMenu}
+                closeMenu={closeMenu}
+              />
             </div>
             <p className="text-gray-700">{project.address}, {project.zipcode} {project.city}</p>
 

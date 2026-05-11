@@ -7,6 +7,7 @@ export type ProjectType = {
   thumbnailUrl: string;
   createdAt?: string;
   lastOpenedAt?: string;
+  updatedAt?: string;
   isArchived?: boolean;
 
   numberOfPlans: number;
