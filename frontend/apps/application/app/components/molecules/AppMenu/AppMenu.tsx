@@ -66,8 +66,25 @@ function AppMenu() {
             <Logo type='long' color='black' />
           </div>
 
-          {/* Profile picture placeholder */}
-          <div className="relative w-8 h-8 rounded-full bg-gray-300 z-50 px-4" onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}>
+          {/* Profile picture + menu */}
+          <div className="relative z-50">
+            <div
+              className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-300 cursor-pointer"
+              onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+            >
+              {user && user.profilePicture && (
+                <img
+                  src={user.profilePicture.url}
+                  alt="Apercu de la photo de profil"
+                  className="absolute left-1/2 top-1/2 select-none"
+                  style={{
+                    transform: `translate(-50%, -50%) translate(${user.profilePicture?.offsetX}px, ${user.profilePicture?.offsetY}px) scale(${user.profilePicture?. zoom})`
+                  }}
+                  draggable={false}
+                />
+              )}
+            </div>
+
             <div className={`absolute top-full mt-2 right-0 bg-white border border-gray-300 rounded-md shadow-lg w-40 ${isProfileMenuOpen ? "visible opacity-100" : "invisible opacity-0"} transition-all duration-150`}>
               <Link href="/dashboard/profile" className='flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100'> <User className='w-4 h-4'/> Mon Profil</Link>
               <button onClick={() => {
@@ -143,8 +160,18 @@ function AppMenu() {
           </div>
           <Link href="/dashboard/profile" className={`hover:bg-white/20 p-2 rounded-md flex items-center gap-4 ${isSidebarOpen ? '' : 'justify-center w-full'}`}>
           
-            <div className="pp-container w-12 h-12 shrink-0 rounded-full bg-gray-300">
-
+            <div className="pp-container relative w-12 h-12 shrink-0 rounded-full overflow-hidden bg-gray-300">
+              {user && user.profilePicture && (
+                <img
+                  src={user.profilePicture.url}
+                  alt="Apercu de la photo de profil"
+                  className="absolute left-1/2 top-1/2 select-none"
+                  style={{
+                    transform: `translate(-50%, -50%) translate(${user.profilePicture?.offsetX}px, ${user.profilePicture?.offsetY}px) scale(${user.profilePicture?. zoom})`
+                  }}
+                  draggable={false}
+                />
+              )}
             </div>
 
             <div className={`user-infos max-w-2/5 ${isSidebarOpen ? '' : 'hidden'}`}>
