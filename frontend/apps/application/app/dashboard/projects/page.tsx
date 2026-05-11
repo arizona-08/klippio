@@ -4,6 +4,8 @@ import React, { Suspense } from 'react'
 import Link from 'next/link'
 import { useUser } from '@/app/Context/AuthContext/AuthUserProvider';
 import UserGreetings from '@/app/components/molecules/UserGreetings';
+import RecentActivitiesLoader from '@/app/components/molecules/RecentActivitiesList/RecentActivitiesLoader';
+import RecentActivitiesSkeletonList from '@/app/components/skeletons/RecentActivitiesSkeleton/RecentActivitiesSkeletonList';
 
 function ProjectsPage() {
   
@@ -63,14 +65,9 @@ function ProjectsPage() {
             <div className="sticky top-4 space-y-4">
               <div className="rounded-2xl border border-gray-100 bg-white p-4">
                 <h2 className="text-sm font-semibold text-gray-900">Activite recente</h2>
-                <ul className="mt-3 space-y-3">
-                  {recentActivities.map((item, index) => (
-                    <li key={index} className="flex items-start justify-between gap-3">
-                      <span className="text-sm text-gray-700">{item.label}</span>
-                      <span className="whitespace-nowrap text-xs text-gray-400">{item.time}</span>
-                    </li>
-                  ))}
-                </ul>
+                <Suspense fallback={<RecentActivitiesSkeletonList />}>
+                  <RecentActivitiesLoader />
+                </Suspense>
               </div>
 
               <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
