@@ -80,7 +80,7 @@ export class ProjectService {
         throw new UnauthorizedException("Unauthorized");
       }
 
-      const deletedproject = await this.prismaService.project.delete({
+      const deletedProject = await this.prismaService.project.delete({
         where: {
           id: projectId,
         }
@@ -89,7 +89,7 @@ export class ProjectService {
       return {
         success: true,
         message: "Project deleted successfully",
-        deletedProjectTitle: deletedproject.title,
+        deletedProjectTitle: deletedProject.title,
       };
     } catch(error: any) {
       console.error(error.message);
