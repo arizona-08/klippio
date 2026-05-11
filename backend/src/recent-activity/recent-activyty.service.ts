@@ -52,6 +52,7 @@ export class RecentActivityService {
         where: {
           userId,
         },
+        take: 3,
         include: {
           activity: true,
         },
