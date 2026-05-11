@@ -72,6 +72,7 @@ model Project {
   city                String
   createdAt           DateTime @default(now())
   lastOpenedAt        DateTime @default(now())
+  updatedAt           DateTime @default(now())
   isArchived          Boolean  @default(false)
   
   author              User     @relation(fields: [authorId], references: [id], onDelete: Cascade)

@@ -18,7 +18,7 @@ function ProjectCard({ project, mode }: ProjectCardProps) {
     ? 'bg-gray-200 text-gray-700'
     : 'bg-emerald-100 text-emerald-700';
   const collaboratorsCount = project.collaborators?.length || 0;
-  const activityDate = project.lastOpenedAt || project.createdAt;
+  const activityDate = project.updatedAt || project.lastOpenedAt;
   const activityLabel = activityDate ? formatDate(activityDate) : 'Recemment';
 
   function openMenu(){

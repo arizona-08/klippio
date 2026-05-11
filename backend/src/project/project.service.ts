@@ -54,6 +54,7 @@ export class ProjectService {
         },
         data: {
           ...createProjectDto,
+          updatedAt: new Date(),
         }
       });
 
@@ -81,6 +82,7 @@ export class ProjectService {
           address: true,
           city: true,
           zipcode: true,
+          updatedAt: true,
           
           _count: {
             select: { plans: true}
@@ -118,6 +120,7 @@ export class ProjectService {
         address: projectItem.address,
         zipcode: projectItem.zipcode,
         city: projectItem.city,
+        updatedAt: projectItem.updatedAt,
         numberOfPlans: projectItem._count.plans,
         numberOfPhotos: totalNumberOfPhotos,
       };
