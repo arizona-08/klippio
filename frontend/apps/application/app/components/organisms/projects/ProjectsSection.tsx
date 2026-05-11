@@ -118,8 +118,10 @@ function ProjectsSection({ projects, mode }: ProjectsSectionProps) {
       setMasterProjectsList((previousList) => previousList.filter(project => project.id !== projectIdToDelete));
 
       //récupérer Ids collaborateur
-      const deleteProjectActivityDescription = `${user?.firstname} ${user?.lastname} a supprimé le projet "${data.deletedProjectTitle}"`;
-      const deleteProjectActivity = await createRecentActivity([user?.id as number], deleteProjectActivityDescription);
+      if (user) {
+        const deleteProjectActivityDescription = `${user.firstname} ${user.lastname} a supprimé le projet "${data.deletedProjectTitle}"`;
+        await createRecentActivity([user.id as number], deleteProjectActivityDescription);
+      }
     } else {
       console.error('Erreur lors de la suppression du projet');
     }
