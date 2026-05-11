@@ -6,18 +6,19 @@ import { CurrentUser } from "src/auth/decorators/current-user.decorator";
 import type { User } from "src/user/interfaces/user.interface";
 import { CreateFolderDto } from "./dtos/create-folder.dto";
 
+@UseGuards(AuthenticatedGuard)
 @Controller('api/projects')
 export class ProjectController {
   constructor(private readonly projectService: ProjectService){}
 
-  @UseGuards(AuthenticatedGuard)
+  
   @Post('create')
   async createProject(@Body() createProjectDto: CreateProjectDTO, @CurrentUser() user: User){
     const userId = user.id;
     return this.projectService.createProject(createProjectDto, userId);
   }
 
-  @UseGuards(AuthenticatedGuard)
+  
   @Get('all')
   async getProjects(
     @CurrentUser() user: User,
@@ -28,7 +29,7 @@ export class ProjectController {
     return this.projectService.getProjects(userId, sortBy, order);
   }
 
-  @UseGuards(AuthenticatedGuard)
+  
   @Get('archived')
   async getArchivedProjects(
     @CurrentUser() user: User,
@@ -39,11 +40,16 @@ export class ProjectController {
     return this.projectService.getProjects(userId, sortBy, order, true);
   }
 
-  @UseGuards(AuthenticatedGuard)
+  
   @Put(':projectId/update')
   async updateProject(@Param('projectId') projectId: string, @Body() createProjectDto: CreateProjectDTO, @CurrentUser() user: User){
     const userId = user.id;
     return this.projectService.updateProject(projectId, createProjectDto, userId);
+  }
+
+  @Delete(':projectId/delete')
+  async deleteProject(@Param('projectId') projectId: string, @CurrentUser() user: User){
+    return this.projectService.deleteProject(projectId, user.id)
   }
 
     // ------ FOLDERS -------

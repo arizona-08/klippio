@@ -1,4 +1,4 @@
-import { Body, Injectable, Req, UseGuards } from "@nestjs/common";
+import { Body, Injectable, InternalServerErrorException, NotFoundException, Req, UnauthorizedException, UseGuards } from "@nestjs/common";
 import { create } from "domain";
 import { AuthenticatedGuard } from "src/auth/authenticated.guard";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -28,7 +28,7 @@ export class ProjectService {
 
       return createdProject;
     } catch(error) {
-      throw new Error("Failed to create project");
+      throw new InternalServerErrorException("Failed to create project");
     }
   }
 
@@ -41,11 +41,11 @@ export class ProjectService {
       });
 
       if(!project){
-        throw new Error("Project not found");
+        throw new NotFoundException("Project not found");
       }
 
       if(project.authorId !== userId){
-        throw new Error("Unauthorized");
+        throw new UnauthorizedException("Unauthorized");
       }
 
       const updatedProject = await this.prismaService.project.update({
@@ -60,7 +60,40 @@ export class ProjectService {
 
       return updatedProject;
     } catch(error) {
-      throw new Error("Failed to update project");
+      throw new InternalServerErrorException("Failed to update project");
+    }
+  }
+
+  async deleteProject(projectId: string, userId: number){
+    try{
+      const project = await this.prismaService.project.findUnique({
+        where: {
+          id: projectId,
+        }
+      });
+
+      if(!project){
+        throw new NotFoundException("Project not found");
+      }
+
+      if(project.authorId !== userId){
+        throw new UnauthorizedException("Unauthorized");
+      }
+
+      const deletedProject = await this.prismaService.project.delete({
+        where: {
+          id: projectId,
+        }
+      });
+
+      return {
+        success: true,
+        message: "Project deleted successfully",
+        deletedProjectTitle: deletedProject.title,
+      };
+    } catch(error: any) {
+      console.error(error.message);
+      throw new InternalServerErrorException("Failed to delete project");
     }
   }
 
@@ -129,7 +162,7 @@ export class ProjectService {
     return formattedProjects;
     } catch(error: any) {
       console.error(error);
-      throw new Error("Failed to get projects");
+      throw new InternalServerErrorException("Failed to get projects");
     }
   }
 
@@ -142,7 +175,7 @@ export class ProjectService {
       });
 
       if (!existingProject) {
-        throw new Error("Project not found");
+        throw new NotFoundException("Project not found");
       }
 
       await this.prismaService.project.update({
@@ -166,12 +199,12 @@ export class ProjectService {
       });
 
       if (!rootFolder) {
-        throw new Error("Root folder not found for the project");
+        throw new NotFoundException("Root folder not found for the project");
       }
 
       return rootFolder;
     } catch (error) {
-      throw new Error("Failed to get project root folder");
+      throw new InternalServerErrorException("Failed to get project root folder");
     }
   }
 
@@ -184,7 +217,7 @@ export class ProjectService {
       });
 
       if (!existingProject) {
-        throw new Error("Project not found");
+        throw new NotFoundException("Project not found");
       }
 
       await this.prismaService.project.update({
@@ -208,12 +241,12 @@ export class ProjectService {
       });
 
       if (!folder) {
-        throw new Error("Folder not found in the project");
+        throw new NotFoundException("Folder not found in the project");
       }
 
       return folder;
     } catch (error) {
-      throw new Error("Failed to get folder");
+      throw new InternalServerErrorException("Failed to get folder");
     }
   }
 
@@ -233,7 +266,7 @@ export class ProjectService {
 
       return newFolder;
     } catch (error) {
-      throw new Error("Failed to create folder");
+      throw new InternalServerErrorException("Failed to create folder");
     }
   }
 
@@ -248,7 +281,7 @@ export class ProjectService {
       });
 
       if (!folder) {
-        throw new Error("Folder not found in the project");
+        throw new NotFoundException("Folder not found in the project");
       }
 
       //supprimer le dossier et tous les sous-dossiers/plans dans le S3 et la bdd
@@ -265,7 +298,7 @@ export class ProjectService {
         message: "Folder deleted successfully"
       };
     } catch (error) {
-      throw new Error("Failed to delete folder");
+      throw new InternalServerErrorException("Failed to delete folder");
     }
   }
 
@@ -280,7 +313,7 @@ export class ProjectService {
       });
 
       if (!folder) {
-        throw new Error("Folder not found in the project");
+        throw new NotFoundException("Folder not found in the project");
       }
 
       // Renommer le dossier
@@ -297,7 +330,7 @@ export class ProjectService {
 
       return updatedFolder;
     } catch (error) {
-      throw new Error("Failed to rename folder");
+      throw new InternalServerErrorException("Failed to rename folder");
     }
   }
 }

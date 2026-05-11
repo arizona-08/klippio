@@ -5,8 +5,7 @@ import RecentActivitiesList from './RecentActivitiesList';
 async function RecentActivitiesLoader() {
   const response = await getRecentActivitiesServerSide();
   const payload = await response.json();
-  const recentActivities = payload.data
-  console.log("Recent Activities:", payload); // Log the recent activities data for debugging  
+  const recentActivities = payload.data;
 
   return (
     <RecentActivitiesList recentActivities={recentActivities} />
