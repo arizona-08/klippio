@@ -6,6 +6,8 @@ import { CTA } from '@repo/ui'
 import { useModifyProjectStore } from '@/stores/ModifyProjectStore'
 import { ProjectType } from '@/types/project'
 import { createProject, modifyProject } from '@/proxy/projects/project-functions'
+import { createRecentActivity } from '@/proxy/recent-activity/recent-activity-functions'
+import { useUser } from '@/app/Context/AuthContext/AuthUserProvider'
 
 interface ProjectFormProps {
   closeForm: () => void;
@@ -15,6 +17,7 @@ interface ProjectFormProps {
 }
 
 function ProjectForm({ closeForm, edit, projectToEdit, onSuccess }: ProjectFormProps) {
+  const {user} = useUser();
   const [projectCredentials, setProjectCredentials] = React.useState<CreateProjectDTO>({
     title: '',
     address: '',
@@ -49,10 +52,14 @@ function ProjectForm({ closeForm, edit, projectToEdit, onSuccess }: ProjectFormP
     e?.preventDefault();
     
     let pickedFunction;
+    let recentActivityDescription;
+
     if(edit && projectToEdit){
       pickedFunction = () => modifyProject(projectCredentials, projectToEdit.id.toString());
+      recentActivityDescription = `Projet "${projectToEdit.title}" renommé en "${projectCredentials.title}"`;
     } else {
       pickedFunction = () => createProject(projectCredentials);
+      recentActivityDescription = `Projet "${projectCredentials.title}" créé`;
     }
 
     try{
@@ -65,6 +72,12 @@ function ProjectForm({ closeForm, edit, projectToEdit, onSuccess }: ProjectFormP
 
         const responseData = await response.json();
         onSuccess?.(responseData);
+
+        // faire en sorte de récupérer les Ids de tout les collaborateurs du projet
+        const recentActivityResponse = await createRecentActivity([user?.id as number], recentActivityDescription);
+        if(!recentActivityResponse.ok){
+          console.error('Failed to create recent activity');
+        }
       } else {
         // Handle error response, e.g., show an error message
         console.error('Failed to submit project form');
