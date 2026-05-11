@@ -18,9 +18,9 @@ function RecentActivitiesList({ recentActivities }: RecentActivitiesListProps) {
   return (
     <ul className="mt-3 space-y-3">
       {recentActivities && recentActivities.map((item, index) => (
-        <li key={index} className="flex items-start justify-between gap-3">
+        <li key={index} className="flex flex-col gap-1">
+          <span className="inline-block w-full whitespace-nowrap text-right text-xs text-gray-400 items-self-end">{formatDateRelative(item.activity.createdAt)}</span>
           <span className="text-sm text-gray-700">{item.activity.description}</span>
-          <span className="whitespace-nowrap text-xs text-gray-400">{formatDateRelative(item.activity.createdAt)}</span>
         </li>
       ))}
     </ul>

@@ -64,6 +64,39 @@ export class ProjectService {
     }
   }
 
+  async deleteProject(projectId: string, userId: number){
+    try{
+      const project = await this.prismaService.project.findUnique({
+        where: {
+          id: projectId,
+        }
+      });
+
+      if(!project){
+        throw new Error("Project not found");
+      }
+
+      if(project.authorId !== userId){
+        throw new Error("Unauthorized");
+      }
+
+      const deletedproject = await this.prismaService.project.delete({
+        where: {
+          id: projectId,
+        }
+      });
+
+      return {
+        success: true,
+        message: "Project deleted successfully",
+        deletedProjectTitle: deletedproject.title,
+      };
+    } catch(error: any) {
+      console.error(error.message);
+      throw new Error("Failed to delete project");
+    }
+  }
+
   async getProjects(
     userId: number,
     sortBy: "createdAt" | "lastOpenedAt" | "title",

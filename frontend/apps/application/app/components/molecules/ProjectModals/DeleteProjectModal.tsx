@@ -5,9 +5,10 @@ import React from 'react'
 
 interface DeleteProjectModalProps {
   isVisible: boolean;
+  onDelete: (projectIdToDelete: string | null) => void;
 }
 
-function DeleteProjectModal({ isVisible }: DeleteProjectModalProps) {
+function DeleteProjectModal({ isVisible, onDelete }: DeleteProjectModalProps) {
   const projectIdToDelete = useDeleteProjectModalStore((state) => state.projectIdToDelete);
   const onClose = useDeleteProjectModalStore((state) => state.closeDeleteProjectModal);
   const closeOverlay = useOverlayStore((state) => state.closeOverlay);
@@ -18,13 +19,13 @@ function DeleteProjectModal({ isVisible }: DeleteProjectModalProps) {
   }
 
   function handleDeleteProject(){
-    console.log(projectIdToDelete);
+    onDelete(projectIdToDelete);
     closeModal();
   }
 
   return (
     <div 
-      className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg z-50 w-full max-w-md ${isVisible ? 'block' : 'hidden'}`}
+      className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg z-50 w-full max-w-md ${isVisible ? 'block' : 'hidden'}`}
     >
       <h2 className='text-xl font-semibold mb-4'>Confirmer la suppression</h2>
       <p className='mb-6'>Êtes-vous sûr de vouloir supprimer ce projet ? Cette action est irréversible.</p>

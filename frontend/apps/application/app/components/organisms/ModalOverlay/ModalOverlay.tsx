@@ -14,8 +14,6 @@ import { useAddPlanModalStore } from '@/stores/AddPlanModalStore';
 function ModalOverlay() {
   const isOverlayVisible = useOverlayStore((state) => state.isOverlayOpen);
 
-  const isDeleteProjectModalVisible = useDeleteProjectModalStore((state) => state.isDeleteProjectModalOpen);
-
   
 
   const isShareProjectModalVisible = useShareProjectModalStore((state) => state.isShareProjectModalOpen);
@@ -24,7 +22,6 @@ function ModalOverlay() {
   return (
     <>
       <div className={`fixed inset-0 bg-black/25 z-40 backdrop-blur-sm ${isOverlayVisible ? 'block' : 'hidden'}`}></div>
-      <DeleteProjectModal isVisible={isDeleteProjectModalVisible}/>
 
       
 

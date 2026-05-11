@@ -7,11 +7,14 @@ import ProjectSorter from './ProjectFilter'
 import ProjectForm from '../../molecules/ProjectForm/ProjectForm';
 import { ProjectType } from '@/types/project';
 import { PlusIcon } from 'lucide-react';
-import { getArchivedProjects, getProjects } from '@/proxy/projects/project-functions';
+import { deleteProject, getArchivedProjects, getProjects } from '@/proxy/projects/project-functions';
 import DeleteProjectModal from '../../molecules/ProjectModals/DeleteProjectModal';
 import { useSidebarStore } from '@/stores/SidebarStore';
 import { useModifyProjectStore } from '@/stores/ModifyProjectStore';
 import { useOverlayStore } from '@/stores/OverlayStore';
+import { useDeleteProjectModalStore } from '@/stores/DeleteProjectModalStore';
+import { createRecentActivity } from '@/proxy/recent-activity/recent-activity-functions';
+import { useUser } from '@/app/Context/AuthContext/AuthUserProvider';
 
 interface ProjectsSectionProps {
   // Define any props if needed
@@ -21,6 +24,8 @@ interface ProjectsSectionProps {
 
 function ProjectsSection({ projects, mode }: ProjectsSectionProps) {
   const isBasicMode = mode === 'basic';
+
+  const {user} = useUser();
 
   const [isProjectFormOpen, setIsProjectFormOpen] = React.useState(false);
   const [masterProjectsList, setMasterProjectsList] = React.useState<ProjectType[]>(projects || []);
@@ -100,8 +105,33 @@ function ProjectsSection({ projects, mode }: ProjectsSectionProps) {
     });
   }
 
+  const isDeleteProjectModalVisible = useDeleteProjectModalStore((state) => state.isDeleteProjectModalOpen);
+
+  async function handleDeleteProject(projectIdToDelete: string | null){
+    if(!projectIdToDelete) return;
+
+    // Appel à l'API pour supprimer le projet
+    const response = await deleteProject(projectIdToDelete);
+    const data = await response.json();
+
+    if(response.ok){
+      setMasterProjectsList((previousList) => previousList.filter(project => project.id !== projectIdToDelete));
+
+      //récupérer Ids collaborateur
+      const deleteProjectActivityDescription = `${user?.firstname} ${user?.lastname} a supprimé le projet "${data.deletedProjectTitle}"`;
+      const deleteProjectActivity = await createRecentActivity([user?.id as number], deleteProjectActivityDescription);
+    } else {
+      console.error('Erreur lors de la suppression du projet');
+    }
+  }
+
   return (
     <>
+      <DeleteProjectModal
+        isVisible={isDeleteProjectModalVisible}
+        onDelete={handleDeleteProject}
+       />
+
       <div className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50  ${isModifyProjectModalVisible ? 'block' : 'hidden'}`}>
         <ProjectForm
           edit={true}
