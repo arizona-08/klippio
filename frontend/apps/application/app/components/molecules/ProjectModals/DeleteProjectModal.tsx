@@ -5,7 +5,7 @@ import React from 'react'
 
 interface DeleteProjectModalProps {
   isVisible: boolean;
-  onDelete: (projectIdToDelete: string | null) => void;
+  onDelete: (projectIdToDelete: string | null) => Promise<void>;
 }
 
 function DeleteProjectModal({ isVisible, onDelete }: DeleteProjectModalProps) {
@@ -18,8 +18,8 @@ function DeleteProjectModal({ isVisible, onDelete }: DeleteProjectModalProps) {
     closeOverlay();
   }
 
-  function handleDeleteProject(){
-    onDelete(projectIdToDelete);
+  async function handleDeleteProject(){
+    await onDelete(projectIdToDelete);
     closeModal();
   }
 
