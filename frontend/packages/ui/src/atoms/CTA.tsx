@@ -15,10 +15,11 @@ interface CTAProps {
   iconReverse?: boolean
   onClick?: (e?: React.MouseEvent<HTMLButtonElement>) => void
   disabled?: boolean
+  isLoading?: boolean
 } 
 
-function CTA({ type, text, href, color, icon, iconImage, iconReverse, onClick, disabled }: CTAProps) {
-  const baseClasses = `block px-4 py-2 rounded font-medium ${icon || iconImage ? 'flex items-center justify-center gap-2' : ''} ${iconReverse ? 'flex-row-reverse' : ''}`;
+function CTA({ type, text, href, color, icon, iconImage, iconReverse, onClick, disabled, isLoading = false }: CTAProps) {
+  const baseClasses = `block px-4 py-2 rounded font-medium cursor-pointer ${icon || iconImage ? 'flex items-center justify-center gap-2' : ''} ${iconReverse ? 'flex-row-reverse' : ''}`;
   const colorClasses = {
     primary: `bg-primary text-white hover:bg-primary-hover transition-colors duration-150 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
     secondary: `border-1 border-primary text-primary hover:bg-primary hover:text-white transition-colors duration-150 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
@@ -29,10 +30,33 @@ function CTA({ type, text, href, color, icon, iconImage, iconReverse, onClick, d
 
   if(type === 'button') {
     return (
-      <button className={`${baseClasses} ${colorClasses[color]}`} onClick={onClick} disabled={disabled}>
-        {text}
-        {icon}
-        {iconImage && <Image src={iconImage.src} alt={iconImage.alt} width={20} height={20} />}
+      <button className={`${baseClasses} ${colorClasses[color]}`} onClick={onClick} disabled={disabled} aria-busy={isLoading}>
+        {isLoading ? (
+          <>
+            <span className='flex items-center justify-center'>
+              
+              {/* spin animation */}
+              <svg
+                className="animate-spin h-5 w-5 text-current"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                {/* faint full circle border */}
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" fill="none" />
+                {/* arc stroke that gives spinning border effect */}
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-75" fill="none" strokeLinecap="round" strokeDasharray="80" strokeDashoffset="60" />
+              </svg>
+            </span>
+          </>
+        ) : (
+          <>
+            {text}
+            {icon}
+            {iconImage && <Image src={iconImage.src} alt={iconImage.alt} width={20} height={20} />}
+          </>
+
+        )}
       </button>
     )
   }
@@ -40,9 +64,31 @@ function CTA({ type, text, href, color, icon, iconImage, iconReverse, onClick, d
   if(type === 'link'){
     return (
       <Link href={href as string} className={`${baseClasses} ${colorClasses[color]}`} >
-        {text}
-        {icon}
-        {iconImage && <Image src={iconImage.src} alt={iconImage.alt} width={20} height={20} />}
+        {isLoading ? (
+          <>
+            <span className='flex items-center justify-center'>
+              
+              {/* spin animation */}
+              <svg
+                className="animate-spin h-5 w-5 text-current"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                {/* faint full circle border */}
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" fill="none" />
+                {/* arc stroke that gives spinning border effect */}
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-75" fill="none" strokeLinecap="round" strokeDasharray="80" strokeDashoffset="60" />
+              </svg>
+            </span>
+          </>
+        ) : (
+          <>
+            {text}
+            {icon}
+            {iconImage && <Image src={iconImage.src} alt={iconImage.alt} width={20} height={20} />}
+          </>
+        )}
       </Link>
     )
   }

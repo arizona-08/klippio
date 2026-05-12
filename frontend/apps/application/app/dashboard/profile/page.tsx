@@ -7,6 +7,9 @@ import React, { useEffect } from 'react'
 import Toast from '@/app/components/molecules/Toast/Toast'
 import ProfilePicturePreview from '@/app/components/molecules/ProfilePicturePreview/ProfilePicturePreview';
 import PicturePreview from '@/app/components/molecules/ProfilePicturePreview/ProfilePicturePreview';
+import { LogOut } from 'lucide-react';
+import { logout } from '@/proxy/auth/auth-functions';
+import { useRouter } from 'next/navigation';
 
 function ProfilePage() {
   const {user, setUser} = useUser();
@@ -300,6 +303,24 @@ function ProfilePage() {
     }  
     
   }
+
+  const [isLogoutLoading, setIsLogoutLoading] = React.useState(false);
+  const router = useRouter();
+
+  async function handleLogout(e?: React.MouseEvent){
+    e?.preventDefault();
+    setIsLogoutLoading(true);
+    
+    const response = await logout();
+    
+    if(response.ok){
+      setUser(undefined);
+      router.push('/auth/login');
+    }
+      
+  }
+
+  
   
   return (
     <>
@@ -603,6 +624,21 @@ function ProfilePage() {
                 />
               </div>
             </form>
+          </div>
+        </section>
+
+        {/* logout section */}
+        <section className="mt-12 flex flex-col items-end max-w-7xl mx-auto">
+          <div className='min-w-65 flex flex-col items-stretch'>
+            <CTA
+              color='danger'
+              text='Me déconnecter'
+              type='button'
+              onClick={handleLogout}
+              icon={<LogOut className='w-5 h-5'/>}
+              iconReverse={true}
+              isLoading={isLogoutLoading}
+            />
           </div>
         </section>
 

@@ -16,6 +16,8 @@ function LoginForm() {
     password: ""
   })
 
+  const [isLoginLoading, setIsLoginLoading] = React.useState(false);
+
   const isFormValid = Object.values(loginCredentials).every(value => value.trim() !== "");
 
   const [errorMessage, setErrorMessage] = React.useState<string | null>();
@@ -27,7 +29,7 @@ function LoginForm() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>){
     e.preventDefault();
-
+    setIsLoginLoading(true);
     const response = await login(loginCredentials);
     const result = await response.json();
 
@@ -36,6 +38,7 @@ function LoginForm() {
       router.push('/dashboard/projects')
     } else {
       setErrorMessage(result.message);
+      setIsLoginLoading(false);
     }
   }
 
@@ -62,7 +65,7 @@ function LoginForm() {
             onChange={setCredentialsInfo}
           />
 
-          <CTA type='button' color='primary' text='Connexion' disabled={!isFormValid} />
+          <CTA type='button' color='primary' text='Connexion' disabled={!isFormValid} isLoading={isLoginLoading} />
     
           <p className='mt-2'><Link href="/auth/forgot-password" className='hover:underline hover:text-primary'>Mot de passe oublié ?</Link></p>
           <p className='mt-2'>Pas encore de compte ? <Link href='/auth/register' className='hover:underline hover:text-primary'>Me créer un compte</Link></p>
