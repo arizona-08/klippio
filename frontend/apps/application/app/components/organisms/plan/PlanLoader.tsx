@@ -10,7 +10,7 @@ import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { Document, Page, pdfjs } from 'react-pdf';
 import { usePlanStore } from '@/stores/AllPlansStore'
 import { addMarker, deleteMarker, editMarker, fetchPlan, getLastOpenedPlan, getMarkers } from '@/proxy/plan/plan-functions'
-import { FolderType, MarkerPhotoType, MarkerType, PlanType } from '@/types/project'
+import { FolderType, MarkerPhotoType, MarkerType, PlanType, ProjectType } from '@/types/project'
 import { useCurrentProjectStore } from '@/stores/CurrentProjectStore'
 import { getFolder, getProjectRootFolder } from '@/proxy/folders/folder-functions'
 // Configuration obligatoire du worker pour react-pdf (compatible Next.js)
@@ -20,9 +20,11 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 
 interface PlanLoaderProps {
   projectId: string;
+  onPlanChange?: (plan: PlanType) => void; // Callback pour notifier le changement de plan
+  
 }
 
-function PlanLoader({ projectId }: PlanLoaderProps) {
+function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
   const [markers, setMarkers] = React.useState<MarkerType[]>([]);
   const currentClickCoords = React.useRef({x: 0, y: 0})
   const [isModalActive, setIsModalActive] = React.useState<boolean>(false)
@@ -280,6 +282,7 @@ function PlanLoader({ projectId }: PlanLoaderProps) {
           const result = await response.json();
           const lastPlan = result.lastPlan;
           if(lastPlan) {
+            onPlanChange && onPlanChange(lastPlan);
             const isActuallyPdf = lastPlan.documentStorageKey.toLowerCase().endsWith('.pdf');
             displayPlan({
               planId: lastPlan.id,
