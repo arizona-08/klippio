@@ -49,7 +49,9 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
   const [option, setOption] = React.useState<SelectOption>('hand');
 
   //État pour gérer le dossier actif
-  const [activeFolder, setActiveFolder] = React.useState<FolderType | null>(null); 
+  const [activeFolder, setActiveFolder] = React.useState<FolderType | null>(null);
+
+  
 
   function selectOption(option: SelectOption) {
     setOption(option);

@@ -4,6 +4,7 @@ import React from 'react'
 import Image from 'next/image';
 import MarkerPicsCarousel from './MarkerPicsCarousel';
 import { CTA } from '@repo/ui';
+import { Camera } from 'lucide-react';
 
 interface PicModalInterface {
   isActive: boolean;
@@ -19,6 +20,7 @@ interface PicModalInterface {
 function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhotoText, handleAddMarker, handleUpdateMarkerPhoto, handleDeleteMarker }: PicModalInterface) {
   // Au début du composant
   const [localPhotos, setLocalPhotos] = React.useState<MarkerPhotoType[]>(marker?.photos || []);
+  const [isPhotoSelectorVisible, setIsPhotoSelectorVisible] = React.useState(false);
 
   // On synchronise localPhotos quand le marqueur change (ex: ouverture de la modale)
   React.useEffect(() => {
@@ -62,17 +64,34 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
   }
 
  function handleDeleteMarkerPhoto(photoIndex: number) {
-  // 1. On crée une copie sans l'élément supprimé
-  const updatedPhotos = localPhotos.filter((_, index) => index !== photoIndex);
-  
-  // 2. On met à jour l'état LOCAL (le SAS)
-  setLocalPhotos(updatedPhotos);
+    // 1. On crée une copie sans l'élément supprimé
+    const updatedPhotos = localPhotos.filter((_, index) => index !== photoIndex);
+    
+    // 2. On met à jour l'état LOCAL (le SAS)
+    setLocalPhotos(updatedPhotos);
 
-  // 3. Gestion de l'index du carrousel
-  if (currentMarkerPhotoIndex >= updatedPhotos.length) {
-    setCurrentMarkerPhotoIndex(Math.max(0, updatedPhotos.length - 1));
+    // 3. Gestion de l'index du carrousel
+    if (currentMarkerPhotoIndex >= updatedPhotos.length) {
+      setCurrentMarkerPhotoIndex(Math.max(0, updatedPhotos.length - 1));
+    }
   }
-}
+
+  React.useEffect(() => {
+    function handleClickOutsidePhotoSelector(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.photo-selector')) {
+        setIsPhotoSelectorVisible(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutsidePhotoSelector);
+    return () => document.removeEventListener('mousedown', handleClickOutsidePhotoSelector);
+  }, []);
+
+  // Fonction pour prendre une photo depuis l'appareil (placeholder pour l'instant)
+  function getPhotoFromDevice(){
+
+  }
 
   return (
     <>
@@ -170,12 +189,34 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
                 onClick={() => handleDeleteMarker(marker as MarkerType)}
               />
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:grow md:justify-end">
-                <CTA 
-                  type='button' 
-                  color='secondary' 
-                  text="Ajouter plus de photos" 
-                  onClick={() => addMorePhotosInputRef.current?.click()}
-                />
+                <div className="relative">
+                  <div className={`photo-selector absolute -top-2 -translate-y-full mb-5 left-0 bg-white border border-gray-200 rounded-md ${isPhotoSelectorVisible ? 'block' : 'hidden'}`}>
+                    <button
+                      className="w-full flex items-center gap-2 p-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={getPhotoFromDevice}
+                    >
+                      <Camera className="w-5 h-5" /> Prendre une photo
+                    </button>
+
+                    <hr className="text-gray-200"/>
+
+                    <button
+                      className="w-full flex items-center gap-2 p-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => {
+                        addMorePhotosInputRef.current?.click()
+                        setIsPhotoSelectorVisible(false);
+                      }}
+                    >
+                      <Camera className="w-5 h-5" /> Choisir depuis l'appareil
+                    </button>
+                  </div>
+                  <CTA 
+                    type='button' 
+                    color='secondary' 
+                    text="Ajouter plus de photos" 
+                    onClick={() => setIsPhotoSelectorVisible(prev => !prev)}
+                  />
+                </div>
                 <CTA 
                   type="button" 
                   color="primary" 
