@@ -88,9 +88,24 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
     return () => document.removeEventListener('mousedown', handleClickOutsidePhotoSelector);
   }, []);
 
-  // Fonction pour prendre une photo depuis l'appareil (placeholder pour l'instant)
-  function getPhotoFromDevice(){
+  
+  async function accessDeviceCamera(){
+    try {
+      const constraints: MediaStreamConstraints = {
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: 'environment' // Utilise la caméra arrière sur les mobiles
+        }
+      };
 
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      
+      alert("Accès à la caméra réussi ! (implémentation de la capture à faire)");
+    } catch (error) {
+      console.error("Erreur d'accès à la caméra :", error);
+      alert("Impossible d'accéder à la caméra. Veuillez vérifier les permissions de votre navigateur.");
+    }
   }
 
   return (
@@ -193,7 +208,7 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
                   <div className={`photo-selector absolute -top-2 -translate-y-full mb-5 left-0 bg-white border border-gray-200 rounded-md ${isPhotoSelectorVisible ? 'block' : 'hidden'}`}>
                     <button
                       className="w-full flex items-center gap-2 p-2 text-sm text-gray-700 hover:bg-gray-100"
-                      onClick={getPhotoFromDevice}
+                      onClick={accessDeviceCamera}
                     >
                       <Camera className="w-5 h-5" /> Prendre une photo
                     </button>
@@ -244,6 +259,7 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
             id="photo-upload"
             className="hidden"
             accept="image/*"
+            capture="environment"
             ref={addMorePhotosInputRef}
             onChange={(e) => handleAddMorePhotos(e, marker as MarkerType)}
           />
