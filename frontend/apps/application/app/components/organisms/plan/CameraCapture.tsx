@@ -3,11 +3,12 @@ import React, { useRef, useState } from 'react';
 import { CTA } from '@repo/ui';
 
 interface CameraCaptureProps {
+  isVisible: boolean;
   onPhotoCaptured: (file: File, previewUrl: string) => void;
   onClose: () => void;
 }
 
-export function CameraCapture({ onPhotoCaptured, onClose }: CameraCaptureProps) {
+export function CameraCapture({ isVisible, onPhotoCaptured, onClose }: CameraCaptureProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -65,13 +66,18 @@ export function CameraCapture({ onPhotoCaptured, onClose }: CameraCaptureProps) 
           const file = new File([blob], `capture_${Date.now()}.jpg`, { type: 'image/jpeg' });
           onPhotoCaptured(file, previewUrl);
           stopCamera();
+          onClose();
         }
       }, 'image/jpeg', 0.85); // 0.85 = qualité de compression
     }
   };
 
+  if (!isVisible) {
+    return null;
+  }
+
   return (
-    <div className="flex flex-col items-center gap-4 p-4 bg-gray-900 rounded-xl text-white">
+    <div className="fixed inset-0 z-100 flex flex-col items-center gap-4 p-4 bg-gray-900 rounded-xl text-white">
       {error && <p className="text-red-400 text-sm">{error}</p>}
 
       <div className="relative w-full max-w-md h-[300px] bg-black rounded-lg overflow-hidden">

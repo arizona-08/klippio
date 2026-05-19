@@ -5,6 +5,7 @@ import Image from 'next/image';
 import MarkerPicsCarousel from './MarkerPicsCarousel';
 import { CTA } from '@repo/ui';
 import { Camera } from 'lucide-react';
+import { CameraCapture } from './CameraCapture';
 
 interface PicModalInterface {
   isActive: boolean;
@@ -20,6 +21,7 @@ interface PicModalInterface {
 function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhotoText, handleAddMarker, handleUpdateMarkerPhoto, handleDeleteMarker }: PicModalInterface) {
   // Au début du composant
   const [localPhotos, setLocalPhotos] = React.useState<MarkerPhotoType[]>(marker?.photos || []);
+  const isOnlyOneLocalPhoto = localPhotos.length === 1;
   const [isPhotoSelectorVisible, setIsPhotoSelectorVisible] = React.useState(false);
 
   // On synchronise localPhotos quand le marqueur change (ex: ouverture de la modale)
@@ -88,28 +90,30 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
     return () => document.removeEventListener('mousedown', handleClickOutsidePhotoSelector);
   }, []);
 
-  
-  async function accessDeviceCamera(){
-    try {
-      const constraints: MediaStreamConstraints = {
-        video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          facingMode: 'environment' // Utilise la caméra arrière sur les mobiles
-        }
-      };
 
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      
-      alert("Accès à la caméra réussi ! (implémentation de la capture à faire)");
-    } catch (error) {
-      console.error("Erreur d'accès à la caméra :", error);
-      alert("Impossible d'accéder à la caméra. Veuillez vérifier les permissions de votre navigateur.");
-    }
+
+  const [isCameraCaptureVisible, setIsCameraCaptureVisible] = React.useState(false);
+
+  function closeCameraCapture() {
+    setIsCameraCaptureVisible(false);
+  }
+
+  async function handlePhotoCaptured(file: File, previewUrl: string) {
+    const newPhoto: MarkerPhotoType = {
+      label: '',
+      comment: '',
+      previewUrl,
+      physicalFile: file
+    };
+
+    setLocalPhotos(prev => [...prev, newPhoto]);
+    setCurrentMarkerPhotoIndex(localPhotos.length);
   }
 
   return (
     <>
+      <CameraCapture isVisible={isCameraCaptureVisible} onPhotoCaptured={handlePhotoCaptured} onClose={closeCameraCapture} />
+
       {isActive && (  
         <div id="photo-modal" className="fixed inset-0 bg-black/55 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
           
@@ -208,7 +212,7 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
                   <div className={`photo-selector absolute -top-2 -translate-y-full mb-5 left-0 bg-white border border-gray-200 rounded-md ${isPhotoSelectorVisible ? 'block' : 'hidden'}`}>
                     <button
                       className="w-full flex items-center gap-2 p-2 text-sm text-gray-700 hover:bg-gray-100"
-                      onClick={accessDeviceCamera}
+                      onClick={() => setIsCameraCaptureVisible(true)}
                     >
                       <Camera className="w-5 h-5" /> Prendre une photo
                     </button>
@@ -235,7 +239,8 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
                 <CTA 
                   type="button" 
                   color="primary" 
-                  text="Valider les modifications" 
+                  text="Valider les modifications"
+                  disabled={isOnlyOneLocalPhoto}
                   onClick={() => {
                     if (marker) {
                       // On fusionne le marqueur original avec nos photos modifiées dans le SAS
