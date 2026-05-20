@@ -7,7 +7,7 @@ import ProjectSorter from './ProjectFilter'
 import ProjectForm from '../../molecules/ProjectForm/ProjectForm';
 import { ProjectType } from '@/types/project';
 import { PlusIcon } from 'lucide-react';
-import { deleteProject, getArchivedProjects, getProjects } from '@/proxy/projects/project-functions';
+import { archiveProject, deleteProject, getArchivedProjects, getProjects, unarchiveProject } from '@/proxy/projects/project-functions';
 import DeleteProjectModal from '../../molecules/ProjectModals/DeleteProjectModal';
 import { useSidebarStore } from '@/stores/SidebarStore';
 import { useModifyProjectStore } from '@/stores/ModifyProjectStore';
@@ -15,6 +15,10 @@ import { useOverlayStore } from '@/stores/OverlayStore';
 import { useDeleteProjectModalStore } from '@/stores/DeleteProjectModalStore';
 import { createRecentActivity } from '@/proxy/recent-activity/recent-activity-functions';
 import { useUser } from '@/app/Context/AuthContext/AuthUserProvider';
+import ArchiveProjectModal from '../../molecules/ProjectModals/ArchiveProjectModal';
+import { useArchiveProjectStore } from '@/stores/ArchiveProjectStore';
+import { useUnarchiveProjectStore } from '@/stores/UnarchiveProjectStore';
+import UnarchiveProjectModal from '../../molecules/ProjectModals/UnarchiveProjectModal';
 
 interface ProjectsSectionProps {
   // Define any props if needed
@@ -133,8 +137,74 @@ function ProjectsSection({ projects, mode }: ProjectsSectionProps) {
     
   }
 
+  const isProjectToArchiveModalOpen = useArchiveProjectStore((state) => state.isProjectToArchiveModalOpen);
+
+
+  async function handleArchiveProject(projectIdToArchive: string | null, projectName: string | null){
+    if(!projectIdToArchive) return;
+
+    try{
+      const response = await archiveProject(projectIdToArchive);
+      const data = await response.json();
+
+      if(response.ok){
+        setMasterProjectsList((previousList) => previousList.filter(project => project.id !== projectIdToArchive));
+
+        //récupérer Ids collaborateur
+        if (user) {
+          const archiveProjectActivityDescription = `${user.firstname} ${user.lastname} a archivé le projet "${projectName || data.archivedProjectTitle}"`;
+          await createRecentActivity([user.id as number], archiveProjectActivityDescription);
+        }
+      } else {
+        console.error("Erreur lors de l'archivage du projet");
+      }
+    } catch (error) {
+      // afficher une notification d'erreur à l'utilisateur
+      console.error("Erreur lors de l'archivage du projet", error);
+    }
+    // Appel à l'API pour archiver le projet
+    
+  }
+
+  const isProjectToUnarchiveModalOpen = useUnarchiveProjectStore((state) => state.isProjectToUnarchiveModalOpen);
+
+  async function handleUnarchiveProject(projectIdToUnarchive: string | null, projectName: string | null){
+    if(!projectIdToUnarchive) return;
+
+    try{
+      const response = await unarchiveProject(projectIdToUnarchive);
+      const data = await response.json();
+
+      if(response.ok){
+        setMasterProjectsList((previousList) => previousList.filter(project => project.id !== projectIdToUnarchive));
+
+        //récupérer Ids collaborateur
+        if (user) {
+          const unarchiveProjectActivityDescription = `${user.firstname} ${user.lastname} a désarchivé le projet "${projectName || data.unarchivedProjectTitle}"`;
+          await createRecentActivity([user.id as number], unarchiveProjectActivityDescription);
+        }
+      } else {
+        console.error("Erreur lors du désarchivage du projet");
+      }
+    } catch (error) {
+      // afficher une notification d'erreur à l'utilisateur
+      console.error("Erreur lors du désarchivage du projet", error);
+    }
+    
+  }
+
   return (
     <>
+      <ArchiveProjectModal
+        isVisible={isProjectToArchiveModalOpen}
+        onArchive={handleArchiveProject}
+      />
+
+      <UnarchiveProjectModal
+        isVisible={isProjectToUnarchiveModalOpen}
+        onUnarchive={handleUnarchiveProject}
+      />
+
       <DeleteProjectModal
         isVisible={isDeleteProjectModalVisible}
         onDelete={handleDeleteProject}

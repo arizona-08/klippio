@@ -53,6 +53,18 @@ export class ProjectController {
     return this.projectService.updateProject(projectId, createProjectDto, userId);
   }
 
+  @Put(':projectId/archive')
+  async archiveProject(@Param('projectId') projectId: string, @CurrentUser() user: User){
+    const userId = user.id;
+    return this.projectService.archiveProject(projectId, userId);
+  }
+
+  @Put(':projectId/unarchive')
+  async unarchiveProject(@Param('projectId') projectId: string, @CurrentUser() user: User){
+    const userId = user.id;
+    return this.projectService.unarchiveProject(projectId, userId);
+  }
+
   @Delete(':projectId/delete')
   async deleteProject(@Param('projectId') projectId: string, @CurrentUser() user: User){
     return this.projectService.deleteProject(projectId, user.id)

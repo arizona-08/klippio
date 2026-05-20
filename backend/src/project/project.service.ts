@@ -83,6 +83,70 @@ export class ProjectService {
     }
   }
 
+  async archiveProject(projectId: string, userId: number){
+    try{
+      const project = await this.prismaService.project.findUnique({
+        where: {
+          id: projectId,
+        }
+      });
+
+      if(!project){
+        throw new NotFoundException("Project not found");
+      }
+
+      if(project.authorId !== userId){
+        throw new UnauthorizedException("Unauthorized");
+      }
+
+      const archivedProject = await this.prismaService.project.update({
+        where: {
+          id: projectId,
+        },
+        data: {
+          isArchived: true,
+          updatedAt: new Date(),
+        }
+      });
+
+      return archivedProject;
+    } catch(error) {
+      throw new InternalServerErrorException("Failed to archive project");
+    }
+  }
+
+  async unarchiveProject(projectId: string, userId: number){
+    try{
+      const project = await this.prismaService.project.findUnique({
+        where: {
+          id: projectId,
+        }
+      });
+
+      if(!project){
+        throw new NotFoundException("Project not found");
+      }
+
+      if(project.authorId !== userId){
+        throw new UnauthorizedException("Unauthorized");
+      }
+
+      const unarchivedProject = await this.prismaService.project.update({
+        where: {
+          id: projectId,
+        },
+        data: {
+          isArchived: false,
+          updatedAt: new Date(),
+        }
+      });
+
+      return unarchivedProject;
+    } catch(error) {
+      throw new InternalServerErrorException("Failed to unarchive project");
+    }
+  }
+
   async deleteProject(projectId: string, userId: number){
     try{
       const project = await this.prismaService.project.findUnique({
@@ -135,7 +199,7 @@ export class ProjectService {
           city: true,
           zipcode: true,
           updatedAt: true,
-          
+          isArchived: true,
           _count: {
             select: { plans: true}
           },
@@ -175,6 +239,7 @@ export class ProjectService {
         updatedAt: projectItem.updatedAt,
         numberOfPlans: projectItem._count.plans,
         numberOfPhotos: totalNumberOfPhotos,
+        isArchived: projectItem.isArchived,
       };
     });
 
