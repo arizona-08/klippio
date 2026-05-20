@@ -32,7 +32,7 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
   }, [marker]);
 
   const [currentMarkerPhotoIndex, setCurrentMarkerPhotoIndex] = React.useState(0);
-  const maxPhotoIndex = marker?.photos.length ? marker.photos.length - 1 : 0;
+  const maxPhotoIndex = localPhotos.length ? localPhotos.length - 1 : 0;
 
   const addMorePhotosInputRef = React.useRef<HTMLInputElement>(null);
 

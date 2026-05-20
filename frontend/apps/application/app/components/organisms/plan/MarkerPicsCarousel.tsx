@@ -11,6 +11,7 @@ interface MarkerPicsCarouselProps {
 }
 
 function MarkerPicsCarousel({ markerPhotos, currentPhotoIndex, maxPhotoIndex, setIndex }: MarkerPicsCarouselProps) {
+  console.log(maxPhotoIndex)
   return (
     <div>
 
