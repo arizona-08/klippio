@@ -32,6 +32,25 @@ export class ProjectService {
     }
   }
 
+  async getProject(userId: number, projectId: string) {
+    try {
+      const project = await this.prismaService.project.findFirst({
+        where: {
+          id: projectId,
+          authorId: userId,
+        },
+      });
+
+      if (!project) {
+        throw new NotFoundException("Project not found");
+      }
+
+      return project;
+    } catch (error) {
+      throw new InternalServerErrorException("Failed to get project");
+    }
+  }
+
   async updateProject(projectId: string, createProjectDto: CreateProjectDTO, userId: number){
     try{
       const project = await this.prismaService.project.findUnique({

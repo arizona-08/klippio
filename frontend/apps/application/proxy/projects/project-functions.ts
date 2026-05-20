@@ -14,6 +14,17 @@ export async function createProject(data: CreateProjectDTO){
   return response;
 }
 
+export async function getProjectById(projectId: string){
+  const response = await fetchFromClient(`/api/projects/${projectId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json"
+    },
+  });
+
+  return response;
+}
+
 export async function deleteProject(projectId: string){
   const response = await fetchFromClient(`/api/projects/${projectId}/delete`, {
     method: "DELETE",

@@ -4,6 +4,8 @@ import React from 'react'
 import Image from 'next/image';
 import MarkerPicsCarousel from './MarkerPicsCarousel';
 import { CTA } from '@repo/ui';
+import { Camera, File } from 'lucide-react';
+import { CameraCapture } from './CameraCapture';
 
 interface PicModalInterface {
   isActive: boolean;
@@ -19,6 +21,9 @@ interface PicModalInterface {
 function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhotoText, handleAddMarker, handleUpdateMarkerPhoto, handleDeleteMarker }: PicModalInterface) {
   // Au début du composant
   const [localPhotos, setLocalPhotos] = React.useState<MarkerPhotoType[]>(marker?.photos || []);
+  const isLocalPhotosEmpty = localPhotos.length === 0;
+  const isOnlyOneLocalPhoto = localPhotos.length === 1;
+  const [isPhotoSelectorVisible, setIsPhotoSelectorVisible] = React.useState(false);
 
   // On synchronise localPhotos quand le marqueur change (ex: ouverture de la modale)
   React.useEffect(() => {
@@ -28,7 +33,7 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
   }, [marker]);
 
   const [currentMarkerPhotoIndex, setCurrentMarkerPhotoIndex] = React.useState(0);
-  const maxPhotoIndex = marker?.photos.length ? marker.photos.length - 1 : 0;
+  const maxPhotoIndex = localPhotos.length ? localPhotos.length - 1 : 0;
 
   const addMorePhotosInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -62,20 +67,54 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
   }
 
  function handleDeleteMarkerPhoto(photoIndex: number) {
-  // 1. On crée une copie sans l'élément supprimé
-  const updatedPhotos = localPhotos.filter((_, index) => index !== photoIndex);
-  
-  // 2. On met à jour l'état LOCAL (le SAS)
-  setLocalPhotos(updatedPhotos);
+    // 1. On crée une copie sans l'élément supprimé
+    const updatedPhotos = localPhotos.filter((_, index) => index !== photoIndex);
+    
+    // 2. On met à jour l'état LOCAL (le SAS)
+    setLocalPhotos(updatedPhotos);
 
-  // 3. Gestion de l'index du carrousel
-  if (currentMarkerPhotoIndex >= updatedPhotos.length) {
-    setCurrentMarkerPhotoIndex(Math.max(0, updatedPhotos.length - 1));
+    // 3. Gestion de l'index du carrousel
+    if (currentMarkerPhotoIndex >= updatedPhotos.length) {
+      setCurrentMarkerPhotoIndex(Math.max(0, updatedPhotos.length - 1));
+    }
   }
-}
+
+  React.useEffect(() => {
+    function handleClickOutsidePhotoSelector(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.photo-selector')) {
+        setIsPhotoSelectorVisible(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutsidePhotoSelector);
+    return () => document.removeEventListener('mousedown', handleClickOutsidePhotoSelector);
+  }, []);
+
+
+
+  const [isCameraCaptureVisible, setIsCameraCaptureVisible] = React.useState(false);
+
+  function closeCameraCapture() {
+    setIsCameraCaptureVisible(false);
+  }
+
+  async function handlePhotoCaptured(file: File, previewUrl: string) {
+    const newPhoto: MarkerPhotoType = {
+      label: '',
+      comment: '',
+      previewUrl,
+      physicalFile: file
+    };
+
+    setLocalPhotos(prev => [...prev, newPhoto]);
+    setCurrentMarkerPhotoIndex(localPhotos.length);
+  }
 
   return (
     <>
+      <CameraCapture isVisible={isCameraCaptureVisible} onPhotoCaptured={handlePhotoCaptured} onClose={closeCameraCapture} />
+
       {isActive && (  
         <div id="photo-modal" className="fixed inset-0 bg-black/55 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
           
@@ -156,6 +195,7 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
                   type='button'
                   color='danger_reverse'
                   text='Supprimer la photo'
+                  disabled={isLocalPhotosEmpty || isOnlyOneLocalPhoto}
                   onClick={() => handleDeleteMarkerPhoto(currentMarkerPhotoIndex)}
                 />
               </div>
@@ -170,16 +210,39 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
                 onClick={() => handleDeleteMarker(marker as MarkerType)}
               />
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:grow md:justify-end">
-                <CTA 
-                  type='button' 
-                  color='secondary' 
-                  text="Ajouter plus de photos" 
-                  onClick={() => addMorePhotosInputRef.current?.click()}
-                />
+                <div className="relative">
+                  <div className={`photo-selector absolute -top-2 -translate-y-full mb-5 left-0 bg-white border border-gray-200 rounded-md ${isPhotoSelectorVisible ? 'block' : 'hidden'}`}>
+                    <button
+                      className="w-full flex items-center justify-center gap-2 p-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setIsCameraCaptureVisible(true)}
+                    >
+                      <Camera className="w-5 h-5" /> Prendre une photo
+                    </button>
+
+                    <hr className="text-gray-200"/>
+
+                    <button
+                      className="w-full flex items-center justify-center gap-2 p-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => {
+                        addMorePhotosInputRef.current?.click()
+                        setIsPhotoSelectorVisible(false);
+                      }}
+                    >
+                      <File className="w-5 h-5" /> Choisir depuis l'appareil
+                    </button>
+                  </div>
+                  <CTA 
+                    type='button' 
+                    color='secondary' 
+                    text="Ajouter plus de photos" 
+                    onClick={() => setIsPhotoSelectorVisible(prev => !prev)}
+                  />
+                </div>
                 <CTA 
                   type="button" 
                   color="primary" 
-                  text="Valider les modifications" 
+                  text="Valider les modifications"
+                  disabled={isLocalPhotosEmpty}
                   onClick={() => {
                     if (marker) {
                       // On fusionne le marqueur original avec nos photos modifiées dans le SAS
@@ -203,6 +266,7 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
             id="photo-upload"
             className="hidden"
             accept="image/*"
+            capture="environment"
             ref={addMorePhotosInputRef}
             onChange={(e) => handleAddMorePhotos(e, marker as MarkerType)}
           />

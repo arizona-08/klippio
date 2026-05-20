@@ -40,6 +40,12 @@ export class ProjectController {
     return this.projectService.getProjects(userId, sortBy, order, true);
   }
 
+  @Get(":projectId")
+  async getProjectById(@Param('projectId') projectId: string, @CurrentUser() user: User) {
+    const userId = user.id;
+    return this.projectService.getProject(userId, projectId)
+  }
+
   
   @Put(':projectId/update')
   async updateProject(@Param('projectId') projectId: string, @Body() createProjectDto: CreateProjectDTO, @CurrentUser() user: User){

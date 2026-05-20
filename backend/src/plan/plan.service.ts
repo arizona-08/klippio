@@ -204,7 +204,6 @@ export class PlanService {
   }
 
   async editMarker(userId: number, projectId: string, markerId: string, markerData: UpdateMarkerDto, files: Express.Multer.File[]) {
-    console.log("hello");
     //update des données du marker
     try {
       const updatedMarker = await this.prismaService.marker.update({
@@ -216,8 +215,7 @@ export class PlanService {
         }
       });
 
-      console.log("hello * 2");
-
+      
       const updatedExistingPhotos = await Promise.all(markerData.existingPhotosToUpdate.map(async (photo) => {
         const updatedPhoto = await this.prismaService.markerPhoto.update({
           where: { id: photo.identifier },
@@ -279,9 +277,6 @@ export class PlanService {
             markerId,
           }
         });
-
-        console.log(insertedPhoto);
-
 
         return {
           ...insertedPhoto,
