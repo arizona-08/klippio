@@ -4,7 +4,7 @@ import React from 'react'
 import Image from 'next/image';
 import MarkerPicsCarousel from './MarkerPicsCarousel';
 import { CTA } from '@repo/ui';
-import { Camera } from 'lucide-react';
+import { Camera, File } from 'lucide-react';
 import { CameraCapture } from './CameraCapture';
 
 interface PicModalInterface {
@@ -21,6 +21,7 @@ interface PicModalInterface {
 function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhotoText, handleAddMarker, handleUpdateMarkerPhoto, handleDeleteMarker }: PicModalInterface) {
   // Au début du composant
   const [localPhotos, setLocalPhotos] = React.useState<MarkerPhotoType[]>(marker?.photos || []);
+  const isLocalPhotosEmpty = localPhotos.length === 0;
   const isOnlyOneLocalPhoto = localPhotos.length === 1;
   const [isPhotoSelectorVisible, setIsPhotoSelectorVisible] = React.useState(false);
 
@@ -194,6 +195,7 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
                   type='button'
                   color='danger_reverse'
                   text='Supprimer la photo'
+                  disabled={isLocalPhotosEmpty || isOnlyOneLocalPhoto}
                   onClick={() => handleDeleteMarkerPhoto(currentMarkerPhotoIndex)}
                 />
               </div>
@@ -211,7 +213,7 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
                 <div className="relative">
                   <div className={`photo-selector absolute -top-2 -translate-y-full mb-5 left-0 bg-white border border-gray-200 rounded-md ${isPhotoSelectorVisible ? 'block' : 'hidden'}`}>
                     <button
-                      className="w-full flex items-center gap-2 p-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="w-full flex items-center justify-center gap-2 p-2 text-sm text-gray-700 hover:bg-gray-100"
                       onClick={() => setIsCameraCaptureVisible(true)}
                     >
                       <Camera className="w-5 h-5" /> Prendre une photo
@@ -220,13 +222,13 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
                     <hr className="text-gray-200"/>
 
                     <button
-                      className="w-full flex items-center gap-2 p-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="w-full flex items-center justify-center gap-2 p-2 text-sm text-gray-700 hover:bg-gray-100"
                       onClick={() => {
                         addMorePhotosInputRef.current?.click()
                         setIsPhotoSelectorVisible(false);
                       }}
                     >
-                      <Camera className="w-5 h-5" /> Choisir depuis l'appareil
+                      <File className="w-5 h-5" /> Choisir depuis l'appareil
                     </button>
                   </div>
                   <CTA 
@@ -240,7 +242,7 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
                   type="button" 
                   color="primary" 
                   text="Valider les modifications"
-                  disabled={isOnlyOneLocalPhoto}
+                  disabled={isLocalPhotosEmpty}
                   onClick={() => {
                     if (marker) {
                       // On fusionne le marqueur original avec nos photos modifiées dans le SAS

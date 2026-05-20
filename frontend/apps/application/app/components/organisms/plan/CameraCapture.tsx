@@ -77,10 +77,10 @@ export function CameraCapture({ isVisible, onPhotoCaptured, onClose }: CameraCap
   }
 
   return (
-    <div className="fixed inset-0 z-100 flex flex-col items-center gap-4 p-4 bg-gray-900 rounded-xl text-white">
+    <div className="fixed inset-0 z-100 flex flex-col items-center justify-center gap-4 p-4 bg-zinc-800/95 rounded-xl text-white">
       {error && <p className="text-red-400 text-sm">{error}</p>}
 
-      <div className="relative w-full max-w-md h-[300px] bg-black rounded-lg overflow-hidden">
+      <div className="relative w-full max-w-2xl h-[400px] bg-black rounded-lg overflow-hidden">
         {/* Balise vidéo qui affiche le flux en direct */}
         <video 
           ref={videoRef} 
