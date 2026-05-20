@@ -25,6 +25,28 @@ export async function getProjectById(projectId: string){
   return response;
 }
 
+export async function archiveProject(projectId: string){
+  const response = await fetchFromClient(`/api/projects/${projectId}/archive`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json"
+    },
+  });
+
+  return response;
+}
+
+export async function unarchiveProject(projectId: string){
+  const response = await fetchFromClient(`/api/projects/${projectId}/unarchive`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json"
+    },
+  });
+
+  return response;
+}
+
 export async function deleteProject(projectId: string){
   const response = await fetchFromClient(`/api/projects/${projectId}/delete`, {
     method: "DELETE",
