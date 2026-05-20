@@ -4,13 +4,15 @@ import ProjectManager from './ProjectManager';
 import { ProjectType } from '@/types/project';
 import { useCurrentProjectStore } from '@/stores/CurrentProjectStore';
 import { useRouter } from 'next/navigation';
+import ProjectIsArchivedWarningModal from '../ProjectModals/ProjectIsArchivedWarningModal';
 
 interface ProjectCardProps {
   project: ProjectType;
   mode: 'basic' | 'archive';
+  handleUnarchiveProject: (projectIdToUnarchive: string | null, projectName: string | null) => Promise<void>;
 }
 
-function ProjectCard({ project, mode }: ProjectCardProps) {
+function ProjectCard({ project, mode, handleUnarchiveProject }: ProjectCardProps) {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const statusLabel = mode === 'archive' || project.isArchived ? 'Archive' : 'Actif';
@@ -30,8 +32,12 @@ function ProjectCard({ project, mode }: ProjectCardProps) {
   }
 
   function handleCardClick() {
-    setCurrentProject(project);
-    router.push(`/project/${project.id}/visualize`);
+    if(project.isArchived){
+      setIsModalVisible(true);
+    } else {
+      setCurrentProject(project);
+      router.push(`/project/${project.id}/visualize`);
+    }
   }
 
   const setCurrentProject = useCurrentProjectStore((state) => state.setCurrentProject);
@@ -46,9 +52,21 @@ function ProjectCard({ project, mode }: ProjectCardProps) {
       month: 'short'
     }).format(date);
   }
+
+  const [isModalVisible, setIsModalVisible] = React.useState(false);
+
+  async function handleUnarchive(){
+    await handleUnarchiveProject(project.id, project.title);
+    setIsModalVisible(false);
+  }
   
   return (
     <>
+      <ProjectIsArchivedWarningModal
+        isVisible={isModalVisible}
+        closeModal={() => setIsModalVisible(false)}
+        handleUnarchiveProject={handleUnarchive}
+      />
       <li className='w-full cursor-pointer border border-gray-200 rounded-xl p-4 hover:shadow-sm hover:scale-101 transition-all duration-150 relative hover:z-10 bg-white'>
         <div onClick={handleCardClick}>
           <div className="relative project-pic-container aspect-video rounded-lg mb-4 overflow-hidden bg-gray-200">
