@@ -11,6 +11,8 @@ import { ProjectModule } from './project/project.module';
 import { PlanModule } from './plan/plan.module';
 import { ProfileModule } from './profile/profile.module';
 import { RecentActivityModule } from './recent-activity/recent-activity.module';
+import { StatsModule } from './stats/stats.module';
+import { MarkerModule } from './markers/marker.module';
 
 @Module({
   imports: [
@@ -24,8 +26,10 @@ import { RecentActivityModule } from './recent-activity/recent-activity.module';
     AmazonS3Module,
     ProjectModule,
     PlanModule,
+    MarkerModule,
     ProfileModule,
-    RecentActivityModule
+    RecentActivityModule,
+    StatsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

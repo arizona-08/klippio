@@ -35,7 +35,7 @@ function LoginForm() {
 
     if(response.ok){
       setUser(result.user)
-      router.push('/dashboard/projects')
+      router.push('/dashboard');
     } else {
       setErrorMessage(result.message);
       setIsLoginLoading(false);

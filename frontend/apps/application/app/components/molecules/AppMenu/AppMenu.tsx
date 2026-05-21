@@ -8,7 +8,7 @@ import Logo from '@repo/ui/src/atoms/Logo'
 import AppMenuLink from '../../atoms/AppMenuLink'
 import Image from 'next/image'
 import { logout } from '@/proxy/auth/auth-functions'
-import { Archive, Book, LogInIcon, LogOut, User, Users } from 'lucide-react'
+import { Archive, Book, Home, LogInIcon, LogOut, User, Users } from 'lucide-react'
 import { useSidebarStore } from '@/stores/SidebarStore'
 import useViewportWidth from '@/app/hooks/useViewportWidth'
 
@@ -17,6 +17,11 @@ function AppMenu() {
   const {user, setUser} = useUser();
 
   const appMenuLinks = [
+    {
+      label: 'Accueil',
+      href: '/dashboard',
+      icon: <Home className='text-white'/>
+    },
     {
       label: 'Mes Projets',
       href: '/dashboard/projects',
@@ -27,11 +32,11 @@ function AppMenu() {
       href: '/dashboard/archives',
       icon: <Archive className='text-white'/>
     },
-    {
-      label: 'Mon Équipe',
-      href: '/dashboard/teams',
-      icon: <Users className='text-white'/>
-    }
+    // {
+    //   label: 'Mon Équipe',
+    //   href: '/dashboard/teams',
+    //   icon: <Users className='text-white'/>
+    // }
   ]
   
   const [burgerActive, setIsBurgerActive] = React.useState<boolean>(false);

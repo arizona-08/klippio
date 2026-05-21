@@ -1,9 +1,10 @@
-import ProjectsSectionLoader from '@/app/components/molecules/ProjectsSectionLoader'
-import DisplayProjectsListSkeleton from '@/app/components/skeletons/ProjectsListSkeleton/ProjectListSkeleton'
+import React from 'react'
+import UserGreetings from '../components/molecules/UserGreetings'
 import Link from 'next/link'
-import React, { Suspense } from 'react'
+import DashboardStatsLoader from '../components/organisms/DashboardStats/DashboardStatsLoader'
 
-function ArchivesPage() {
+
+function DashboardPage() {
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <section className="relative overflow-hidden border-b border-gray-100 bg-white">
@@ -11,12 +12,13 @@ function ArchivesPage() {
         <div className="absolute -bottom-16 left-10 h-40 w-40 rounded-full bg-emerald-50 blur-2xl" />
 
         <div className="relative px-4 pt-6 pb-6 lg:px-8 lg:pt-8 lg:pb-8">
+          <UserGreetings />
 
           <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <h1 className="text-3xl font-semibold text-gray-900">Mes archives</h1>
+              <h1 className="text-3xl font-semibold text-gray-900">Accueil</h1>
               <p className="mt-2 max-w-2xl text-sm text-gray-600">
-                Retrouvez vos projets archivés !
+                Bienvenue sur votre espace de travail !
               </p>
             </div>
 
@@ -32,11 +34,9 @@ function ArchivesPage() {
         </div>
       </section>
 
-      <Suspense fallback={<DisplayProjectsListSkeleton />}>
-        <ProjectsSectionLoader mode="archive" />
-      </Suspense>
+      <DashboardStatsLoader />
     </div>
   )
 }
 
-export default ArchivesPage
+export default DashboardPage

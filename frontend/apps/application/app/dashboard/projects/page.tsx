@@ -8,21 +8,6 @@ import RecentActivitiesLoader from '@/app/components/molecules/RecentActivitiesL
 import RecentActivitiesSkeletonList from '@/app/components/skeletons/RecentActivitiesSkeleton/RecentActivitiesSkeletonList';
 
 function ProjectsPage() {
-  
-  const recentActivities = [
-    {
-      label: 'Projet "Mon nouveau projet" ouvert',
-      time: 'Il y a 2 h'
-    },
-    {
-      label: 'Nouveau plan ajoute a "Deuxieme projet"',
-      time: 'Hier'
-    },
-    {
-      label: 'Invitation envoyee a Marie Dupont',
-      time: 'Il y a 3 j'
-    }
-  ];
 
   return (
     <div className="Dashboard-root-container flex flex-col h-screen overflow-hidden">
@@ -31,7 +16,6 @@ function ProjectsPage() {
         <div className="absolute -bottom-16 left-10 h-40 w-40 rounded-full bg-emerald-50 blur-2xl" />
 
         <div className="relative px-4 pt-6 pb-6 lg:px-8 lg:pt-8 lg:pb-8">
-          <UserGreetings />
 
           <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>

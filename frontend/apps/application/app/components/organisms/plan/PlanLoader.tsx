@@ -9,10 +9,12 @@ import ProjectFolders from '../ProjectFolders/ProjectFolders'
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { Document, Page, pdfjs } from 'react-pdf';
 import { usePlanStore } from '@/stores/AllPlansStore'
-import { addMarker, deleteMarker, editMarker, fetchPlan, getLastOpenedPlan, getMarkers } from '@/proxy/plan/plan-functions'
-import { FolderType, MarkerPhotoType, MarkerType, PlanType, ProjectType } from '@/types/project'
+import { fetchPlan, getLastOpenedPlan, getPlanById } from '@/proxy/plan/plan-functions'
+import { FolderType, MarkerPhotoType, MarkerType, PlanType } from '@/types/project'
 import { useCurrentProjectStore } from '@/stores/CurrentProjectStore'
 import { getFolder, getProjectRootFolder } from '@/proxy/folders/folder-functions'
+import { useSearchParams } from 'next/navigation'
+import { addMarker, deleteMarker, editMarker, getMarkers } from '@/proxy/markers/marker-functions'
 // Configuration obligatoire du worker pour react-pdf (compatible Next.js)
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 // import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
@@ -31,6 +33,8 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
   const [temporaryModalMarker, setTemporaryModalMarker] = React.useState<MarkerType | undefined>(undefined)
   const [isAddPlanModalActive, setIsAddPlanModalActive] = React.useState<boolean>(false);
 
+  const searchParams = useSearchParams();
+  const planId = searchParams.get('planId');
 
   // État pour gérer le fichier (PDF ou Image)
   const [currentFileUrl, setCurrentFileUrl] = React.useState<string | null>(null);
@@ -68,6 +72,7 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
     setIsPdf(isPdfDocument);
     setCurrentFileUrl(temporaryAccessUrl);
     setCurrentPlan({ id: planId, name: planName, storageKey: storageKey, temporaryAccessUrl, isPdfDocument: isPdfDocument });
+    console.log("hello");
 
     setMarkers([]);
   }
@@ -277,23 +282,30 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
   }
 
   useEffect(() => {
-    async function fetchLastOpenedPlan() {
+    async function fetchPlan() {
       if(!currentFileUrl){
-        const response = await getLastOpenedPlan(projectId);
+        let response;
+
+        if(planId) {
+          response = await getPlanById(projectId, planId);
+        } else {
+          response = await getLastOpenedPlan(projectId);
+        }
+        
         if(response.ok){
           const result = await response.json();
-          const lastPlan = result.lastPlan;
-          if(lastPlan) {
-            onPlanChange && onPlanChange(lastPlan);
-            const isActuallyPdf = lastPlan.documentStorageKey.toLowerCase().endsWith('.pdf');
+          
+          if(result) {
+            onPlanChange && onPlanChange(result);
+            const isActuallyPdf = result.documentStorageKey.toLowerCase().endsWith('.pdf');
             displayPlan({
-              planId: lastPlan.id,
-              planName: lastPlan.name,
-              storageKey: lastPlan.documentStorageKey,
-              temporaryAccessUrl: lastPlan.temporaryAccessUrl,
+              planId: result.id,
+              planName: result.name,
+              storageKey: result.documentStorageKey,
+              temporaryAccessUrl: result.temporaryAccessUrl,
               isPdfDocument: isActuallyPdf
             });
-            setCurrentProjectTitle(lastPlan.project.title);
+            setCurrentProjectTitle(result.project.title);
           }
         } else {
           console.error("Erreur lors de la récupération du dernier plan ouvert :", response.statusText);
@@ -301,8 +313,18 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
       }
     }
 
+    
+
+
+    fetchPlan();
+    
+  }, [currentFileUrl])
+
+  useEffect(() => {
     async function fetchMarkersForCurrentPlan() {
+      if(!currentPlan?.id) return;
       const response = await getMarkers(currentPlan?.id as string);
+      console.log("Current plan:", currentPlan);
       if(response.ok){
         const result = await response.json();
         const fetchedMarkers = result.markers;
@@ -312,10 +334,8 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
       }
     }
 
-
-    fetchLastOpenedPlan();
-    fetchMarkersForCurrentPlan();
-  }, [currentFileUrl])
+    fetchMarkersForCurrentPlan()
+  }, [currentPlan?.id])
 
   useEffect(() => {
     if(!activeFolder) {
