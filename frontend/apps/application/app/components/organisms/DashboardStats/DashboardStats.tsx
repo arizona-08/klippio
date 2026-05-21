@@ -88,7 +88,7 @@ function DashboardStats({ myStats, recentActivities, threeLastOpenedPlans }: Das
                   <h3 className="text-sm font-semibold text-gray-900">Reprendre où j'en suis</h3>
                   <p className="mt-1 text-xs text-gray-500">Derniers plans consultés</p>
                 </div>
-                <button className="text-xs font-medium text-emerald-700 hover:text-emerald-800">Voir tout</button>
+                
               </div>
 
               <div className="mt-4 space-y-3">
@@ -107,7 +107,7 @@ function DashboardStats({ myStats, recentActivities, threeLastOpenedPlans }: Das
 
           <aside className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-900">Recent activity</h3>
+              <h3 className="text-sm font-semibold text-gray-900">Activité récente</h3>
               <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">Live</span>
             </div>
 

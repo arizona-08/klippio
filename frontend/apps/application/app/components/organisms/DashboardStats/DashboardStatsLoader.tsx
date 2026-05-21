@@ -3,6 +3,7 @@ import DashboardStats from './DashboardStats'
 import { getMyStatsServerSide, getThreeLastOpenedPlans } from '@/proxy/stats/stats-functions';
 import { getRecentActivitiesServerSide } from '@/proxy/recent-activity/recent-activity-functions';
 import { LastProjectOpenedType, MyStatsType, RecentActivityType } from '@/types/project';
+import DashboardStatsSkeleton from '../../skeletons/DashboardStatsSkeleton/DashboardStatsSkeleton';
 
 async function DashboardStatsLoader() {
   const response = await getMyStatsServerSide();
@@ -17,7 +18,7 @@ async function DashboardStatsLoader() {
   console.log("threeLastOpenedPlans", threeLastOpenedPlans);
 
   return (
-    <Suspense fallback={<div>loading...</div>}>
+    <Suspense fallback={<DashboardStatsSkeleton />}>
       <DashboardStats myStats={data} recentActivities={recentActivitiesData} threeLastOpenedPlans={threeLastOpenedPlans}/>
     </Suspense>
   )
