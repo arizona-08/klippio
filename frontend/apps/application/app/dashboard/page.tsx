@@ -1,7 +1,7 @@
 import React from 'react'
 import UserGreetings from '../components/molecules/UserGreetings'
 import Link from 'next/link'
-import DashboardStats from '../components/organisms/DashboardStats/DashboardStats'
+import DashboardStatsLoader from '../components/organisms/DashboardStats/DashboardStatsLoader'
 
 
 function DashboardPage() {
@@ -34,7 +34,7 @@ function DashboardPage() {
         </div>
       </section>
 
-      <DashboardStats />
+      <DashboardStatsLoader />
     </div>
   )
 }

@@ -75,3 +75,31 @@ export type MarkerPhotoType = {
   physicalFile: File
   temporaryAccessUrl?: string
 }
+
+export type MyStatsType = {
+  markerStats: {
+    totalMarkers: number;
+    markersLastWeek: number;
+  },
+  photosStats: {
+    totalPhotos: number;
+    photosLastWeek: number;
+  },
+  projectsStats: {
+    totalProjects: number;
+    projectsLastWeek: number;
+  },
+  plansStats: {
+    totalPlans: number;
+    plansLastWeek: number;
+  }
+}
+
+export type RecentActivityType = {
+  id: string;
+  activity: {
+    id: string;
+    createdAt: string;
+    description: string;
+  }
+}

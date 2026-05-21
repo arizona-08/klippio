@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect } from 'react'
+import { useSearchParams } from 'next/navigation';
 import ProjectCard from '../../molecules/ProjectCard/ProjectCard'
 import { CTA } from '@repo/ui'
 import SearchBar from '../../atoms/SearchBar'
@@ -220,7 +221,6 @@ function ProjectsSection({ projects, mode }: ProjectsSectionProps) {
       </div>
 
       <div className=''>
-        {/* <DeleteProjectModal /> */}
         <div className="top-projects-bar p-4 w-full">
           <div className={`flex flex-col gap-4 ${isSideBarOpen ? '' : 'md:flex-row-reverse md:items-center md:justify-between'}`}>
             <div className="w-full md:max-w-80">

@@ -100,6 +100,7 @@ model Marker {
   coordX              Float   
   coordY              Float   
   title               String
+  createdAt           DateTime @default(now())
   
   planId      String
 
@@ -113,6 +114,7 @@ model MarkerPhoto {
   photoLabel          String
   comment             String?
   temporaryAccessUrl  String?
+  createdAt           DateTime @default(now())
   
   markerId            String
   marker              Marker   @relation(fields: [markerId], references: [id], onDelete: Cascade)
