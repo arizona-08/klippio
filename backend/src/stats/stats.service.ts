@@ -133,4 +133,27 @@ export class StatsService {
 
     return { totalPlans, plansLastWeek };
   }
+
+  async getThreeLastOpenedPlans(userId: number) {
+    const lastOpenedPlans = await this.prismaService.plan.findMany({
+      
+      where: { project: { authorId: userId } },
+      orderBy: { lastOpenedAt: 'desc' },
+      take: 3,
+      select: {
+        id: true,
+        name: true,
+        lastOpenedAt: true,
+        
+        project: {
+          select: {
+            id: true,
+            title: true,
+          }
+        },
+      }
+    });
+
+    return lastOpenedPlans;
+  }
 }

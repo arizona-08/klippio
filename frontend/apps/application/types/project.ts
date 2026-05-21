@@ -103,3 +103,13 @@ export type RecentActivityType = {
     description: string;
   }
 }
+
+export type LastProjectOpenedType = {
+  id: string;
+  name: string;
+  lastOpenedAt: string;
+  project: {
+    id: string;
+    title: string;
+  }
+}

@@ -15,4 +15,9 @@ export class StatsController {
   async getMyStats(@CurrentUser() user: User) {
     return this.statsService.getUserStats(user.id);
   }
+
+  @Get("three-last-opened-plans")
+  async getThreeLastOpenedPlans(@CurrentUser() user: User) {
+    return this.statsService.getThreeLastOpenedPlans(user.id);
+  }
 }

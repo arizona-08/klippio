@@ -15,3 +15,10 @@ export async function getMyStatsServerSide(){
   });
   return response;
 }
+
+export async function getThreeLastOpenedPlans(){
+  const response = await fetchFromServer("/api/stats/three-last-opened-plans", {
+    method: "GET"
+  });
+  return response;
+}

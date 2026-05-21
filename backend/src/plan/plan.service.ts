@@ -39,7 +39,7 @@ export class PlanService {
     });
 
     if (!existingPlan) {
-      throw new InternalServerErrorException("Plan non trouvé aaaa");
+      throw new InternalServerErrorException("Plan non trouvé");
     }
 
     const newTemporaryAccessUrl = await this.amazonS3Service.generatePresignedUrl(existingPlan.documentStorageKey, 3600);
@@ -66,7 +66,7 @@ export class PlanService {
     });
 
     if (!existingPlan) {
-      throw new InternalServerErrorException("Plan non trouvé bbbbb");
+      throw new InternalServerErrorException("Plan non trouvé");
     }
 
     const newTemporaryAccessUrl = await this.amazonS3Service.generatePresignedUrl(existingPlan.documentStorageKey, 3600);
@@ -139,8 +139,6 @@ export class PlanService {
     }
   }
 
-
-  //  --------------------------MARKERS------------------------------
-
+  
 
 }
