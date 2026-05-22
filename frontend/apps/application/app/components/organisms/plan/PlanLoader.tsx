@@ -17,8 +17,6 @@ import { useSearchParams } from 'next/navigation'
 import { addMarker, deleteMarker, editMarker, getMarkers } from '@/proxy/markers/marker-functions'
 // Configuration obligatoire du worker pour react-pdf (compatible Next.js)
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-// import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
-// import 'react-pdf/dist/esm/Page/TextLayer.css';
 
 interface PlanLoaderProps {
   projectId: string;
