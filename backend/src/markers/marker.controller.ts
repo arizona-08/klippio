@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, UploadedFiles, UseGuards, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UploadedFiles, UseGuards, UseInterceptors } from "@nestjs/common";
 import { MarkerService } from "./marker.service";
 import { FilesInterceptor } from "@nestjs/platform-express";
 import { CurrentUser } from "src/auth/decorators/current-user.decorator";
@@ -20,6 +20,7 @@ export class MarkerController {
     @UploadedFiles() files: Express.Multer.File[],
     @Param('projectId') projectId: string,
     @Param('planId') planId: string,
+    @Query('pageNumber') pageNumber: number,
     @Body('markerData') stringifiedMarkerData: string,
     @CurrentUser() user: User,
   ) {
@@ -30,6 +31,7 @@ export class MarkerController {
       userId,
       projectId,
       planId,
+      pageNumber,
       parsedMarkerData,
       files
     );
@@ -37,8 +39,8 @@ export class MarkerController {
   }
 
   @Get(':planId/markers')
-  async getMarkers(@Param('planId') planId: string) {
-    const markers = await this.markerService.getMarkers(planId);
+  async getMarkers(@Param('planId') planId: string, @Query('pageNumber') pageNumber: number,) {
+    const markers = await this.markerService.getMarkers(planId, pageNumber);
     return {markers};
   }
 

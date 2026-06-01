@@ -37,6 +37,9 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
 
   console.log("render")
 
+  const [currentPageNumber, setCurrentPageNumber] = React.useState(1);
+  const [numPages, setNumPages] = React.useState<number | null>(0);
+
   // État pour gérer le fichier (PDF ou Image)
   const [currentFileUrl, setCurrentFileUrl] = React.useState<string | null>(null);
   const [isPdf, setIsPdf] = React.useState<boolean>(false);
@@ -155,7 +158,7 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
     });
 
     try{
-      const response = await addMarker(markerFormData, projectId, currentPlan?.id as string);
+      const response = await addMarker(markerFormData, projectId, currentPlan?.id as string, currentPageNumber);
       if(!response.ok){
         console.error("Erreur lors de l'ajout du marqueur :", response.statusText);
         return;
@@ -321,7 +324,7 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
   useEffect(() => {
     async function fetchMarkersForCurrentPlan() {
       if(!currentPlan?.id) return;
-      const response = await getMarkers(currentPlan?.id as string);
+      const response = await getMarkers(currentPlan?.id as string, currentPageNumber);
       if(response.ok){
         const result = await response.json();
         const fetchedMarkers = result.markers;
@@ -332,7 +335,7 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
     }
 
     fetchMarkersForCurrentPlan()
-  }, [currentPlan?.id])
+  }, [currentPlan?.id, currentPageNumber])
 
   useEffect(() => {
     if(!activeFolder) {
@@ -419,8 +422,7 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
       }
   }
 
-  const [currentPageNumber, setCurrentPageNumber] = React.useState(1);
-  const [numPages, setNumPages] = React.useState<number | null>(0);
+
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setCurrentPageNumber(1);
