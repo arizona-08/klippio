@@ -37,10 +37,8 @@ function ProjectNode({ node, type, handleOnDelete, handleOnRename, navigateToFol
         onClick={() => {
           if(type === "folder") {
             navigateToFolder?.(node.id);
-            console.log("Folder clicked");
           } else {
             loadPlan?.(node.id);
-            console.log("Plan clicked");
           }
           
         }}

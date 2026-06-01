@@ -34,6 +34,8 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
 
   const [currentMarkerPhotoIndex, setCurrentMarkerPhotoIndex] = React.useState(0);
   const maxPhotoIndex = localPhotos.length ? localPhotos.length - 1 : 0;
+  const currentPhoto = localPhotos[currentMarkerPhotoIndex];
+  const currentPhotoSrc = currentPhoto?.previewUrl || currentPhoto?.temporaryAccessUrl;
 
   const addMorePhotosInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -55,8 +57,11 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
           physicalFile: file
         };
 
-        setLocalPhotos(prev => [...prev, newPhoto]);
-        setCurrentMarkerPhotoIndex(localPhotos.length);
+        setLocalPhotos(prev => {
+          const next = [...prev, newPhoto];
+          setCurrentMarkerPhotoIndex(next.length - 1);
+          return next;
+        });
       };
 
       reader.readAsDataURL(file);
@@ -107,8 +112,11 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
       physicalFile: file
     };
 
-    setLocalPhotos(prev => [...prev, newPhoto]);
-    setCurrentMarkerPhotoIndex(localPhotos.length);
+    setLocalPhotos(prev => {
+      const next = [...prev, newPhoto];
+      setCurrentMarkerPhotoIndex(next.length - 1);
+      return next;
+    });
   }
 
   return (
@@ -142,14 +150,18 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
               {/* ZONE IMAGE ET CARROUSEL */}
               <div className="p-6 pb-2">
                 <div className="relative w-full h-[400px] border-4 border-white shadow-lg rounded-xl overflow-hidden bg-gray-50">
-                  <Image 
-                    id="modal-image"
-                    src={localPhotos[currentMarkerPhotoIndex]?.previewUrl as string || localPhotos[currentMarkerPhotoIndex]?.temporaryAccessUrl as string}
-                    alt="Photo de chantier"
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  />
+                  {currentPhotoSrc ? (
+                    <Image 
+                      id="modal-image"
+                      src={currentPhotoSrc as string}
+                      alt="Photo de chantier"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gray-50" />
+                  )}
                 </div>
 
                 <div className="mt-4">

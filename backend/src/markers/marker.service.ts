@@ -130,7 +130,6 @@ export class MarkerService {
 
       // Suppression des photos supprimées
       if (markerData.deletedPhotoIdentifiers) {
-        console.log(markerData.deletedPhotoIdentifiers);
         
         const photosToDelete = await this.prismaService.markerPhoto.findMany({
           where: {

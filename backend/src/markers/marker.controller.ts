@@ -1,11 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, UploadedFiles, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Put, UploadedFiles, UseGuards, UseInterceptors } from "@nestjs/common";
 import { MarkerService } from "./marker.service";
 import { FilesInterceptor } from "@nestjs/platform-express";
 import { CurrentUser } from "src/auth/decorators/current-user.decorator";
 import type { User } from "src/user/interfaces/user.interface";
 import { CreateMarkerDto } from "./dtos/create-marker.dto";
 import { UpdateMarkerDto } from "./dtos/update-marker.dto";
+import { AuthenticatedGuard } from "src/auth/authenticated.guard";
 
+@UseGuards(AuthenticatedGuard)
 @Controller('api/markers')
 export class MarkerController {
   constructor(

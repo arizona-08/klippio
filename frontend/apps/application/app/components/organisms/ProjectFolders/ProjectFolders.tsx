@@ -11,6 +11,7 @@ import { createFolder, deleteFolder, renameFolder } from '@/proxy/folders/folder
 import { on } from 'events';
 import AddPlanModal from '../plan/AddPlanModal';
 import { renamePlan } from '@/proxy/plan/plan-functions';
+import { usePlanStore } from '@/stores/AllPlansStore';
 
 interface ProjectFoldersProps {
   activeFolder: FolderType | null
@@ -45,6 +46,8 @@ function ProjectFolders({
   const isProjectsFolderModalOpen = useProjectNodeStore((state) => state.isOpen);
   const closeFolders = useProjectNodeStore((state) => state.close);
 
+  const currentPlan = usePlanStore((state) => state.currentPlan);
+
   async function handleOnCreateFolder(folderName: string){
     const response = await createFolder(folderName, projectId, activeFolder ? activeFolder.id : null);
 
@@ -65,7 +68,10 @@ function ProjectFolders({
   }
 
   function onLoadPlan(planId: string){
-    triggerLoadPlan(planId);
+    if(currentPlan && currentPlan.id !== planId){
+      triggerLoadPlan(planId);
+    }
+    
     closeFolders();
   }
 

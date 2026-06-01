@@ -17,8 +17,6 @@ import { useSearchParams } from 'next/navigation'
 import { addMarker, deleteMarker, editMarker, getMarkers } from '@/proxy/markers/marker-functions'
 // Configuration obligatoire du worker pour react-pdf (compatible Next.js)
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-// import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
-// import 'react-pdf/dist/esm/Page/TextLayer.css';
 
 interface PlanLoaderProps {
   projectId: string;
@@ -35,6 +33,8 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
 
   const searchParams = useSearchParams();
   const planId = searchParams.get('planId');
+
+  console.log("render")
 
   // État pour gérer le fichier (PDF ou Image)
   const [currentFileUrl, setCurrentFileUrl] = React.useState<string | null>(null);
@@ -72,7 +72,6 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
     setIsPdf(isPdfDocument);
     setCurrentFileUrl(temporaryAccessUrl);
     setCurrentPlan({ id: planId, name: planName, storageKey: storageKey, temporaryAccessUrl, isPdfDocument: isPdfDocument });
-    console.log("hello");
 
     setMarkers([]);
   }
@@ -313,18 +312,15 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
       }
     }
 
-    
-
-
     fetchPlan();
     
   }, [currentFileUrl])
 
+  
   useEffect(() => {
     async function fetchMarkersForCurrentPlan() {
       if(!currentPlan?.id) return;
       const response = await getMarkers(currentPlan?.id as string);
-      console.log("Current plan:", currentPlan);
       if(response.ok){
         const result = await response.json();
         const fetchedMarkers = result.markers;
@@ -416,6 +412,7 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
           temporaryAccessUrl: plan.temporaryAccessUrl,
           isPdfDocument: isActuallyPdf
         });
+        onPlanChange && onPlanChange(plan);
       } else {
         console.error("Erreur lors du chargement du plan :", response.statusText);
       }
