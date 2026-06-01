@@ -34,6 +34,8 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
   const searchParams = useSearchParams();
   const planId = searchParams.get('planId');
 
+  console.log("render")
+
   // État pour gérer le fichier (PDF ou Image)
   const [currentFileUrl, setCurrentFileUrl] = React.useState<string | null>(null);
   const [isPdf, setIsPdf] = React.useState<boolean>(false);
@@ -70,7 +72,6 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
     setIsPdf(isPdfDocument);
     setCurrentFileUrl(temporaryAccessUrl);
     setCurrentPlan({ id: planId, name: planName, storageKey: storageKey, temporaryAccessUrl, isPdfDocument: isPdfDocument });
-    console.log("hello");
 
     setMarkers([]);
   }
@@ -311,18 +312,15 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
       }
     }
 
-    
-
-
     fetchPlan();
     
   }, [currentFileUrl])
 
+  
   useEffect(() => {
     async function fetchMarkersForCurrentPlan() {
       if(!currentPlan?.id) return;
       const response = await getMarkers(currentPlan?.id as string);
-      console.log("Current plan:", currentPlan);
       if(response.ok){
         const result = await response.json();
         const fetchedMarkers = result.markers;
@@ -414,6 +412,7 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
           temporaryAccessUrl: plan.temporaryAccessUrl,
           isPdfDocument: isActuallyPdf
         });
+        onPlanChange && onPlanChange(plan);
       } else {
         console.error("Erreur lors du chargement du plan :", response.statusText);
       }
