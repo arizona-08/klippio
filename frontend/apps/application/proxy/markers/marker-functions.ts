@@ -1,7 +1,7 @@
 import { fetchFromClient } from "../api";
 
-export async function addMarker(formData: FormData, projectId: string, planId: string) {
-  const response = await fetchFromClient(`/api/markers/${projectId}/${planId}/marker`, {
+export async function addMarker(formData: FormData, projectId: string, planId: string, pageNumber: number) {
+  const response = await fetchFromClient(`/api/markers/${projectId}/${planId}/marker?pageNumber=${pageNumber}`, {
     method: "POST",
     body: formData,
   });
@@ -9,8 +9,8 @@ export async function addMarker(formData: FormData, projectId: string, planId: s
   return response;
 }
 
-export async function getMarkers(planId: string) {
-  const response = await fetchFromClient(`/api/markers/${planId}/markers`, {
+export async function getMarkers(planId: string, pageNumber: number) {
+  const response = await fetchFromClient(`/api/markers/${planId}/markers?pageNumber=${pageNumber}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",

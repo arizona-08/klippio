@@ -15,6 +15,7 @@ import { useCurrentProjectStore } from '@/stores/CurrentProjectStore'
 import { getFolder, getProjectRootFolder } from '@/proxy/folders/folder-functions'
 import { useSearchParams } from 'next/navigation'
 import { addMarker, deleteMarker, editMarker, getMarkers } from '@/proxy/markers/marker-functions'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 // Configuration obligatoire du worker pour react-pdf (compatible Next.js)
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
@@ -35,6 +36,9 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
   const planId = searchParams.get('planId');
 
   console.log("render")
+
+  const [currentPageNumber, setCurrentPageNumber] = React.useState(1);
+  const [numPages, setNumPages] = React.useState<number | null>(0);
 
   // État pour gérer le fichier (PDF ou Image)
   const [currentFileUrl, setCurrentFileUrl] = React.useState<string | null>(null);
@@ -154,7 +158,7 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
     });
 
     try{
-      const response = await addMarker(markerFormData, projectId, currentPlan?.id as string);
+      const response = await addMarker(markerFormData, projectId, currentPlan?.id as string, currentPageNumber);
       if(!response.ok){
         console.error("Erreur lors de l'ajout du marqueur :", response.statusText);
         return;
@@ -320,7 +324,7 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
   useEffect(() => {
     async function fetchMarkersForCurrentPlan() {
       if(!currentPlan?.id) return;
-      const response = await getMarkers(currentPlan?.id as string);
+      const response = await getMarkers(currentPlan?.id as string, currentPageNumber);
       if(response.ok){
         const result = await response.json();
         const fetchedMarkers = result.markers;
@@ -331,7 +335,7 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
     }
 
     fetchMarkersForCurrentPlan()
-  }, [currentPlan?.id])
+  }, [currentPlan?.id, currentPageNumber])
 
   useEffect(() => {
     if(!activeFolder) {
@@ -417,6 +421,23 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
         console.error("Erreur lors du chargement du plan :", response.statusText);
       }
   }
+
+
+
+  function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
+    setCurrentPageNumber(1);
+    console.log(`Le document a ${numPages} page(s).`);
+    setNumPages(numPages);
+    // Si tu veux faire quelque chose en fonction du nombre de pages, tu peux le faire ici.
+  }
+
+  function navigatePreviousPage() {
+    setCurrentPageNumber(prev => Math.max(prev - 1, 1));
+  }
+
+  function navigateNextPage() {
+    setCurrentPageNumber(prev => numPages ? Math.min(prev + 1, numPages) : prev + 1);
+  }
   
   return (
     <div className="relative w-full h-full bg-gray-100  flex flex-col">
@@ -458,12 +479,22 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
                 <button onClick={() => zoomIn()} className="p-2 bg-gray-100 hover:bg-gray-200 rounded">+</button>
               </div>
 
+              {isPdf && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center gap-4 bg-white p-2 rounded-lg shadow-md">
+                  <ChevronLeft className="cursor-pointer rounded-full w-8 h-8 hover:bg-gray-200" onClick={navigatePreviousPage}/>
+                  <p className=" ">
+                    Page {currentPageNumber} sur {numPages || '...'}
+                  </p>
+                  <ChevronRight className="cursor-pointer rounded-full w-8 h-8 hover:bg-gray-200" onClick={navigateNextPage}/>
+                </div>
+              )}
+
               <TransformComponent wrapperClass="!w-full !h-full" contentClass="!w-full !h-full flex items-center justify-center">
                 <div ref={planContainerRef} className='relative bg-white' onClick={handlePlanClick}>
                   {isPdf ? (
-                      <Document file={currentFileUrl}>
+                      <Document file={currentFileUrl} onLoadSuccess={onDocumentLoadSuccess}>
                         {/* On ne rend que la page 1. La prop 'width' peut être définie si tu veux forcer une taille */}
-                        <Page pageNumber={1} renderTextLayer={false} renderAnnotationLayer={false} />
+                        <Page pageNumber={currentPageNumber} renderTextLayer={false} renderAnnotationLayer={false} />
                       </Document>
                     ) : (
                       <img src={currentFileUrl} alt="Plan" className="max-w-none" />

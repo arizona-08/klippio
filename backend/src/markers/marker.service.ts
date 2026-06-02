@@ -15,6 +15,7 @@ export class MarkerService {
     userId: number,
     projectId: string,
     planId: string,
+    pageNumber: number,
     markerData: CreateMarkerDto,
     files: Express.Multer.File[]
   ) {
@@ -25,6 +26,7 @@ export class MarkerService {
           coordX: markerData.coordX,
           coordY: markerData.coordY,
           planId,
+          planPageNumber: pageNumber,
         }
       });
 
@@ -67,9 +69,9 @@ export class MarkerService {
     }
   }
 
-  async getMarkers(planId: string) {
+  async getMarkers(planId: string, pageNumber: number) {
     const markers = await this.prismaService.marker.findMany({
-      where: { planId },
+      where: { planId, planPageNumber: pageNumber },
       include: {
         markerPhotos: true
       }
