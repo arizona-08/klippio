@@ -65,7 +65,7 @@ function LoginForm() {
             onChange={setCredentialsInfo}
           />
 
-          <CTA type='button' color='primary' text='Connexion' disabled={!isFormValid} isLoading={isLoginLoading} />
+          <CTA type='button' color='primary' text='Connexion' disabled={!isFormValid || isLoginLoading} isLoading={isLoginLoading} />
     
           <p className='mt-2'><Link href="/auth/forgot-password" className='hover:underline hover:text-primary'>Mot de passe oublié ?</Link></p>
           <p className='mt-2'>Pas encore de compte ? <Link href='/auth/register' className='hover:underline hover:text-primary'>Me créer un compte</Link></p>

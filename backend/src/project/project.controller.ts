@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, FileTypeValidator, Get, MaxFileSizeValidator, Param, ParseFilePipe, Patch, Post, Put, Query, Req, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
 import { AuthenticatedGuard } from "src/auth/authenticated.guard";
 import { CreateProjectDTO } from "./dtos/create-project.dto";
 import { ProjectService } from "./project.service";
 import { CurrentUser } from "src/auth/decorators/current-user.decorator";
 import type { User } from "src/user/interfaces/user.interface";
 import { CreateFolderDto } from "./dtos/create-folder.dto";
+import { FileInterceptor } from "@nestjs/platform-express";
 
 @UseGuards(AuthenticatedGuard)
 @Controller('api/projects')
@@ -63,6 +64,24 @@ export class ProjectController {
   async unarchiveProject(@Param('projectId') projectId: string, @CurrentUser() user: User){
     const userId = user.id;
     return this.projectService.unarchiveProject(projectId, userId);
+  }
+
+  @Patch(':projectId/thumbnail')
+  @UseInterceptors(FileInterceptor('file')) // 'file' est le nom du champ dans le FormData côté Next.js
+  async updateProjectThumbnail(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5000000 }), // Limite à 5 Mégaoctets
+          new FileTypeValidator({ fileType: /(jpg|jpeg|png)$/ }), // Accepte uniquement les images
+        ]
+      })
+    ) file: Express.Multer.File,
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: User
+  ) {
+    const userId = user.id;
+    return this.projectService.updateProjectThumbnail(userId, projectId, file);
   }
 
   @Delete(':projectId/delete')

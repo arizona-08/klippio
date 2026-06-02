@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import PicModal from './PicModal'
 import { CTA } from '@repo/ui'
 import AddPlanModal, { UploadPlanCredentials } from './AddPlanModal'
@@ -16,6 +16,7 @@ import { getFolder, getProjectRootFolder } from '@/proxy/folders/folder-function
 import { useSearchParams } from 'next/navigation'
 import { addMarker, deleteMarker, editMarker, getMarkers } from '@/proxy/markers/marker-functions'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { updateProjectThumbnail } from '@/proxy/projects/project-functions'
 // Configuration obligatoire du worker pour react-pdf (compatible Next.js)
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
@@ -35,7 +36,7 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
   const searchParams = useSearchParams();
   const planId = searchParams.get('planId');
 
-  console.log("render")
+  // console.log("render")
 
   const [currentPageNumber, setCurrentPageNumber] = React.useState(1);
   const [numPages, setNumPages] = React.useState<number | null>(0);
@@ -299,6 +300,7 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
           const result = await response.json();
           
           if(result) {
+            
             onPlanChange && onPlanChange(result);
             const isActuallyPdf = result.documentStorageKey.toLowerCase().endsWith('.pdf');
             displayPlan({
@@ -404,31 +406,27 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
   }
 
   async function onLoadPlan(planId: string){
-      const response = await fetchPlan(planId);
-      if(response.ok){
-        const result = await response.json();
-        const plan = result;
-        const isActuallyPdf = plan.documentStorageKey.toLowerCase().endsWith('.pdf');
-        displayPlan({
-          planId: plan.id,
-          planName: plan.name,
-          storageKey: plan.documentStorageKey,
-          temporaryAccessUrl: plan.temporaryAccessUrl,
-          isPdfDocument: isActuallyPdf
-        });
-        onPlanChange && onPlanChange(plan);
-      } else {
-        console.error("Erreur lors du chargement du plan :", response.statusText);
-      }
+    const response = await fetchPlan(planId);
+    if(response.ok){
+      const result = await response.json();
+      const plan = result;
+      const isActuallyPdf = plan.documentStorageKey.toLowerCase().endsWith('.pdf');
+      displayPlan({
+        planId: plan.id,
+        planName: plan.name,
+        storageKey: plan.documentStorageKey,
+        temporaryAccessUrl: plan.temporaryAccessUrl,
+        isPdfDocument: isActuallyPdf
+      });
+      onPlanChange && onPlanChange(plan);
+    } else {
+      console.error("Erreur lors du chargement du plan :", response.statusText);
+    }
   }
-
-
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setCurrentPageNumber(1);
-    console.log(`Le document a ${numPages} page(s).`);
     setNumPages(numPages);
-    // Si tu veux faire quelque chose en fonction du nombre de pages, tu peux le faire ici.
   }
 
   function navigatePreviousPage() {
@@ -437,6 +435,52 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
 
   function navigateNextPage() {
     setCurrentPageNumber(prev => numPages ? Math.min(prev + 1, numPages) : prev + 1);
+  }
+
+  
+  const lastThumbnailPlanIdRef = React.useRef<string | null>(null);
+
+  async function createThumbnail(){
+    if(!currentPlan?.id) return;
+    if(lastThumbnailPlanIdRef.current === currentPlan.id) return;
+    if(!planContainerRef.current) return;
+
+    let sourceCanvas: HTMLCanvasElement | null = null;
+
+    if(isPdf) {
+      sourceCanvas = planContainerRef.current.querySelector('canvas.react-pdf__Page__canvas');
+      if(!sourceCanvas) return;
+    } else {
+      const img = planContainerRef.current.querySelector('img');
+      if(!img || !img.complete) return;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth || img.width;
+      canvas.height = img.naturalHeight || img.height;
+
+      const ctx = canvas.getContext('2d');
+      if(!ctx) return;
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      sourceCanvas = canvas;
+    }
+
+    const thumbnailBlob = await new Promise<Blob | null>(resolve => sourceCanvas?.toBlob(resolve, 'image/jpeg', 0.8));
+    if(!thumbnailBlob) return;
+
+    const formData = new FormData();
+    formData.append('file', thumbnailBlob, `${currentPlan?.name}-thumbnail.jpg`);
+
+    try{
+      const response = await updateProjectThumbnail(projectId, formData);
+      if(!response.ok){
+        console.error("Erreur lors de la mise à jour de la miniature du projet :", response.statusText);
+        return;
+      } else {
+        lastThumbnailPlanIdRef.current = currentPlan.id;
+      }
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de la miniature du projet :", error);
+    }
   }
   
   return (
@@ -494,10 +538,15 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
                   {isPdf ? (
                       <Document file={currentFileUrl} onLoadSuccess={onDocumentLoadSuccess}>
                         {/* On ne rend que la page 1. La prop 'width' peut être définie si tu veux forcer une taille */}
-                        <Page pageNumber={currentPageNumber} renderTextLayer={false} renderAnnotationLayer={false} />
+                        <Page
+                          pageNumber={currentPageNumber}
+                          renderTextLayer={false}
+                          renderAnnotationLayer={false}
+                          onRenderSuccess={createThumbnail}
+                        />
                       </Document>
                     ) : (
-                      <img src={currentFileUrl} alt="Plan" className="max-w-none" />
+                      <img src={currentFileUrl} alt="Plan" className="max-w-none" onLoad={() => { void createThumbnail(); }} />
                     )
                   }
 

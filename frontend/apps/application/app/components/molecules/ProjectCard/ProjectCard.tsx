@@ -70,9 +70,9 @@ function ProjectCard({ project, mode, handleUnarchiveProject }: ProjectCardProps
       <li className='w-full cursor-pointer border border-gray-200 rounded-xl p-4 hover:shadow-sm hover:scale-101 transition-all duration-150 relative hover:z-10 bg-white'>
         <div onClick={handleCardClick}>
           <div className="relative project-pic-container aspect-video rounded-lg mb-4 overflow-hidden bg-gray-200">
-            {project.thumbnailUrl ? (
+            {project.thumbnailTemporaryAccessUrl ? (
               <Image
-                src={project.thumbnailUrl}
+                src={project.thumbnailTemporaryAccessUrl}
                 alt={project.title}
                 fill
                 className="object-cover"

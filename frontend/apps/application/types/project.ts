@@ -4,7 +4,7 @@ export type ProjectType = {
   address: string;
   zipcode: string;
   city: string;
-  thumbnailUrl: string;
+  thumbnailTemporaryAccessUrl: string | null;
   createdAt?: string;
   lastOpenedAt?: string;
   updatedAt?: string;
