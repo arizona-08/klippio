@@ -65,16 +65,17 @@ model Session {
 }
 
 model Project {
-  id                  String   @id @default(uuid())
-  authorId            Int
-  title               String
-  address             String
-  zipcode             String
-  city                String
-  createdAt           DateTime @default(now())
-  lastOpenedAt        DateTime @default(now())
-  updatedAt           DateTime @default(now())
-  isArchived          Boolean  @default(false)
+  id                    String   @id @default(uuid())
+  authorId              Int
+  title                 String
+  address               String
+  zipcode               String
+  city                  String
+  createdAt             DateTime @default(now())
+  lastOpenedAt          DateTime @default(now())
+  updatedAt             DateTime @default(now())
+  isArchived            Boolean  @default(false)
+  thumbnailStorageKey   String?
   
   author              User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   plans               Plan[]

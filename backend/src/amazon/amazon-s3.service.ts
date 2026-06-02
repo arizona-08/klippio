@@ -25,7 +25,7 @@ export class AmazonS3Service {
    */
   async uploadImage({ type, file, userId, projectId, markerId }: PicUpload): Promise<{storageKey: string, generatedFileName: string, temporaryAccessUrl: string}> {
     const bucketName = this.configurationService.getOrThrow<string>('AMAZON_S3_BUCKET_NAME');
-    
+
     // Génération d'un nom unique pour éviter d'écraser des fichiers existants
     const uniqueTimestamp = Date.now().toString();
     const fileExtension = file.originalname.split('.').pop();
@@ -43,7 +43,7 @@ export class AmazonS3Service {
     }
 
     if(type === "PROJECT_THUMBNAIL") {
-      storageKey += `/thumbnail/${generatedFileName}`;
+      storageKey += `/project-${projectId}/thumbnail/${generatedFileName}`;
     }
 
     if(type === "USER_PROFILE_PICTURE") {

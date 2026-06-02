@@ -92,6 +92,16 @@ export async function getArchivedProjects(sortOptions?: { sortBy: string, order:
   return response;
 }
 
+export async function updateProjectThumbnail(projectId: string, formData: FormData){
+
+  const response = await fetchFromClient(`/api/projects/${projectId}/thumbnail`, {
+    method: "PATCH",
+    body: formData,
+  });
+
+  return response;
+}
+
 
 // ----- SERVER SIDE FUNCTIONS ------
 

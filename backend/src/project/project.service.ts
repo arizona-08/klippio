@@ -4,10 +4,14 @@ import { AuthenticatedGuard } from "src/auth/authenticated.guard";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateProjectDTO } from "./dtos/create-project.dto";
 import { CreateFolderDto } from "./dtos/create-folder.dto";
+import { AmazonS3Service } from "src/amazon/amazon-s3.service";
 
 @Injectable()
 export class ProjectService {
-  constructor(private readonly prismaService: PrismaService){}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly amazonS3Service: AmazonS3Service
+  ){}
 
   async createProject(@Body() createProjectDto: CreateProjectDTO, userId: number){
     try{
@@ -200,6 +204,7 @@ export class ProjectService {
           zipcode: true,
           updatedAt: true,
           isArchived: true,
+          thumbnailStorageKey: true,
           _count: {
             select: { plans: true}
           },
@@ -220,7 +225,7 @@ export class ProjectService {
         }
       });
       
-      const formattedProjects = projects.map((projectItem) => {
+      const formattedProjects = await Promise.all(projects.map(async (projectItem) => {
       let totalNumberOfPhotos = 0;
 
       
@@ -229,6 +234,8 @@ export class ProjectService {
           totalNumberOfPhotos += markerItem._count.markerPhotos;
         }
       }
+
+      const thumbnailTemporaryAccessUrl = projectItem.thumbnailStorageKey ? await this.amazonS3Service.generatePresignedUrl(projectItem.thumbnailStorageKey) : null;
 
       return {
         id: projectItem.id,
@@ -239,9 +246,10 @@ export class ProjectService {
         updatedAt: projectItem.updatedAt,
         numberOfPlans: projectItem._count.plans,
         numberOfPhotos: totalNumberOfPhotos,
+        thumbnailTemporaryAccessUrl: thumbnailTemporaryAccessUrl,
         isArchived: projectItem.isArchived,
       };
-    });
+    }));
 
     return formattedProjects;
     } catch(error: any) {
@@ -291,6 +299,55 @@ export class ProjectService {
       throw new InternalServerErrorException("Failed to get project root folder");
     }
   }
+
+  async updateProjectThumbnail(userId: number, projectId: string, file: Express.Multer.File) {
+    try{
+      const project = await this.prismaService.project.findUnique({
+        where: {
+          id: projectId,
+        }
+      });
+
+      if(!project){
+        throw new NotFoundException("Project not found");
+      }
+
+      if(project.authorId !== userId){
+        throw new UnauthorizedException("Unauthorized");
+      }
+
+      if(project.thumbnailStorageKey){
+        await this.amazonS3Service.deleteImage(project.thumbnailStorageKey);
+      }
+
+      const uploadResult = await this.amazonS3Service.uploadImage({
+        type: "PROJECT_THUMBNAIL",
+        file,
+        userId,
+        projectId,
+      });
+
+      await this.prismaService.project.update({
+        where: {
+          id: projectId,
+        },
+        data: {
+          thumbnailStorageKey: uploadResult.storageKey,
+          updatedAt: new Date(),
+        }
+      });
+
+      return {
+        success: true,
+        message: "Project thumbnail updated successfully",
+        temporaryAccessUrl: uploadResult.temporaryAccessUrl,
+      }
+    } catch (error: any) {
+      throw new InternalServerErrorException("Failed to update project thumbnail", error.message);
+    }
+  }
+
+  /* ----------------- FOLDERS -------------------- */
 
   async getFolder(folderId: string, projectId: string) {
     try {
