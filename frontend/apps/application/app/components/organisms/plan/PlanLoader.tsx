@@ -106,30 +106,25 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
     const file = files[0]
 
     if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          if(!e.target) return;
+        const previewUrl = URL.createObjectURL(file);
 
-          const newMarker: MarkerType = {
-              coordX: currentClickCoords.current.x,
-              coordY: currentClickCoords.current.y,
-              title: '',
-              photos: [
-                {
-                  label: '',
-                  comment: '',
-                  previewUrl: e.target.result as string,
-                  physicalFile: file
-                }
-              ]
-          };
-
-          //permettre d'ajouter un titre et des commentaires dès l'ajout du marqueur
-          setIsModalActive(true);
-          setTemporaryModalMarker(newMarker);
-
+        const newMarker: MarkerType = {
+            coordX: currentClickCoords.current.x,
+            coordY: currentClickCoords.current.y,
+            title: '',
+            photos: [
+              {
+                label: '',
+                comment: '',
+                previewUrl,
+                physicalFile: file
+              }
+            ]
         };
-        reader.readAsDataURL(file);
+
+        //permettre d'ajouter un titre et des commentaires dès l'ajout du marqueur
+        setIsModalActive(true);
+        setTemporaryModalMarker(newMarker);
 
         // Réinitialiser l'input pour permettre de charger la même photo plusieurs fois
         if(!photoInputRef.current) return
@@ -439,6 +434,26 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
 
   
   const lastThumbnailPlanIdRef = React.useRef<string | null>(null);
+  const thumbnailJobRef = React.useRef<number | null>(null);
+
+  function scheduleThumbnail() {
+    if (thumbnailJobRef.current !== null) return;
+
+    const run = () => {
+      thumbnailJobRef.current = null;
+      void createThumbnail();
+    };
+
+    const requestIdle = (window as typeof window & {
+      requestIdleCallback?: (cb: IdleRequestCallback, opts?: IdleRequestOptions) => number;
+    }).requestIdleCallback;
+
+    if (requestIdle) {
+      thumbnailJobRef.current = requestIdle(run, { timeout: 1000 });
+    } else {
+      thumbnailJobRef.current = window.setTimeout(run, 200);
+    }
+  }
 
   async function createThumbnail(){
     if(!currentPlan?.id) return;
@@ -542,18 +557,18 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
                           pageNumber={currentPageNumber}
                           renderTextLayer={false}
                           renderAnnotationLayer={false}
-                          onRenderSuccess={createThumbnail}
+                          onRenderSuccess={scheduleThumbnail}
                         />
                       </Document>
                     ) : (
-                      <img src={currentFileUrl} alt="Plan" className="max-w-none" onLoad={() => { void createThumbnail(); }} />
+                      <img src={currentFileUrl} alt="Plan" className="max-w-none" onLoad={scheduleThumbnail} />
                     )
                   }
 
                     {/* Affichage des marqueurs (ton code intact) */}
                     {markers.map((marker, index) => (
                       <div
-                        key={index}
+                        key={marker.id ?? index}
                         className="marker absolute w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-sm cursor-pointer border-2 border-white shadow-lg transform -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform z-10"
                         style={{ left: `${marker.coordX}%`, top: `${marker.coordY}%` }}
                         onClick={(e) => handleMarkerClick(e, marker)}

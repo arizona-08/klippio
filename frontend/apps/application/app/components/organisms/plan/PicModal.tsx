@@ -19,18 +19,57 @@ interface PicModalInterface {
 }
 
 function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhotoText, handleAddMarker, handleUpdateMarkerPhoto, handleDeleteMarker }: PicModalInterface) {
+  function isBlobUrl(url?: string) {
+    return typeof url === 'string' && url.startsWith('blob:');
+  }
+
+  function revokePreviewUrls(photos: MarkerPhotoType[]) {
+    photos.forEach((photo) => {
+      if (isBlobUrl(photo.previewUrl)) {
+        URL.revokeObjectURL(photo.previewUrl as string);
+      }
+    });
+  }
+
   // Au début du composant
   const [localPhotos, setLocalPhotos] = React.useState<MarkerPhotoType[]>(marker?.photos || []);
   const isLocalPhotosEmpty = localPhotos.length === 0;
   const isOnlyOneLocalPhoto = localPhotos.length === 1;
   const [isPhotoSelectorVisible, setIsPhotoSelectorVisible] = React.useState(false);
+  const previousLocalPhotosRef = React.useRef<MarkerPhotoType[]>(localPhotos);
+  const lastMarkerIdRef = React.useRef<string | undefined>(marker?.id);
 
   // On synchronise localPhotos quand le marqueur change (ex: ouverture de la modale)
   React.useEffect(() => {
     if (marker?.photos) {
       setLocalPhotos([...marker.photos]);
+      if (marker.id !== lastMarkerIdRef.current) {
+        setCurrentMarkerPhotoIndex(0);
+        lastMarkerIdRef.current = marker.id;
+      }
+      return;
     }
+
+    setLocalPhotos([]);
+    setCurrentMarkerPhotoIndex(0);
+    lastMarkerIdRef.current = undefined;
   }, [marker]);
+
+  React.useEffect(() => {
+    const previousPhotos = previousLocalPhotosRef.current;
+    const removedPhotos = previousPhotos.filter(
+      (photo) => !localPhotos.some((nextPhoto) => nextPhoto.previewUrl === photo.previewUrl)
+    );
+
+    revokePreviewUrls(removedPhotos);
+    previousLocalPhotosRef.current = localPhotos;
+  }, [localPhotos]);
+
+  React.useEffect(() => {
+    return () => {
+      revokePreviewUrls(previousLocalPhotosRef.current);
+    };
+  }, []);
 
   const [currentMarkerPhotoIndex, setCurrentMarkerPhotoIndex] = React.useState(0);
   const maxPhotoIndex = localPhotos.length ? localPhotos.length - 1 : 0;
@@ -46,25 +85,19 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
     const file = files[0];
 
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (!e.target) return;
-
-        const newPhoto: MarkerPhotoType = {
-          label: '',
-          comment: '',
-          previewUrl: e.target.result as string,
-          physicalFile: file
-        };
-
-        setLocalPhotos(prev => {
-          const next = [...prev, newPhoto];
-          setCurrentMarkerPhotoIndex(next.length - 1);
-          return next;
-        });
+      const previewUrl = URL.createObjectURL(file);
+      const newPhoto: MarkerPhotoType = {
+        label: '',
+        comment: '',
+        previewUrl,
+        physicalFile: file
       };
 
-      reader.readAsDataURL(file);
+      setLocalPhotos(prev => {
+        const next = [...prev, newPhoto];
+        setCurrentMarkerPhotoIndex(next.length - 1);
+        return next;
+      });
 
       if (!addMorePhotosInputRef.current) return;
       addMorePhotosInputRef.current.value = '';

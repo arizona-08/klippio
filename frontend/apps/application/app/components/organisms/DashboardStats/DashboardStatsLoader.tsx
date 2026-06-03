@@ -15,7 +15,6 @@ async function DashboardStatsLoader() {
 
   const threeLastOpenedPlansResponse = await getThreeLastOpenedPlans();
   const threeLastOpenedPlans : LastProjectOpenedType[] = await threeLastOpenedPlansResponse.json();
-  console.log("threeLastOpenedPlans", threeLastOpenedPlans);
 
   return (
     <Suspense fallback={<DashboardStatsSkeleton />}>
