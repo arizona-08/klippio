@@ -111,6 +111,7 @@ function AppMenu() {
                 <AppMenuLink
                   key={index}
                   menuLink={menuLink}
+                  onClose={toggleBurgerActive}
                 />
               ))}
             </ul>
@@ -152,6 +153,7 @@ function AppMenu() {
                     key={index}
                     menuLink={menuLink}
                     hideText={!isSidebarOpen}
+                    onClose={() => {}}
                   />
                 ))}
               </ul>

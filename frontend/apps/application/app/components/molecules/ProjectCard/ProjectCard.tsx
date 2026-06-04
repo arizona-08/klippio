@@ -5,6 +5,7 @@ import { ProjectType } from '@/types/project';
 import { useCurrentProjectStore } from '@/stores/CurrentProjectStore';
 import { useRouter } from 'next/navigation';
 import ProjectIsArchivedWarningModal from '../ProjectModals/ProjectIsArchivedWarningModal';
+import NProgress from 'nprogress'
 
 interface ProjectCardProps {
   project: ProjectType;
@@ -36,7 +37,9 @@ function ProjectCard({ project, mode, handleUnarchiveProject }: ProjectCardProps
       setIsModalVisible(true);
     } else {
       setCurrentProject(project);
+      NProgress.start();
       router.push(`/project/${project.id}/visualize`);
+      NProgress.done();
     }
   }
 

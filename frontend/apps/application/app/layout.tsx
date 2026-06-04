@@ -3,6 +3,7 @@ import "./globals.css";
 import { Albert_Sans } from "next/font/google";
 import AuthUserProvider from "./Context/AuthContext/AuthUserProvider";
 import ModalOverlay from "./components/organisms/ModalOverlay/ModalOverlay";
+import NextTopLoader from "nextjs-toploader";
 
 const albertSans = Albert_Sans({
   subsets: ["latin"],
@@ -23,6 +24,17 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className={`min-h-screen relative overflow-x-hidden ${albertSans.className} bg-white`}>
+        <NextTopLoader
+          color="#10B981" // Le code HEX du vert de ton application
+          initialPosition={0.08}
+          crawlSpeed={200}
+          height={3}
+          crawl={true}
+          showSpinner={false} // Désactive le petit spinner circulaire en haut à droite si tu ne veux que la barre
+          easing="ease"
+          speed={200}
+          shadow="0 0 10px #10B981,0 0 5px #10B981" // Effet de lueur (glow)
+        />
         <ModalOverlay />
         <AuthUserProvider>
           {children}

@@ -12,9 +12,10 @@ export type AppMenuLinkType = {
 interface AppMenuLinkProps {
   menuLink: AppMenuLinkType;
   hideText?: boolean;
+  onClose(): void;
 }
 
-function AppMenuLink({ menuLink, hideText }: AppMenuLinkProps) {
+function AppMenuLink({ menuLink, hideText, onClose }: AppMenuLinkProps) {
   const { label, href, icon } = menuLink;
   const pathname = usePathname();
 
@@ -23,7 +24,7 @@ function AppMenuLink({ menuLink, hideText }: AppMenuLinkProps) {
 
   return (
     <li className={`relative overflow-hidden w-full shrink-0 hover:bg-white/10 p-1 rounded-md ${hideText ? 'flex justify-center' : ''} ${isActive ? 'bg-white/20 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-white' : ''}`}>
-      <Link href={href} className={`flex items-center w-full ${hideText ? 'justify-center gap-0' : 'gap-4'}`}>
+      <Link href={href} className={`flex items-center w-full ${hideText ? 'justify-center gap-0' : 'gap-4'}`} onClick={onClose}>
         <div className="w-[30px] h-[30px] rounded-sm flex justify-center items-center">
           {icon}
         </div>
