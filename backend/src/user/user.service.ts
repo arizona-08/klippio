@@ -1,11 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateUserDTO } from "./dto/create-user.dto";
-import bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { ForgotPasswordTokens, User, UserFilter } from "./interfaces/user.interface";
 import { CouldNotUpdateUserError, UserCreationError, UserNotFoundError } from "src/Error/UserError";
 import { err, ok, Result } from "src/Error/Result";
-import * as crypto from 'crypto';
 import { AmazonS3Service } from "src/amazon/amazon-s3.service";
 
 @Injectable()

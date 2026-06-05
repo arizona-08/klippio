@@ -2,8 +2,7 @@ import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { EditPersonalInfoDto } from "./dtos/edit-personal-info.dto";
 import { EditPasswordDto } from "./dtos/edit-password.dto";
-import { BlockedEncryptionTypes$ } from "@aws-sdk/client-s3";
-import bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { AmazonS3Service } from "src/amazon/amazon-s3.service";
 import { EditUserPictureDto } from "./dtos/edit-profile-picture.dto";
 

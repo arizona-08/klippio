@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { UserService } from "src/user/user.service";
-import bcrypt from "bcrypt"
+import * as bcrypt from "bcryptjs"
 import { InvalidCredentialsError } from "src/Error/AuthError";
 import { User } from "src/user/interfaces/user.interface";
 import { err, ok, Result } from "src/Error/Result";
