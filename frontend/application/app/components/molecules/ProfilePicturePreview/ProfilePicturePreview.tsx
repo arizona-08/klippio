@@ -95,12 +95,11 @@ function PicturePreview({ type, file, isVisible, onClose, onConfirm }: PicturePr
                 <Image
                   src={imageUrl}
                   alt={type === 'BANNER' ? "Apercu de la photo de banniere" : "Apercu de la photo de profil"}
-                  width={1}
-                  height={1}
+                  fill
                   sizes="100vw"
-                  className="absolute left-1/2 top-1/2 select-none"
+                  className="select-none object-cover"
                   unoptimized
-                  style={{ width: '100%', height: '100%', transform: `translate(-50%, -50%) translate(${offsetX}px, ${offsetY}px) scale(${zoom})` }}
+                  style={{transform: `translate(${offsetX}px, ${offsetY}px) scale(${zoom})` }}
                   draggable={false}
                 />
               ) : (

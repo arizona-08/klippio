@@ -339,10 +339,9 @@ function ProfilePage() {
               <Image
                 src={resolvedBannerUrl}
                 alt="Banniere de profil"
-                width={1}
-                height={1}
+                fill
                 sizes="100vw"
-                className="h-full w-full object-cover"
+                className="select-none object-cover"
                 unoptimized
                 style={{ width: '100%', height: '100%' }}
                 draggable={false}
@@ -468,12 +467,13 @@ function ProfilePage() {
                   <div className="relative w-full h-32 rounded-lg bg-gray-400 border-4 border-gray-200 overflow-hidden mx-auto">
                     <Image
                       src={bannerPictureImageUrl}
-                      alt="Apercu de la photo de profil"
-                      width={1}
-                      height={1}
+                      alt="Aperçu de la photo de profil"
+                      fill // Remplace width, height et absolute
                       sizes="100vw"
-                      className="absolute left-1/2 top-1/2 select-none"
-                      style={{ width: '100%', height: '100%', transform: `translate(-50%, -50%) translate(${newBannerPicture?.offsetX}px, ${newBannerPicture?.offsetY}px) scale(${newBannerPicture?. zoom})` }}
+                      className="select-none object-cover" // object-cover empêche la déformation
+                      style={{ 
+                        transform: `translate(${newBannerPicture?.offsetX}px, ${newBannerPicture?.offsetY}px) scale(${newBannerPicture?.zoom})` 
+                      }}
                       draggable={false}
                       unoptimized
                     />
@@ -538,13 +538,12 @@ function ProfilePage() {
                   <div className="relative w-32 h-32 rounded-full bg-gray-400 border-4 border-gray-200 overflow-hidden mx-auto">
                     <Image
                       src={profilePictureImageUrl}
-                      alt="Apercu de la photo de profil"
-                      width={128}
-                      height={128}
-                      sizes="128px"
-                      className="absolute left-1/2 top-1/2 select-none"
+                      alt="Aperçu de la photo de profil"
+                      fill
+                      sizes="100vw"
+                      className="select-none object-cover"
                       style={{
-                        transform: `translate(-50%, -50%) translate(${newProfilePicture?.offsetX}px, ${newProfilePicture?.offsetY}px) scale(${newProfilePicture?. zoom})`
+                        transform: `translate(${newProfilePicture?.offsetX}px, ${newProfilePicture?.offsetY}px) scale(${newProfilePicture?. zoom})`
                       }}
                       unoptimized
                       draggable={false}
