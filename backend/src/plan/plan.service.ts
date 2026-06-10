@@ -63,6 +63,14 @@ export class PlanService {
   async getPlanById(projectId: string, planId: string) {
     const existingPlan = await this.prismaService.plan.findFirst({
       where: { id: planId, projectId },
+      include: {
+        project: {
+          select: {
+            id: true,
+            title: true,
+          }
+        }
+      }
     });
 
     if (!existingPlan) {
@@ -84,6 +92,7 @@ export class PlanService {
       name: updatedPlan.name,
       documentStorageKey: updatedPlan.documentStorageKey,
       temporaryAccessUrl: updatedPlan.temporaryAccessUrl,
+      project: existingPlan.project,
     }
   }
 
