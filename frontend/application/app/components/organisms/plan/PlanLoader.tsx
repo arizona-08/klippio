@@ -544,14 +544,13 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
           initialScale={1}
           minScale={0.5}
           maxScale={8} // Zoom max
-          // centerOnInit={true}
-          wheel={{ step: 0.1 }} // Sensibilité de la molette
-          panning={{ velocityDisabled: true }} // Rend le glissement plus précis
+          wheel={{ step: 0.15 }} // Sensibilité de la molette
+          panning={{ velocityDisabled: true }} // Rend le glissement plus précis sur mobile
+          limitToBounds={false} // 💡 Crucial sur mobile : permet de scroller librement sans blocage aux bords
         >
-
-          {({zoomIn, zoomOut, resetTransform}) => (
+          {({ zoomIn, zoomOut, resetTransform }) => (
             <>
-              {/* Petits boutons de contrôle flottants (Optionnel mais UX friendly) */}
+              {/* Petits boutons de contrôle flottants */}
               <div className="absolute top-4 right-4 z-30 flex gap-2 bg-white p-2 rounded-lg shadow-md">
                 <button onClick={() => zoomOut()} className="p-2 bg-gray-100 hover:bg-gray-200 rounded">-</button>
                 <button onClick={() => resetTransform()} className="p-2 bg-gray-100 hover:bg-gray-200 rounded">Reset</button>
@@ -561,50 +560,60 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
               {isPdf && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center gap-4 bg-white p-2 rounded-lg shadow-md">
                   <ChevronLeft className="cursor-pointer rounded-full w-8 h-8 hover:bg-gray-200" onClick={navigatePreviousPage}/>
-                  <p className=" ">
+                  <p className="select-none">
                     Page {currentPageNumber} sur {numPages || '...'}
                   </p>
                   <ChevronRight className="cursor-pointer rounded-full w-8 h-8 hover:bg-gray-200" onClick={navigateNextPage}/>
                 </div>
               )}
 
-              <TransformComponent wrapperClass="!w-full !h-full" contentClass="!w-full !h-full flex items-center justify-center">
-                <div ref={planContainerRef} className='relative bg-white' onClick={handlePlanClick}>
+              {/* 💡 CORRECTION : On retire 'flex items-center justify-center' qui force le recentrage */}
+              <TransformComponent 
+                wrapperClass="!w-full !h-full" 
+                contentClass="!w-auto !h-auto block"
+              >
+                {/* 💡 CORRECTION : 'inline-block' ou 'block' pour que le wrapper épouse la taille exacte du plan */}
+                <div 
+                  ref={planContainerRef} 
+                  className="relative bg-white block select-none touch-none" 
+                  onClick={handlePlanClick}
+                >
                   {isPdf ? (
-                      <Document file={currentFileUrl} onLoadSuccess={onDocumentLoadSuccess}>
-                        {/* On ne rend que la page 1. La prop 'width' peut être définie si tu veux forcer une taille */}
-                        <Page
-                          pageNumber={currentPageNumber}
-                          renderTextLayer={false}
-                          renderAnnotationLayer={false}
-                          onRenderSuccess={scheduleThumbnail}
-                        />
-                      </Document>
-                    ) : (
-                      <Image
-                        src={currentFileUrl}
-                        alt="Plan"
-                        width={1}
-                        height={1}
-                        sizes="100vw"
-                        className="max-w-none"
-                        style={{ width: '100%', height: '100%' }}
-                        onLoad={scheduleThumbnail}
+                    <Document file={currentFileUrl} onLoadSuccess={onDocumentLoadSuccess}>
+                      <Page
+                        pageNumber={currentPageNumber}
+                        renderTextLayer={false}
+                        renderAnnotationLayer={false}
+                        customTextRenderer={() => null}
+                        onRenderSuccess={scheduleThumbnail}
+                        // 💡 Tu peux fixer un scale ici (ex: 1.5) ou une width pour stabiliser le rendu initial sur mobile
                       />
-                    )
-                  }
+                    </Document>
+                  ) : (
+                    <Image
+                      src={currentFileUrl}
+                      alt="Plan"
+                      width={1}
+                      height={1}
+                      sizes="100vw"
+                      className="max-w-none"
+                      style={{ width: '100%', height: '100%' }}
+                      onLoad={scheduleThumbnail}
+                      unoptimized // Pour éviter le bug d'URL présignée vu ensemble !
+                    />
+                  )}
 
-                    {/* Affichage des marqueurs (ton code intact) */}
-                    {markers.map((marker, index) => (
-                      <div
-                        key={marker.id ?? index}
-                        className="marker absolute w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-sm cursor-pointer border-2 border-white shadow-lg transform -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform z-10"
-                        style={{ left: `${marker.coordX}%`, top: `${marker.coordY}%` }}
-                        onClick={(e) => handleMarkerClick(e, marker)}
-                      >
-                        {index + 1}
-                      </div>
-                    ))}
+                  {/* Affichage des marqueurs */}
+                  {markers.map((marker, index) => (
+                    <div
+                      key={marker.id ?? index}
+                      className="marker absolute w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-sm cursor-pointer border-2 border-white shadow-lg transform -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform z-10"
+                      style={{ left: `${marker.coordX}%`, top: `${marker.coordY}%` }}
+                      onClick={(e) => handleMarkerClick(e, marker)}
+                    >
+                      {index + 1}
+                    </div>
+                  ))}
                 </div>
               </TransformComponent>
             </>
