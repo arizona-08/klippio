@@ -548,17 +548,10 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
           panning={{ velocityDisabled: true }} // Rend le glissement plus précis sur mobile
           limitToBounds={false} // 💡 Crucial sur mobile : permet de scroller librement sans blocage aux bords
         >
-          {({ zoomIn, zoomOut, resetTransform }) => (
+          {() => (
             <>
-              {/* Petits boutons de contrôle flottants */}
-              <div className="absolute top-4 right-4 z-30 flex gap-2 bg-white p-2 rounded-lg shadow-md">
-                <button onClick={() => zoomOut()} className="p-2 bg-gray-100 hover:bg-gray-200 rounded">-</button>
-                <button onClick={() => resetTransform()} className="p-2 bg-gray-100 hover:bg-gray-200 rounded">Reset</button>
-                <button onClick={() => zoomIn()} className="p-2 bg-gray-100 hover:bg-gray-200 rounded">+</button>
-              </div>
-
               {isPdf && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center gap-4 bg-white p-2 rounded-lg shadow-md">
+                <div className="min-w-30 max-w-60 w-full absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center justify-between gap-4 bg-white p-2 rounded-lg shadow-md">
                   <ChevronLeft className="cursor-pointer rounded-full w-8 h-8 hover:bg-gray-200" onClick={navigatePreviousPage}/>
                   <p className="select-none">
                     Page {currentPageNumber} sur {numPages || '...'}
@@ -584,9 +577,7 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
                         pageNumber={currentPageNumber}
                         renderTextLayer={false}
                         renderAnnotationLayer={false}
-                        customTextRenderer={() => null}
                         onRenderSuccess={scheduleThumbnail}
-                        // 💡 Tu peux fixer un scale ici (ex: 1.5) ou une width pour stabiliser le rendu initial sur mobile
                       />
                     </Document>
                   ) : (

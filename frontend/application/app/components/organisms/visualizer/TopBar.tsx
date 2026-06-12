@@ -17,8 +17,8 @@ function TopBar({ project, plan }: TopBarProps) {
   const currentProjectTitle = useCurrentProjectStore((state) => state.currentProjectTitle);
 
   return (
-    <div className="bg-white text-black p-4 flex items-center justify-between">
-      <Link href={"/dashboard/projects"}>
+    <div className="w-full bg-white text-black p-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
+      <Link href={"/dashboard/projects"} className="block w-full">
         <div className="flex items-center gap-4">
           <ArrowLeft />
           <div className="flex flex-col">
@@ -28,7 +28,7 @@ function TopBar({ project, plan }: TopBarProps) {
           </div>
         </div>
       </Link>
-      <div className="flex items-center gap-2 cursor-pointer" onClick={openFolders}>
+      <div className="w-full flex items-center justify-end gap-2 cursor-pointer" onClick={openFolders}>
         <p>{plan ? plan.name : 'Aucun'}</p>
         <ChevronDown />
       </div>

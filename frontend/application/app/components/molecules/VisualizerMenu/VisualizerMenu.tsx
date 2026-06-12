@@ -15,7 +15,7 @@ function VisualizerMenu({ option, selectOption }: VisualizerMenuProps) {
   }
 
   return (
-    <div className={`w-12 rounded-full bg-gray-50 border-2 border-gray-100 px-2 py-4 flex flex-col items-center justify-center cursor-pointer fixed bottom-12 right-5 z-50 ${isMenuOpen ? 'h-35' : 'h-12'} transition-all duration-150 overflow-hidden`}>
+    <div className={`w-12 rounded-full bg-gray-50 border-2 border-gray-100 px-2 py-4 flex flex-col items-center justify-center cursor-pointer fixed bottom-20 right-5 z-50 ${isMenuOpen ? 'h-35' : 'h-12'} transition-all duration-150 overflow-hidden`}>
       <div className={`w-full elements flex flex-col items-center gap-2 h-50 ${isMenuOpen ? 'opacity-100 flex-1' : 'opacity-0 hidden'} transition-all duration-150`}>
         <div className={`hover:text-white hover:bg-primary p-1 rounded-full ${option === 'hand' ? 'bg-primary text-white' : ''}`} onClick={() => selectOption('hand')} title='Main libre'>
           <Hand className="stroke-1"/>
