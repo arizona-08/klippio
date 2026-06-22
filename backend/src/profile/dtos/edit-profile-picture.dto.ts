@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsNumberString } from "class-validator";
+import { IsNotEmpty, IsNumberString } from 'class-validator';
 
 export class EditUserPictureDto {
   @IsNotEmpty()
@@ -14,5 +14,5 @@ export class EditUserPictureDto {
   offsetY: number;
 
   @IsNotEmpty()
-  type: "PROFILE" | "BANNER";
+  type: 'PROFILE' | 'BANNER';
 }

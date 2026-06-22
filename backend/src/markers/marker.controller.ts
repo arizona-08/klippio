@@ -1,18 +1,28 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, UploadedFiles, UseGuards, UseInterceptors } from "@nestjs/common";
-import { MarkerService } from "./marker.service";
-import { FilesInterceptor } from "@nestjs/platform-express";
-import { CurrentUser } from "src/auth/decorators/current-user.decorator";
-import type { User } from "src/user/interfaces/user.interface";
-import { CreateMarkerDto } from "./dtos/create-marker.dto";
-import { UpdateMarkerDto } from "./dtos/update-marker.dto";
-import { AuthenticatedGuard } from "src/auth/authenticated.guard";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { MarkerService } from './marker.service';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import type { User } from 'src/user/interfaces/user.interface';
+import { CreateMarkerDto } from './dtos/create-marker.dto';
+import { UpdateMarkerDto } from './dtos/update-marker.dto';
+import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
 
 @UseGuards(AuthenticatedGuard)
 @Controller('api/markers')
 export class MarkerController {
-  constructor(
-    private readonly markerService: MarkerService
-  ) {}
+  constructor(private readonly markerService: MarkerService) {}
 
   @Post(':projectId/:planId/marker')
   @UseInterceptors(FilesInterceptor('photos'))
@@ -26,22 +36,27 @@ export class MarkerController {
   ) {
     const userId = user.id;
 
-    const parsedMarkerData: CreateMarkerDto = JSON.parse(stringifiedMarkerData);
+    const parsedMarkerData = JSON.parse(
+      stringifiedMarkerData,
+    ) as CreateMarkerDto;
     const result = await this.markerService.addMarker(
       userId,
       projectId,
       planId,
       pageNumber,
       parsedMarkerData,
-      files
+      files,
     );
     return result;
   }
 
   @Get(':planId/markers')
-  async getMarkers(@Param('planId') planId: string, @Query('pageNumber') pageNumber: number,) {
+  async getMarkers(
+    @Param('planId') planId: string,
+    @Query('pageNumber') pageNumber: number,
+  ) {
     const markers = await this.markerService.getMarkers(planId, pageNumber);
-    return {markers};
+    return { markers };
   }
 
   @Put(':projectId/:planId/:markerId')
@@ -54,17 +69,25 @@ export class MarkerController {
     @CurrentUser() user: User,
   ) {
     const userId = user.id;
-    const parsedMarkerData: UpdateMarkerDto = JSON.parse(stringifiedMarkerData);
-    const result = await this.markerService.editMarker(userId, projectId, markerId, parsedMarkerData, files);
+    const parsedMarkerData = JSON.parse(
+      stringifiedMarkerData,
+    ) as UpdateMarkerDto;
+    const result = await this.markerService.editMarker(
+      userId,
+      projectId,
+      markerId,
+      parsedMarkerData,
+      files,
+    );
     return result;
   }
 
   @Delete(':markerId')
-  async deleteMarker( @Param('markerId') markerId: string ) {
+  async deleteMarker(@Param('markerId') markerId: string) {
     await this.markerService.deleteMarker(markerId);
     return {
       success: true,
-      message: 'Marqueur supprimé avec succès'
+      message: 'Marqueur supprimé avec succès',
     };
   }
 }

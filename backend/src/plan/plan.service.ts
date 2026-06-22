@@ -1,19 +1,28 @@
-import { Injectable, InternalServerErrorException } from "@nestjs/common";
-import { AmazonS3Service } from "src/amazon/amazon-s3.service";
-import { PrismaService } from "src/prisma/prisma.service";
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { AmazonS3Service } from 'src/amazon/amazon-s3.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class PlanService {
-  constructor(private readonly amazonS3Service: AmazonS3Service, private readonly prismaService: PrismaService){}
+  constructor(
+    private readonly amazonS3Service: AmazonS3Service,
+    private readonly prismaService: PrismaService,
+  ) {}
 
-  async uploadPlan(name: string, projectId: string, folderId: string,  userId: number, file: Express.Multer.File) {
-    const { storageKey, temporaryAccessUrl } = await this.amazonS3Service.uploadImage({
-      type: "PLAN",
-      file,
-      userId,
-      projectId,
-    });
-
+  async uploadPlan(
+    name: string,
+    projectId: string,
+    folderId: string,
+    userId: number,
+    file: Express.Multer.File,
+  ) {
+    const { storageKey, temporaryAccessUrl } =
+      await this.amazonS3Service.uploadImage({
+        type: 'PLAN',
+        file,
+        userId,
+        projectId,
+      });
 
     try {
       const insertedPlan = await this.prismaService.plan.create({
@@ -26,10 +35,12 @@ export class PlanService {
         },
       });
 
-      return {...insertedPlan, temporaryAccessUrl};
+      return { ...insertedPlan, temporaryAccessUrl };
     } catch (error) {
-      console.error("Error when saving plan info in database: ", error);
-      throw new InternalServerErrorException("Erreur lors de l'enregistrement du plan en base de données");
+      console.error('Error when saving plan info in database: ', error);
+      throw new InternalServerErrorException(
+        "Erreur lors de l'enregistrement du plan en base de données",
+      );
     }
   }
 
@@ -39,14 +50,18 @@ export class PlanService {
     });
 
     if (!existingPlan) {
-      throw new InternalServerErrorException("Plan non trouvé");
+      throw new InternalServerErrorException('Plan non trouvé');
     }
 
-    const newTemporaryAccessUrl = await this.amazonS3Service.generatePresignedUrl(existingPlan.documentStorageKey, 3600);
+    const newTemporaryAccessUrl =
+      await this.amazonS3Service.generatePresignedUrl(
+        existingPlan.documentStorageKey,
+        3600,
+      );
 
     const updatedPlan = await this.prismaService.plan.update({
       where: { id: planId },
-      data: { 
+      data: {
         temporaryAccessUrl: newTemporaryAccessUrl,
         lastOpenedAt: new Date(), // Met à jour la date de dernière ouverture
       },
@@ -57,7 +72,7 @@ export class PlanService {
       name: updatedPlan.name,
       documentStorageKey: updatedPlan.documentStorageKey,
       temporaryAccessUrl: updatedPlan.temporaryAccessUrl,
-    }
+    };
   }
 
   async getPlanById(projectId: string, planId: string) {
@@ -68,20 +83,24 @@ export class PlanService {
           select: {
             id: true,
             title: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     if (!existingPlan) {
-      throw new InternalServerErrorException("Plan non trouvé");
+      throw new InternalServerErrorException('Plan non trouvé');
     }
 
-    const newTemporaryAccessUrl = await this.amazonS3Service.generatePresignedUrl(existingPlan.documentStorageKey, 3600);
+    const newTemporaryAccessUrl =
+      await this.amazonS3Service.generatePresignedUrl(
+        existingPlan.documentStorageKey,
+        3600,
+      );
 
     const updatedPlan = await this.prismaService.plan.update({
       where: { id: planId },
-      data: { 
+      data: {
         temporaryAccessUrl: newTemporaryAccessUrl,
         lastOpenedAt: new Date(), // Met à jour la date de dernière ouverture
       },
@@ -93,7 +112,7 @@ export class PlanService {
       documentStorageKey: updatedPlan.documentStorageKey,
       temporaryAccessUrl: updatedPlan.temporaryAccessUrl,
       project: existingPlan.project,
-    }
+    };
   }
 
   async getLastOpenedPlan(projectId: string) {
@@ -105,23 +124,27 @@ export class PlanService {
           select: {
             id: true,
             title: true,
-          }
+          },
         },
 
         folder: {
           select: {
             id: true,
             name: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     if (!lastOpenedPlan) {
-      return null; 
+      return null;
     }
 
-    const newTemporaryAccessUrl = await this.amazonS3Service.generatePresignedUrl(lastOpenedPlan.documentStorageKey, 3600);
+    const newTemporaryAccessUrl =
+      await this.amazonS3Service.generatePresignedUrl(
+        lastOpenedPlan.documentStorageKey,
+        3600,
+      );
 
     return {
       id: lastOpenedPlan.id,
@@ -131,10 +154,9 @@ export class PlanService {
       project: lastOpenedPlan.project,
       folder: lastOpenedPlan.folder,
     };
-   }
+  }
 
-  
-   async renamePlan(planId: string, newName: string, projectId: string) {
+  async renamePlan(planId: string, newName: string, projectId: string) {
     try {
       const updatedPlan = await this.prismaService.plan.update({
         where: { id: planId, projectId },
@@ -143,11 +165,10 @@ export class PlanService {
 
       return updatedPlan;
     } catch (error) {
-      console.error("Error when renaming plan: ", error);
-      throw new InternalServerErrorException("Erreur lors du renommage du plan");
+      console.error('Error when renaming plan: ', error);
+      throw new InternalServerErrorException(
+        'Erreur lors du renommage du plan',
+      );
     }
   }
-
-  
-
 }

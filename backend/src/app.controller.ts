@@ -11,7 +11,7 @@ export class AppController {
   }
 
   @Get('test')
-  getTest(){
+  getTest() {
     return this.appService.getTest();
   }
 }

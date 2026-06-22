@@ -1,7 +1,7 @@
-import { $Enums } from "@prisma/client";
-import { IsEmail, IsNotEmpty, IsString } from "class-validator";
+import { $Enums } from '@prisma/client';
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
-export class CreateUserDTO{
+export class CreateUserDTO {
   @IsString()
   @IsNotEmpty()
   firstname: string;
@@ -20,5 +20,5 @@ export class CreateUserDTO{
 
   @IsString()
   @IsNotEmpty()
-  role: $Enums.Role
+  role: $Enums.Role;
 }

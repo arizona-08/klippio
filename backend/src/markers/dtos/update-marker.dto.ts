@@ -15,6 +15,4 @@ export class UpdateMarkerDto {
   }[];
 
   deletedPhotoIdentifiers: string[];
-
-
 }

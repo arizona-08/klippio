@@ -1,7 +1,7 @@
 export type MarkerPhotoType = {
   label: string;
   comment: string;
-}
+};
 
 export class CreateMarkerDto {
   title: string;

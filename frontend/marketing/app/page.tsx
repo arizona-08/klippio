@@ -52,7 +52,7 @@ export default function Home() {
               Se connecter
             </button>
             <button className="rounded-full bg-[#00AF63] px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#009a56]">
-              S'inscrire gratuitement
+              S&apos;inscrire gratuitement
             </button>
           </div>
         </nav>
@@ -66,7 +66,7 @@ export default function Home() {
             </h1>
             <p className="max-w-xl text-base leading-7 text-black/65 sm:text-lg">
               Klippio aide les équipes du batiment à capturer les défauts, les
-              idées d'amélioration et les points de controle directement sur le
+              idées d&apos;amélioration et les points de controle directement sur le
               plan. Fini les notes perdues, tout est au bon endroit avant la fin
               de la journée.
             </p>
@@ -81,7 +81,7 @@ export default function Home() {
             <div className="flex items-center gap-6 text-xs font-medium uppercase tracking-[0.2em] text-black/40">
               <span>Entreprises generales</span>
               <span>Architectes</span>
-              <span>Bureaux d'études</span>
+              <span>Bureaux d&apos;études</span>
             </div>
           </div>
           <div className="relative">
@@ -261,9 +261,9 @@ export default function Home() {
                 Equipe chantier
               </p>
               <p className="mt-3 text-sm text-black/65">
-                "On retrouve instantanement toutes les photos et les remarques
+                &quot;On retrouve instantanement toutes les photos et les remarques
                 zone par zone. On ne perd plus une demi-journee a tout
-                reconstituer."
+                reconstituer.&quot;
               </p>
             </div>
             <div className="rounded-2xl border border-black/5 bg-white p-5">
@@ -271,8 +271,8 @@ export default function Home() {
                 Conducteur de travaux
               </p>
               <p className="mt-3 text-sm text-black/65">
-                "Les validations sont fluides, et les rapports sont prets a
-                envoyer en fin de journee."
+                &quot;Les validations sont fluides, et les rapports sont prets a
+                envoyer en fin de journee.&quot;
               </p>
             </div>
           </div>
@@ -295,7 +295,7 @@ export default function Home() {
               Planifier une demo
             </button>
             <button className="rounded-full border border-black/15 px-6 py-3 text-sm font-semibold text-black/70 transition hover:border-black/30 hover:text-black">
-              Contacter l'equipe
+              Contacter l&apos;equipe
             </button>
           </div>
         </div>

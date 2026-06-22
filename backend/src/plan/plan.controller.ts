@@ -1,11 +1,29 @@
-import { Controller, Post, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator, Param, UseGuards, Body, Get, Patch } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
+  Param,
+  UseGuards,
+  Body,
+  Get,
+  Patch,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import type { User } from 'src/user/interfaces/user.interface';
 import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
 import { PlanService } from './plan.service';
 
-@UseGuards(AuthenticatedGuard) 
+type UploadPlanBody = {
+  name: string;
+  folderId: string;
+};
+
+@UseGuards(AuthenticatedGuard)
 @Controller('/api/plans')
 export class PlanController {
   constructor(private readonly planService: PlanService) {}
@@ -24,14 +42,19 @@ export class PlanController {
     )
     file: Express.Multer.File,
     @Param('projectId') projectId: string,
-    @Body() body :any,
+    @Body() body: UploadPlanBody,
     @CurrentUser() user: User,
   ) {
-    
     const userId = user.id;
     const fileName = body.name;
     const folderId = body.folderId;
-    const uploadedPlanInfo = await this.planService.uploadPlan(fileName, projectId, folderId, userId, file);
+    const uploadedPlanInfo = await this.planService.uploadPlan(
+      fileName,
+      projectId,
+      folderId,
+      userId,
+      file,
+    );
 
     return {
       message: 'Fichier sauvegardé avec succès',
@@ -50,13 +73,19 @@ export class PlanController {
   }
 
   @Get(':projectId/:planId')
-  async getPlansByProject(@Param('projectId') projectId: string, @Param('planId') planId: string) {
+  async getPlansByProject(
+    @Param('projectId') projectId: string,
+    @Param('planId') planId: string,
+  ) {
     return await this.planService.getPlanById(projectId, planId);
   }
 
   @Patch(':projectId/:planId/rename')
-  async renamePlan(@Param('planId') planId: string, @Param('projectId') projectId: string, @Body() body: { newName: string, }) {
+  async renamePlan(
+    @Param('planId') planId: string,
+    @Param('projectId') projectId: string,
+    @Body() body: { newName: string },
+  ) {
     return await this.planService.renamePlan(planId, body.newName, projectId);
   }
-
 }

@@ -1,17 +1,27 @@
 import { fetchFromClient } from "../api";
 
-export async function addMarker(formData: FormData, projectId: string, planId: string, pageNumber: number) {
-  const response = await fetchFromClient(`/api/markers/${projectId}/${planId}/marker?pageNumber=${pageNumber}`, {
-    method: "POST",
-    body: formData,
-  });
+export async function addMarker(
+  formData: FormData,
+  projectId: string,
+  planId: string,
+  pageNumber: number,
+) {
+  const response = await fetchFromClient(
+    `/api/markers/${projectId}/${planId}/marker`,
+    {
+      method: "POST",
+      query: { pageNumber },
+      body: formData,
+    },
+  );
 
   return response;
 }
 
 export async function getMarkers(planId: string, pageNumber: number) {
-  const response = await fetchFromClient(`/api/markers/${planId}/markers?pageNumber=${pageNumber}`, {
+  const response = await fetchFromClient(`/api/markers/${planId}/markers`, {
     method: "GET",
+    query: { pageNumber },
     headers: {
       "Content-Type": "application/json",
     },
@@ -31,11 +41,19 @@ export async function deleteMarker(markerId: string) {
   return response;
 }
 
-export async function editMarker(projectId: string, planId: string, markerId: string, formData: FormData) {
-  const response = await fetchFromClient(`/api/markers/${projectId}/${planId}/${markerId}`, {
-    method: "PUT",
-    body: formData,
-  });
+export async function editMarker(
+  projectId: string,
+  planId: string,
+  markerId: string,
+  formData: FormData,
+) {
+  const response = await fetchFromClient(
+    `/api/markers/${projectId}/${planId}/${markerId}`,
+    {
+      method: "PUT",
+      body: formData,
+    },
+  );
 
   return response;
 }

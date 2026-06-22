@@ -2,125 +2,140 @@ import { fetchFromClient } from "../api";
 import { fetchFromServer } from "../serverApi";
 import { CreateProjectDTO } from "./dto/create-project.dto";
 
-export async function createProject(data: CreateProjectDTO){
+export async function createProject(data: CreateProjectDTO) {
   const response = await fetchFromClient("/api/projects/create", {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify(data)
+    body: JSON.stringify(data),
   });
 
   return response;
 }
 
-export async function getProjectById(projectId: string){
+export async function getProjectById(projectId: string) {
   const response = await fetchFromClient(`/api/projects/${projectId}`, {
     method: "GET",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
   });
 
   return response;
 }
 
-export async function archiveProject(projectId: string){
+export async function archiveProject(projectId: string) {
   const response = await fetchFromClient(`/api/projects/${projectId}/archive`, {
     method: "PUT",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
   });
 
   return response;
 }
 
-export async function unarchiveProject(projectId: string){
-  const response = await fetchFromClient(`/api/projects/${projectId}/unarchive`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json"
+export async function unarchiveProject(projectId: string) {
+  const response = await fetchFromClient(
+    `/api/projects/${projectId}/unarchive`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
     },
-  });
+  );
 
   return response;
 }
 
-export async function deleteProject(projectId: string){
+export async function deleteProject(projectId: string) {
   const response = await fetchFromClient(`/api/projects/${projectId}/delete`, {
     method: "DELETE",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
   });
 
   return response;
 }
 
-export async function modifyProject(data: CreateProjectDTO, projectId: string){
+export async function modifyProject(data: CreateProjectDTO, projectId: string) {
   const response = await fetchFromClient(`/api/projects/${projectId}/update`, {
     method: "PUT",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify(data)
+    body: JSON.stringify(data),
   });
 
   return response;
 }
 
-export async function getProjects(sortOptions?: { sortBy: string, order: 'asc' | 'desc' } ){
-  const response = await fetchFromClient(`/api/projects/all${sortOptions ? `?sortBy=${sortOptions.sortBy}&order=${sortOptions.order}` : ''}`, {
+export async function getProjects(sortOptions?: {
+  sortBy: string;
+  order: "asc" | "desc";
+}) {
+  const response = await fetchFromClient("/api/projects/all", {
     method: "GET",
+    query: sortOptions,
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
   });
 
   return response;
 }
 
-export async function getArchivedProjects(sortOptions?: { sortBy: string, order: 'asc' | 'desc' } ){
-  const response = await fetchFromClient(`/api/projects/archived${sortOptions ? `?sortBy=${sortOptions.sortBy}&order=${sortOptions.order}` : ''}`, {
+export async function getArchivedProjects(sortOptions?: {
+  sortBy: string;
+  order: "asc" | "desc";
+}) {
+  const response = await fetchFromClient("/api/projects/archived", {
     method: "GET",
+    query: sortOptions,
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
   });
 
   return response;
 }
 
-export async function updateProjectThumbnail(projectId: string, formData: FormData){
-
-  const response = await fetchFromClient(`/api/projects/${projectId}/thumbnail`, {
-    method: "PATCH",
-    body: formData,
-  });
+export async function updateProjectThumbnail(
+  projectId: string,
+  formData: FormData,
+) {
+  const response = await fetchFromClient(
+    `/api/projects/${projectId}/thumbnail`,
+    {
+      method: "PATCH",
+      body: formData,
+    },
+  );
 
   return response;
 }
-
 
 // ----- SERVER SIDE FUNCTIONS ------
 
-export async function getProjectsServerSide(){
+export async function getProjectsServerSide() {
   const response = await fetchFromServer("/api/projects/all", {
     method: "GET",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
   });
 
   return response;
 }
 
-export async function getArchivedProjectsServerSide(){
+export async function getArchivedProjectsServerSide() {
   const response = await fetchFromServer("/api/projects/archived", {
     method: "GET",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
   });
 

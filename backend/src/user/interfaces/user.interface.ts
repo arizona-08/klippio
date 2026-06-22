@@ -1,6 +1,6 @@
-import { $Enums } from "@prisma/client";
+import { $Enums } from '@prisma/client';
 
-export interface User{
+export interface User {
   id: number;
   firstname: string;
   lastname: string;
@@ -26,14 +26,20 @@ export interface User{
   } | null;
 }
 
-export type UserFilter = 'id' | 'email' | 'firstname' | 'lastname' | 'role' | 'forgotPasswordTokenSelector';
+export type UserFilter =
+  | 'id'
+  | 'email'
+  | 'firstname'
+  | 'lastname'
+  | 'role'
+  | 'forgotPasswordTokenSelector';
 
-export interface UserQuery{
+export interface UserQuery {
   filter: UserFilter;
   value: string | number;
 }
 
-export interface ForgotPasswordTokens{
+export interface ForgotPasswordTokens {
   userId: number;
   forgotPasswordTokenSelector: string | null | undefined;
   forgotPasswordToken: string | null | undefined;

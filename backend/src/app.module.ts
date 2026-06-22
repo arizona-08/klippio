@@ -16,8 +16,9 @@ import { MarkerModule } from './markers/marker.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ // <-- 2. L'ajouter aux imports
-      isGlobal: true,      // Rend les variables d'environnement disponibles dans toute l'app
+    ConfigModule.forRoot({
+      // <-- 2. L'ajouter aux imports
+      isGlobal: true, // Rend les variables d'environnement disponibles dans toute l'app
     }),
     PrismaModule,
     AuthModule,
@@ -34,10 +35,10 @@ import { MarkerModule } from './markers/marker.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule implements OnModuleInit{
-  constructor(private appService: AppService){}
+export class AppModule implements OnModuleInit {
+  constructor(private appService: AppService) {}
 
   async onModuleInit() {
-   await this.appService.createAdmin();
+    await this.appService.createAdmin();
   }
 }

@@ -1,13 +1,26 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
-import { Observable } from 'rxjs';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import type { Request } from 'express';
 import { UserService } from 'src/user/user.service';
+import type { User } from 'src/user/interfaces/user.interface';
+
+type AuthenticatedRequest = Request & {
+  session: Request['session'] & {
+    userId?: number;
+  };
+  user?: User;
+};
 
 @Injectable()
 export class AuthenticatedGuard implements CanActivate {
   constructor(private userService: UserService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const userId = request.session.userId;
 
     if (!userId) {
@@ -21,10 +34,10 @@ export class AuthenticatedGuard implements CanActivate {
     if (!user.ok) {
       throw new UnauthorizedException();
     }
-    
+
     // On attache l'utilisateur à la requête pour un accès facile plus tard
-    request.user = user.value; 
+    request.user = user.value;
     // Le guard renvoie `true` si l'ID utilisateur est dans la session
-    return request.session.userId !== undefined;
+    return true;
   }
 }

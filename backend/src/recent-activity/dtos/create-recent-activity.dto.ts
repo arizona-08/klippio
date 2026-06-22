@@ -1,8 +1,8 @@
-import { IsInt, IsNotEmpty, IsString } from "class-validator";
+import { IsInt, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateRecentActivityDto {
-  @IsInt({each: true})
-  @IsNotEmpty({each: true})
+  @IsInt({ each: true })
+  @IsNotEmpty({ each: true })
   userIds: number[];
 
   @IsString()
