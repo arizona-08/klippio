@@ -24,7 +24,6 @@ function TopBar({ project, plan }: TopBarProps) {
           <div className="flex flex-col">
             <h3 className="font-semibold text-xl">{(project?.title || currentProjectTitle) || "Titre du projet"}</h3>
             <p className="text-gray-600 text-sm">Modifié le {project?.lastOpenedAt ? new Date(project.lastOpenedAt).toLocaleDateString() : 'Date non disponible'}</p>
-
           </div>
         </div>
       </Link>

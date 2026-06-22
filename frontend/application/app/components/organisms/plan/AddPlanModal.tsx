@@ -146,6 +146,7 @@ function AddPlanModal({ isActive, projectId, activeFolderId, onClose, createAndU
               text='Annuler'
               color='gray'
               onClick={onClose}
+              className="w-full"
             />
           </div>
 
@@ -154,6 +155,7 @@ function AddPlanModal({ isActive, projectId, activeFolderId, onClose, createAndU
             type='button'
             text='Confirmer'
             color='primary'
+            className="w-full"
             disabled={isDisabled}
             onClick={async () => {
               if(createAndUploadPlan){
