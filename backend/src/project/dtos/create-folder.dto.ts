@@ -1,8 +1,15 @@
-import { IsString, IsNotEmpty, IsUUID, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsUUID,
+  IsOptional,
+  MaxLength,
+} from 'class-validator';
 
 export class CreateFolderDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(80)
   name: string;
 
   @IsUUID() // Ou @IsString() si ce n'est pas un UUID

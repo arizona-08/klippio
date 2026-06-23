@@ -115,9 +115,6 @@ export class ProfileService {
     body: EditUserPictureDto,
   ) {
     const { zoom, offsetX, offsetY, type } = body;
-    const parsedZoom = parseFloat(zoom as unknown as string);
-    const parsedOffsetX = parseFloat(offsetX as unknown as string);
-    const parsedOffsetY = parseFloat(offsetY as unknown as string);
 
     if (!file) {
       throw new BadRequestException('Aucun fichier téléchargé');
@@ -139,17 +136,17 @@ export class ProfileService {
       },
       update: {
         storageKey: storageKey,
-        zoom: parsedZoom,
-        offsetX: parsedOffsetX,
-        offsetY: parsedOffsetY,
+        zoom,
+        offsetX,
+        offsetY,
       },
       create: {
         userId: userId,
         type: type,
         storageKey: storageKey,
-        zoom: parsedZoom,
-        offsetX: parsedOffsetX,
-        offsetY: parsedOffsetY,
+        zoom,
+        offsetX,
+        offsetY,
       },
     });
 

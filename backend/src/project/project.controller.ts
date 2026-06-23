@@ -1,11 +1,13 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Delete,
   FileTypeValidator,
   Get,
   MaxFileSizeValidator,
   Param,
+  ParseEnumPipe,
   ParseFilePipe,
   Patch,
   Post,
@@ -22,6 +24,18 @@ import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import type { User } from 'src/user/interfaces/user.interface';
 import { CreateFolderDto } from './dtos/create-folder.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { RenameDto } from 'src/common/dtos/rename.dto';
+
+enum ProjectSortBy {
+  CREATED_AT = 'createdAt',
+  LAST_OPENED_AT = 'lastOpenedAt',
+  TITLE = 'title',
+}
+
+enum SortOrder {
+  ASC = 'asc',
+  DESC = 'desc',
+}
 
 @UseGuards(AuthenticatedGuard)
 @Controller('api/projects')
@@ -40,8 +54,18 @@ export class ProjectController {
   @Get('all')
   async getProjects(
     @CurrentUser() user: User,
-    @Query('sortBy') sortBy: 'createdAt' | 'lastOpenedAt' | 'title',
-    @Query('order') order: 'asc' | 'desc',
+    @Query(
+      'sortBy',
+      new DefaultValuePipe(ProjectSortBy.LAST_OPENED_AT),
+      new ParseEnumPipe(ProjectSortBy),
+    )
+    sortBy: ProjectSortBy,
+    @Query(
+      'order',
+      new DefaultValuePipe(SortOrder.DESC),
+      new ParseEnumPipe(SortOrder),
+    )
+    order: SortOrder,
   ) {
     const userId = user.id;
     return this.projectService.getProjects(userId, sortBy, order);
@@ -50,8 +74,18 @@ export class ProjectController {
   @Get('archived')
   async getArchivedProjects(
     @CurrentUser() user: User,
-    @Query('sortBy') sortBy: 'createdAt' | 'lastOpenedAt' | 'title',
-    @Query('order') order: 'asc' | 'desc',
+    @Query(
+      'sortBy',
+      new DefaultValuePipe(ProjectSortBy.LAST_OPENED_AT),
+      new ParseEnumPipe(ProjectSortBy),
+    )
+    sortBy: ProjectSortBy,
+    @Query(
+      'order',
+      new DefaultValuePipe(SortOrder.DESC),
+      new ParseEnumPipe(SortOrder),
+    )
+    order: SortOrder,
   ) {
     const userId = user.id;
     return this.projectService.getProjects(userId, sortBy, order, true);
@@ -170,7 +204,7 @@ export class ProjectController {
   async renameFolder(
     @Param('projectId') projectId: string,
     @Param('folderId') folderId: string,
-    @Body() body: { newName: string },
+    @Body() body: RenameDto,
     @CurrentUser() user: User,
   ) {
     const { newName } = body;

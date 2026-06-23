@@ -1,18 +1,71 @@
+import { Type } from 'class-transformer';
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
+  MaxLength,
+  Min,
+  ValidateNested,
+} from 'class-validator';
+
+class ExistingMarkerPhotoUpdateDto {
+  @IsUUID()
+  identifier: string;
+
+  @IsString()
+  @MaxLength(80)
+  label: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(1000)
+  comment: string;
+}
+
+class NewMarkerPhotoDto {
+  @IsString()
+  @MaxLength(80)
+  label: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(1000)
+  comment: string;
+}
+
 export class UpdateMarkerDto {
+  @IsString()
+  @MaxLength(120)
   title: string;
+
+  @IsNumber()
+  @Min(0)
+  @Max(1)
   coordX: number;
+
+  @IsNumber()
+  @Min(0)
+  @Max(1)
   coordY: number;
 
-  existingPhotosToUpdate: {
-    identifier: string;
-    label: string;
-    comment: string;
-  }[];
+  @IsArray()
+  @ArrayMaxSize(10)
+  @ValidateNested({ each: true })
+  @Type(() => ExistingMarkerPhotoUpdateDto)
+  existingPhotosToUpdate: ExistingMarkerPhotoUpdateDto[];
 
-  newPhotosMetadata: {
-    label: string;
-    comment: string;
-  }[];
+  @IsArray()
+  @ArrayMaxSize(10)
+  @ValidateNested({ each: true })
+  @Type(() => NewMarkerPhotoDto)
+  newPhotosMetadata: NewMarkerPhotoDto[];
 
+  @IsArray()
+  @ArrayMaxSize(10)
+  @IsUUID(undefined, { each: true })
   deletedPhotoIdentifiers: string[];
 }

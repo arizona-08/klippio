@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Post,
   Put,
   Query,
@@ -20,6 +21,7 @@ import { CreateMarkerDto } from './dtos/create-marker.dto';
 import { UpdateMarkerDto } from './dtos/update-marker.dto';
 import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
 import { validateUploadedFiles } from 'src/uploads/validate-upload';
+import { parseJsonDto } from 'src/validation/parse-json-dto';
 
 @UseGuards(AuthenticatedGuard)
 @Controller('api/markers')
@@ -34,15 +36,20 @@ export class MarkerController {
     @UploadedFiles() files: Express.Multer.File[],
     @Param('projectId') projectId: string,
     @Param('planId') planId: string,
-    @Query('pageNumber') pageNumber: number,
+    @Query('pageNumber', ParseIntPipe) pageNumber: number,
     @Body('markerData') stringifiedMarkerData: string,
     @CurrentUser() user: User,
   ) {
     const userId = user.id;
 
-    const parsedMarkerData = JSON.parse(
+    const parsedMarkerData = parseJsonDto(
       stringifiedMarkerData,
-    ) as CreateMarkerDto;
+      CreateMarkerDto,
+    );
+
+    if (pageNumber < 1) {
+      throw new BadRequestException('Numéro de page invalide');
+    }
 
     if (parsedMarkerData.photosMetaData.length !== (files?.length ?? 0)) {
       throw new BadRequestException('Métadonnées photos incohérentes');
@@ -70,9 +77,13 @@ export class MarkerController {
   @Get(':planId/markers')
   async getMarkers(
     @Param('planId') planId: string,
-    @Query('pageNumber') pageNumber: number,
+    @Query('pageNumber', ParseIntPipe) pageNumber: number,
     @CurrentUser() user: User,
   ) {
+    if (pageNumber < 1) {
+      throw new BadRequestException('Numéro de page invalide');
+    }
+
     const markers = await this.markerService.getMarkers(
       planId,
       pageNumber,
@@ -94,9 +105,10 @@ export class MarkerController {
     @CurrentUser() user: User,
   ) {
     const userId = user.id;
-    const parsedMarkerData = JSON.parse(
+    const parsedMarkerData = parseJsonDto(
       stringifiedMarkerData,
-    ) as UpdateMarkerDto;
+      UpdateMarkerDto,
+    );
 
     if (parsedMarkerData.newPhotosMetadata.length !== (files?.length ?? 0)) {
       throw new BadRequestException('Métadonnées photos incohérentes');

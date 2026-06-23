@@ -18,11 +18,8 @@ import type { User } from 'src/user/interfaces/user.interface';
 import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
 import { PlanService } from './plan.service';
 import { validateUploadedFile } from 'src/uploads/validate-upload';
-
-type UploadPlanBody = {
-  name: string;
-  folderId: string;
-};
+import { UploadPlanBodyDto } from './dtos/upload-plan-body.dto';
+import { RenameDto } from 'src/common/dtos/rename.dto';
 
 @UseGuards(AuthenticatedGuard)
 @Controller('/api/plans')
@@ -43,7 +40,7 @@ export class PlanController {
     )
     file: Express.Multer.File,
     @Param('projectId') projectId: string,
-    @Body() body: UploadPlanBody,
+    @Body() body: UploadPlanBodyDto,
     @CurrentUser() user: User,
   ) {
     validateUploadedFile(file, {
@@ -93,7 +90,7 @@ export class PlanController {
   async renamePlan(
     @Param('planId') planId: string,
     @Param('projectId') projectId: string,
-    @Body() body: { newName: string },
+    @Body() body: RenameDto,
     @CurrentUser() user: User,
   ) {
     return await this.planService.renamePlan(
