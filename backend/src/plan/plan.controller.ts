@@ -17,6 +17,7 @@ import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import type { User } from 'src/user/interfaces/user.interface';
 import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
 import { PlanService } from './plan.service';
+import { validateUploadedFile } from 'src/uploads/validate-upload';
 
 type UploadPlanBody = {
   name: string;
@@ -29,7 +30,7 @@ export class PlanController {
   constructor(private readonly planService: PlanService) {}
 
   @Post('upload-plan/:projectId')
-  @UseInterceptors(FileInterceptor('file')) // 'file' est le nom du champ dans le FormData côté Next.js
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 5_000_000 } }))
   async uploadPlan(
     @UploadedFile(
       // Sécurité : On valide le type et la taille du fichier avant de l'envoyer à Amazon
@@ -45,14 +46,18 @@ export class PlanController {
     @Body() body: UploadPlanBody,
     @CurrentUser() user: User,
   ) {
-    const userId = user.id;
+    validateUploadedFile(file, {
+      allowedMimeTypes: ['image/jpeg', 'image/png', 'application/pdf'],
+      maxSizeInBytes: 5_000_000,
+    });
+
     const fileName = body.name;
     const folderId = body.folderId;
     const uploadedPlanInfo = await this.planService.uploadPlan(
       fileName,
       projectId,
       folderId,
-      userId,
+      user.id,
       file,
     );
 
@@ -63,21 +68,25 @@ export class PlanController {
   }
 
   @Get(':planId')
-  async getPlan(@Param('planId') planId: string) {
-    return await this.planService.getPlan(planId);
+  async getPlan(@Param('planId') planId: string, @CurrentUser() user: User) {
+    return await this.planService.getPlan(planId, user.id);
   }
 
   @Get('last-opened/:projectId')
-  async getLastOpenedPlan(@Param('projectId') projectId: string) {
-    return await this.planService.getLastOpenedPlan(projectId);
+  async getLastOpenedPlan(
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: User,
+  ) {
+    return await this.planService.getLastOpenedPlan(projectId, user.id);
   }
 
   @Get(':projectId/:planId')
   async getPlansByProject(
     @Param('projectId') projectId: string,
     @Param('planId') planId: string,
+    @CurrentUser() user: User,
   ) {
-    return await this.planService.getPlanById(projectId, planId);
+    return await this.planService.getPlanById(projectId, planId, user.id);
   }
 
   @Patch(':projectId/:planId/rename')
@@ -85,7 +94,13 @@ export class PlanController {
     @Param('planId') planId: string,
     @Param('projectId') projectId: string,
     @Body() body: { newName: string },
+    @CurrentUser() user: User,
   ) {
-    return await this.planService.renamePlan(planId, body.newName, projectId);
+    return await this.planService.renamePlan(
+      planId,
+      body.newName,
+      projectId,
+      user.id,
+    );
   }
 }

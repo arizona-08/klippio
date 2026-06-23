@@ -15,8 +15,7 @@ import {
 import * as crypto from 'crypto';
 import { MailService } from 'src/mail/mail.service';
 import { MailNotSendedError } from 'src/Error/MailError';
-
-type UserWithoutPassword = Omit<User, 'password'>;
+import { PublicUser, toPublicUser } from 'src/user/public-user';
 
 @Injectable()
 export class AuthService {
@@ -58,7 +57,7 @@ export class AuthService {
       lastname: registerDto.lastname,
       email: registerDto.email,
       password: registerDto.password,
-      role: registerDto.role,
+      role: 'STANDARD',
     });
     if (!newUser.ok) {
       return err(
@@ -74,7 +73,7 @@ export class AuthService {
   async login(
     email: string,
     userPassword: string,
-  ): Promise<Result<Partial<User>, InvalidCredentialsError>> {
+  ): Promise<Result<PublicUser, InvalidCredentialsError>> {
     const user = await this.userService.findOneBy('email', email);
     if (!user.ok) {
       return err(new InvalidCredentialsError('Identifiants invalides'));
@@ -88,7 +87,7 @@ export class AuthService {
       return err(new InvalidCredentialsError('Identifiants invalides'));
     }
 
-    return ok(this.removePassword(user.value));
+    return ok(toPublicUser(user.value));
   }
 
   async forgetPassword(
@@ -141,7 +140,7 @@ export class AuthService {
     newPassword: string,
     confirmNewPassword: string,
   ): Promise<
-    Result<Partial<User>, CouldNotUpdateUserError | PasswordDoNotMatchError>
+    Result<PublicUser, CouldNotUpdateUserError | PasswordDoNotMatchError>
   > {
     if (!tokenString || tokenString.length !== 96) {
       return err(
@@ -214,7 +213,7 @@ export class AuthService {
       return err(new CouldNotUpdateUserError(updatedUser.error.message));
     }
 
-    return ok(this.removePassword(updatedUser.value));
+    return ok(toPublicUser(updatedUser.value));
   }
 
   generateToken() {
@@ -242,22 +241,5 @@ export class AuthService {
     } catch {
       return false;
     }
-  }
-
-  private removePassword(user: User): UserWithoutPassword {
-    return {
-      id: user.id,
-      firstname: user.firstname,
-      lastname: user.lastname,
-      email: user.email,
-      role: user.role,
-      forgotPasswordTokenSelector: user.forgotPasswordTokenSelector,
-      forgotPasswordToken: user.forgotPasswordToken,
-      forgotPasswordTokenExpiry: user.forgotPasswordTokenExpiry,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      profilePicture: user.profilePicture,
-      bannerPicture: user.bannerPicture,
-    };
   }
 }

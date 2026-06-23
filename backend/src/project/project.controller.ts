@@ -128,32 +128,42 @@ export class ProjectController {
   // ------ FOLDERS -------
 
   @Get(':projectId/folders/root-folder')
-  async getProjectRootFolder(@Param('projectId') projectId: string) {
-    return this.projectService.getProjectRootFolder(projectId);
+  async getProjectRootFolder(
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.projectService.getProjectRootFolder(projectId, user.id);
   }
 
   @Get(':projectId/folders/:folderId')
   async getFolder(
     @Param('projectId') projectId: string,
     @Param('folderId') folderId: string,
+    @CurrentUser() user: User,
   ) {
-    return this.projectService.getFolder(folderId, projectId);
+    return this.projectService.getFolder(folderId, projectId, user.id);
   }
 
   @Post(':projectId/folders/create')
   async createFolder(
     @Param('projectId') projectId: string,
     @Body() createFolderDto: CreateFolderDto,
+    @CurrentUser() user: User,
   ) {
-    return this.projectService.createFolder(createFolderDto, projectId);
+    return this.projectService.createFolder(
+      createFolderDto,
+      projectId,
+      user.id,
+    );
   }
 
   @Delete(':projectId/folders/:folderId/delete')
   async deleteFolder(
     @Param('projectId') projectId: string,
     @Param('folderId') folderId: string,
+    @CurrentUser() user: User,
   ) {
-    return this.projectService.deleteFolder(folderId, projectId);
+    return this.projectService.deleteFolder(folderId, projectId, user.id);
   }
 
   @Patch(':projectId/folders/:folderId/rename')
@@ -161,8 +171,14 @@ export class ProjectController {
     @Param('projectId') projectId: string,
     @Param('folderId') folderId: string,
     @Body() body: { newName: string },
+    @CurrentUser() user: User,
   ) {
     const { newName } = body;
-    return this.projectService.renameFolder(folderId, newName, projectId);
+    return this.projectService.renameFolder(
+      folderId,
+      newName,
+      projectId,
+      user.id,
+    );
   }
 }

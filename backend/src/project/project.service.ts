@@ -1,5 +1,6 @@
 import {
   Body,
+  HttpException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -12,6 +13,12 @@ import { AmazonS3Service } from 'src/amazon/amazon-s3.service';
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Unknown error';
+}
+
+function rethrowKnownHttpException(error: unknown) {
+  if (error instanceof HttpException) {
+    throw error;
+  }
 }
 
 @Injectable()
@@ -42,7 +49,8 @@ export class ProjectService {
       });
 
       return createdProject;
-    } catch {
+    } catch (error: unknown) {
+      rethrowKnownHttpException(error);
       throw new InternalServerErrorException('Failed to create project');
     }
   }
@@ -61,7 +69,8 @@ export class ProjectService {
       }
 
       return project;
-    } catch {
+    } catch (error: unknown) {
+      rethrowKnownHttpException(error);
       throw new InternalServerErrorException('Failed to get project');
     }
   }
@@ -96,7 +105,8 @@ export class ProjectService {
       });
 
       return updatedProject;
-    } catch {
+    } catch (error: unknown) {
+      rethrowKnownHttpException(error);
       throw new InternalServerErrorException('Failed to update project');
     }
   }
@@ -127,7 +137,8 @@ export class ProjectService {
       });
 
       return archivedProject;
-    } catch {
+    } catch (error: unknown) {
+      rethrowKnownHttpException(error);
       throw new InternalServerErrorException('Failed to archive project');
     }
   }
@@ -158,7 +169,8 @@ export class ProjectService {
       });
 
       return unarchivedProject;
-    } catch {
+    } catch (error: unknown) {
+      rethrowKnownHttpException(error);
       throw new InternalServerErrorException('Failed to unarchive project');
     }
   }
@@ -191,6 +203,7 @@ export class ProjectService {
         deletedProjectTitle: deletedProject.title,
       };
     } catch (error: unknown) {
+      rethrowKnownHttpException(error);
       console.error(getErrorMessage(error));
       throw new InternalServerErrorException('Failed to delete project');
     }
@@ -275,11 +288,12 @@ export class ProjectService {
     }
   }
 
-  async getProjectRootFolder(projectId: string) {
+  async getProjectRootFolder(projectId: string, userId: number) {
     try {
-      const existingProject = await this.prismaService.project.findUnique({
+      const existingProject = await this.prismaService.project.findFirst({
         where: {
           id: projectId,
+          authorId: userId,
         },
       });
 
@@ -312,7 +326,8 @@ export class ProjectService {
       }
 
       return rootFolder;
-    } catch {
+    } catch (error: unknown) {
+      rethrowKnownHttpException(error);
       throw new InternalServerErrorException(
         'Failed to get project root folder',
       );
@@ -365,6 +380,7 @@ export class ProjectService {
         temporaryAccessUrl: uploadResult.temporaryAccessUrl,
       };
     } catch (error: unknown) {
+      rethrowKnownHttpException(error);
       throw new InternalServerErrorException(
         'Failed to update project thumbnail',
         getErrorMessage(error),
@@ -374,11 +390,12 @@ export class ProjectService {
 
   /* ----------------- FOLDERS -------------------- */
 
-  async getFolder(folderId: string, projectId: string) {
+  async getFolder(folderId: string, projectId: string, userId: number) {
     try {
-      const existingProject = await this.prismaService.project.findUnique({
+      const existingProject = await this.prismaService.project.findFirst({
         where: {
           id: projectId,
+          authorId: userId,
         },
       });
 
@@ -411,14 +428,41 @@ export class ProjectService {
       }
 
       return folder;
-    } catch {
+    } catch (error: unknown) {
+      rethrowKnownHttpException(error);
       throw new InternalServerErrorException('Failed to get folder');
     }
   }
 
-  async createFolder(createFolderDto: CreateFolderDto, projectId: string) {
+  async createFolder(
+    createFolderDto: CreateFolderDto,
+    projectId: string,
+    userId: number,
+  ) {
     try {
       const { name, parentFolderId } = createFolderDto;
+      const existingProject = await this.prismaService.project.findFirst({
+        where: {
+          id: projectId,
+          authorId: userId,
+        },
+        select: { id: true },
+      });
+
+      if (!existingProject) {
+        throw new NotFoundException('Project not found');
+      }
+
+      if (parentFolderId) {
+        const parentFolder = await this.prismaService.folder.findFirst({
+          where: { id: parentFolderId, projectId },
+          select: { id: true },
+        });
+
+        if (!parentFolder) {
+          throw new NotFoundException('Parent folder not found');
+        }
+      }
 
       const newFolder = await this.prismaService.folder.create({
         data: {
@@ -430,13 +474,15 @@ export class ProjectService {
       });
 
       return newFolder;
-    } catch {
+    } catch (error: unknown) {
+      rethrowKnownHttpException(error);
       throw new InternalServerErrorException('Failed to create folder');
     }
   }
 
-  async deleteFolder(folderId: string, projectId: string) {
+  async deleteFolder(folderId: string, projectId: string, userId: number) {
     try {
+      await this.assertProjectOwner(projectId, userId);
       // Vérifier que le dossier existe et appartient au projet
       const folder = await this.prismaService.folder.findFirst({
         where: {
@@ -462,13 +508,20 @@ export class ProjectService {
         success: true,
         message: 'Folder deleted successfully',
       };
-    } catch {
+    } catch (error: unknown) {
+      rethrowKnownHttpException(error);
       throw new InternalServerErrorException('Failed to delete folder');
     }
   }
 
-  async renameFolder(folderId: string, newName: string, projectId: string) {
+  async renameFolder(
+    folderId: string,
+    newName: string,
+    projectId: string,
+    userId: number,
+  ) {
     try {
+      await this.assertProjectOwner(projectId, userId);
       // Vérifier que le dossier existe et appartient au projet
       const folder = await this.prismaService.folder.findFirst({
         where: {
@@ -494,8 +547,20 @@ export class ProjectService {
       //renommer le dossier dans le S3
 
       return updatedFolder;
-    } catch {
+    } catch (error: unknown) {
+      rethrowKnownHttpException(error);
       throw new InternalServerErrorException('Failed to rename folder');
+    }
+  }
+
+  private async assertProjectOwner(projectId: string, userId: number) {
+    const project = await this.prismaService.project.findFirst({
+      where: { id: projectId, authorId: userId },
+      select: { id: true },
+    });
+
+    if (!project) {
+      throw new NotFoundException('Project not found');
     }
   }
 }

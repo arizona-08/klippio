@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { AmazonS3Service } from 'src/amazon/amazon-s3.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateMarkerDto } from './dtos/create-marker.dto';
@@ -24,6 +28,8 @@ export class MarkerService {
     files: Express.Multer.File[],
   ) {
     try {
+      await this.assertPlanAccess(projectId, planId, userId);
+
       const insertedMarker = await this.prismaService.marker.create({
         data: {
           title: markerData.title,
@@ -72,13 +78,19 @@ export class MarkerService {
         photos: markerPhotosData,
       };
     } catch (error: unknown) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+
       throw new InternalServerErrorException(
         'Error when adding marker and its photos : ' + getErrorMessage(error),
       );
     }
   }
 
-  async getMarkers(planId: string, pageNumber: number) {
+  async getMarkers(planId: string, pageNumber: number, userId: number) {
+    await this.assertPlanAccessByPlanId(planId, userId);
+
     const markers = await this.prismaService.marker.findMany({
       where: { planId, planPageNumber: pageNumber },
       include: {
@@ -118,12 +130,15 @@ export class MarkerService {
   async editMarker(
     userId: number,
     projectId: string,
+    planId: string,
     markerId: string,
     markerData: UpdateMarkerDto,
     files: Express.Multer.File[],
   ) {
     //update des données du marker
     try {
+      await this.assertMarkerAccess(markerId, planId, projectId, userId);
+
       const updatedMarker = await this.prismaService.marker.update({
         where: { id: markerId },
         data: {
@@ -135,6 +150,15 @@ export class MarkerService {
 
       const updatedExistingPhotos = await Promise.all(
         markerData.existingPhotosToUpdate.map(async (photo) => {
+          const existingPhoto = await this.prismaService.markerPhoto.findFirst({
+            where: { id: photo.identifier, markerId },
+            select: { id: true },
+          });
+
+          if (!existingPhoto) {
+            throw new NotFoundException('Photo non trouvée');
+          }
+
           const updatedPhoto = await this.prismaService.markerPhoto.update({
             where: { id: photo.identifier },
             data: {
@@ -221,6 +245,10 @@ export class MarkerService {
         },
       };
     } catch (error: unknown) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+
       console.error('Error in editMarker service method: ', error);
       throw new InternalServerErrorException(
         'Error when editing marker and its photos : ' + getErrorMessage(error),
@@ -228,8 +256,10 @@ export class MarkerService {
     }
   }
 
-  async deleteMarker(markerId: string) {
+  async deleteMarker(markerId: string, userId: number) {
     try {
+      await this.assertMarkerAccessByMarkerId(markerId, userId);
+
       await this.prismaService.markerPhoto.deleteMany({
         where: { markerId },
       });
@@ -238,9 +268,85 @@ export class MarkerService {
         where: { id: markerId },
       });
     } catch (error: unknown) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+
       throw new InternalServerErrorException(
         'Error when deleting marker and its photos : ' + getErrorMessage(error),
       );
+    }
+  }
+
+  private async assertPlanAccess(
+    projectId: string,
+    planId: string,
+    userId: number,
+  ) {
+    const plan = await this.prismaService.plan.findFirst({
+      where: {
+        id: planId,
+        projectId,
+        project: { authorId: userId },
+      },
+      select: { id: true },
+    });
+
+    if (!plan) {
+      throw new NotFoundException('Plan non trouvé');
+    }
+  }
+
+  private async assertPlanAccessByPlanId(planId: string, userId: number) {
+    const plan = await this.prismaService.plan.findFirst({
+      where: {
+        id: planId,
+        project: { authorId: userId },
+      },
+      select: { id: true },
+    });
+
+    if (!plan) {
+      throw new NotFoundException('Plan non trouvé');
+    }
+  }
+
+  private async assertMarkerAccess(
+    markerId: string,
+    planId: string,
+    projectId: string,
+    userId: number,
+  ) {
+    const marker = await this.prismaService.marker.findFirst({
+      where: {
+        id: markerId,
+        planId,
+        plan: {
+          projectId,
+          project: { authorId: userId },
+        },
+      },
+      select: { id: true },
+    });
+
+    if (!marker) {
+      throw new NotFoundException('Marqueur non trouvé');
+    }
+  }
+
+  private async assertMarkerAccessByMarkerId(markerId: string, userId: number) {
+    const marker = await this.prismaService.marker.findFirst({
+      where: {
+        id: markerId,
+        plan: {
+          project: { authorId: userId },
+        },
+      },
+      select: { id: true },
+    });
+
+    if (!marker) {
+      throw new NotFoundException('Marqueur non trouvé');
     }
   }
 }

@@ -27,14 +27,13 @@ import { CurrentUser } from './decorators/current-user.decorator';
 
 import { MailNotSendedError } from 'src/Error/MailError';
 import type { User } from 'src/user/interfaces/user.interface';
+import { toPublicUser } from 'src/user/public-user';
 
 type AuthSession = {
   userId?: number;
   role?: User['role'];
   destroy: (callback?: (err?: Error) => void) => void;
 };
-
-type UserWithoutPassword = Omit<User, 'password'>;
 
 @Controller('api/auth')
 export class AuthController {
@@ -56,7 +55,7 @@ export class AuthController {
 
     return {
       message: 'Inscription réussie',
-      user: this.removePassword(newUser.value),
+      user: toPublicUser(newUser.value),
     };
   }
 
@@ -84,7 +83,7 @@ export class AuthController {
   @UseGuards(AuthenticatedGuard)
   @Get('me')
   me(@CurrentUser() user: User) {
-    return user;
+    return toPublicUser(user);
   }
 
   @UseGuards(AuthenticatedGuard)
@@ -135,23 +134,6 @@ export class AuthController {
     return {
       message: 'Mot de passe réinitialisé avec succès.',
       user: result.value,
-    };
-  }
-
-  private removePassword(user: User): UserWithoutPassword {
-    return {
-      id: user.id,
-      firstname: user.firstname,
-      lastname: user.lastname,
-      email: user.email,
-      role: user.role,
-      forgotPasswordTokenSelector: user.forgotPasswordTokenSelector,
-      forgotPasswordToken: user.forgotPasswordToken,
-      forgotPasswordTokenExpiry: user.forgotPasswordTokenExpiry,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      profilePicture: user.profilePicture,
-      bannerPicture: user.bannerPicture,
     };
   }
 }

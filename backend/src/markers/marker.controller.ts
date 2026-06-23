@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -18,6 +19,7 @@ import type { User } from 'src/user/interfaces/user.interface';
 import { CreateMarkerDto } from './dtos/create-marker.dto';
 import { UpdateMarkerDto } from './dtos/update-marker.dto';
 import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
+import { validateUploadedFiles } from 'src/uploads/validate-upload';
 
 @UseGuards(AuthenticatedGuard)
 @Controller('api/markers')
@@ -25,7 +27,9 @@ export class MarkerController {
   constructor(private readonly markerService: MarkerService) {}
 
   @Post(':projectId/:planId/marker')
-  @UseInterceptors(FilesInterceptor('photos'))
+  @UseInterceptors(
+    FilesInterceptor('photos', 10, { limits: { fileSize: 5_000_000 } }),
+  )
   async addMarker(
     @UploadedFiles() files: Express.Multer.File[],
     @Param('projectId') projectId: string,
@@ -39,13 +43,26 @@ export class MarkerController {
     const parsedMarkerData = JSON.parse(
       stringifiedMarkerData,
     ) as CreateMarkerDto;
+
+    if (parsedMarkerData.photosMetaData.length !== (files?.length ?? 0)) {
+      throw new BadRequestException('Métadonnées photos incohérentes');
+    }
+
+    if (files?.length) {
+      validateUploadedFiles(files, {
+        allowedMimeTypes: ['image/jpeg', 'image/png'],
+        maxFiles: 10,
+        maxSizeInBytes: 5_000_000,
+      });
+    }
+
     const result = await this.markerService.addMarker(
       userId,
       projectId,
       planId,
       pageNumber,
       parsedMarkerData,
-      files,
+      files ?? [],
     );
     return result;
   }
@@ -54,15 +71,23 @@ export class MarkerController {
   async getMarkers(
     @Param('planId') planId: string,
     @Query('pageNumber') pageNumber: number,
+    @CurrentUser() user: User,
   ) {
-    const markers = await this.markerService.getMarkers(planId, pageNumber);
+    const markers = await this.markerService.getMarkers(
+      planId,
+      pageNumber,
+      user.id,
+    );
     return { markers };
   }
 
   @Put(':projectId/:planId/:markerId')
-  @UseInterceptors(FilesInterceptor('newPhotos'))
+  @UseInterceptors(
+    FilesInterceptor('newPhotos', 10, { limits: { fileSize: 5_000_000 } }),
+  )
   async editMarker(
     @Param('projectId') projectId: string,
+    @Param('planId') planId: string,
     @Param('markerId') markerId: string,
     @Body('markerData') stringifiedMarkerData: string,
     @UploadedFiles() files: Express.Multer.File[],
@@ -72,19 +97,36 @@ export class MarkerController {
     const parsedMarkerData = JSON.parse(
       stringifiedMarkerData,
     ) as UpdateMarkerDto;
+
+    if (parsedMarkerData.newPhotosMetadata.length !== (files?.length ?? 0)) {
+      throw new BadRequestException('Métadonnées photos incohérentes');
+    }
+
+    if (files?.length) {
+      validateUploadedFiles(files, {
+        allowedMimeTypes: ['image/jpeg', 'image/png'],
+        maxFiles: 10,
+        maxSizeInBytes: 5_000_000,
+      });
+    }
+
     const result = await this.markerService.editMarker(
       userId,
       projectId,
+      planId,
       markerId,
       parsedMarkerData,
-      files,
+      files ?? [],
     );
     return result;
   }
 
   @Delete(':markerId')
-  async deleteMarker(@Param('markerId') markerId: string) {
-    await this.markerService.deleteMarker(markerId);
+  async deleteMarker(
+    @Param('markerId') markerId: string,
+    @CurrentUser() user: User,
+  ) {
+    await this.markerService.deleteMarker(markerId, user.id);
     return {
       success: true,
       message: 'Marqueur supprimé avec succès',

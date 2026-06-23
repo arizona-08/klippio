@@ -15,6 +15,7 @@ import type { User } from 'src/user/interfaces/user.interface';
 import { EditPasswordDto } from './dtos/edit-password.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { EditUserPictureDto } from './dtos/edit-profile-picture.dto';
+import { validateUploadedFile } from 'src/uploads/validate-upload';
 
 @UseGuards(AuthenticatedGuard)
 @Controller('api/profile')
@@ -46,12 +47,17 @@ export class ProfileController {
   }
 
   @Patch('edit-user-picture')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 5_000_000 } }))
   async editUserPicture(
     @UploadedFile() file: Express.Multer.File,
     @Body() body: EditUserPictureDto,
     @CurrentUser() user: User,
   ) {
+    validateUploadedFile(file, {
+      allowedMimeTypes: ['image/jpeg', 'image/png'],
+      maxSizeInBytes: 5_000_000,
+    });
+
     const updatedUser = await this.profileService.editUserPicture(
       user.id,
       file,

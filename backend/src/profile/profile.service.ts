@@ -5,6 +5,7 @@ import { EditPasswordDto } from './dtos/edit-password.dto';
 import * as bcrypt from 'bcryptjs';
 import { AmazonS3Service } from 'src/amazon/amazon-s3.service';
 import { EditUserPictureDto } from './dtos/edit-profile-picture.dto';
+import { toPublicUser } from 'src/user/public-user';
 
 function getErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
@@ -56,18 +57,7 @@ export class ProfileService {
     });
 
     return {
-      user: {
-        id: updatedUser.id,
-        email: updatedUser.email,
-        firstname: updatedUser.firstname,
-        lastname: updatedUser.lastname,
-        role: updatedUser.role,
-        forgotPasswordTokenSelector: updatedUser.forgotPasswordTokenSelector,
-        forgotPasswordToken: updatedUser.forgotPasswordToken,
-        forgotPasswordTokenExpiry: updatedUser.forgotPasswordTokenExpiry,
-        createdAt: updatedUser.createdAt,
-        updatedAt: updatedUser.updatedAt,
-      },
+      user: toPublicUser(updatedUser),
       success: true,
       message: 'Informations personnelles mises à jour avec succès',
     };
