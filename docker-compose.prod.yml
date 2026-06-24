@@ -1,5 +1,19 @@
 services:
 
+  frontend_landing:
+    container_name: frontend-landing
+    build: 
+      context: ./frontend/marketing
+      dockerfile: Dockerfile.prod
+    ports:
+      - "3001:3000"
+    env_file:
+      - ./frontend/marketing/.env
+    depends_on:
+      - backend
+    networks:
+      - klippio-network
+
   frontend:
     container_name: frontend-app
     build: 
@@ -36,17 +50,7 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
-    networks:
-      - klippio-network
-
-  # Ajouter mailpit
-  mailer:
-    container_name: mailer
-    image: axllent/mailpit
-    ports:
-      - "8025:8025"
-      - "1025:1025"
+      - "5432"
     networks:
       - klippio-network
 
