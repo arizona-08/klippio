@@ -1,17 +1,33 @@
-import { Controller, Post, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator, Req, Param, UseGuards, Body, Get, UploadedFiles, Delete, Put, Patch } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
+  Param,
+  UseGuards,
+  Body,
+  Get,
+  Patch,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import type { User } from 'src/user/interfaces/user.interface';
 import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
 import { PlanService } from './plan.service';
+import { validateUploadedFile } from 'src/uploads/validate-upload';
+import { UploadPlanBodyDto } from './dtos/upload-plan-body.dto';
+import { RenameDto } from 'src/common/dtos/rename.dto';
 
-@UseGuards(AuthenticatedGuard) 
+@UseGuards(AuthenticatedGuard)
 @Controller('/api/plans')
 export class PlanController {
   constructor(private readonly planService: PlanService) {}
 
   @Post('upload-plan/:projectId')
-  @UseInterceptors(FileInterceptor('file')) // 'file' est le nom du champ dans le FormData côté Next.js
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 5_000_000 } }))
   async uploadPlan(
     @UploadedFile(
       // Sécurité : On valide le type et la taille du fichier avant de l'envoyer à Amazon
@@ -24,14 +40,23 @@ export class PlanController {
     )
     file: Express.Multer.File,
     @Param('projectId') projectId: string,
-    @Body() body :any,
+    @Body() body: UploadPlanBodyDto,
     @CurrentUser() user: User,
   ) {
-    
-    const userId = user.id;
+    validateUploadedFile(file, {
+      allowedMimeTypes: ['image/jpeg', 'image/png', 'application/pdf'],
+      maxSizeInBytes: 5_000_000,
+    });
+
     const fileName = body.name;
     const folderId = body.folderId;
-    const uploadedPlanInfo = await this.planService.uploadPlan(fileName, projectId, folderId, userId, file);
+    const uploadedPlanInfo = await this.planService.uploadPlan(
+      fileName,
+      projectId,
+      folderId,
+      user.id,
+      file,
+    );
 
     return {
       message: 'Fichier sauvegardé avec succès',
@@ -40,23 +65,39 @@ export class PlanController {
   }
 
   @Get(':planId')
-  async getPlan(@Param('planId') planId: string) {
-    return await this.planService.getPlan(planId);
+  async getPlan(@Param('planId') planId: string, @CurrentUser() user: User) {
+    return await this.planService.getPlan(planId, user.id);
   }
 
   @Get('last-opened/:projectId')
-  async getLastOpenedPlan(@Param('projectId') projectId: string) {
-    return await this.planService.getLastOpenedPlan(projectId);
+  async getLastOpenedPlan(
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: User,
+  ) {
+    return await this.planService.getLastOpenedPlan(projectId, user.id);
   }
 
   @Get(':projectId/:planId')
-  async getPlansByProject(@Param('projectId') projectId: string, @Param('planId') planId: string) {
-    return await this.planService.getPlanById(projectId, planId);
+  async getPlansByProject(
+    @Param('projectId') projectId: string,
+    @Param('planId') planId: string,
+    @CurrentUser() user: User,
+  ) {
+    return await this.planService.getPlanById(projectId, planId, user.id);
   }
 
   @Patch(':projectId/:planId/rename')
-  async renamePlan(@Param('planId') planId: string, @Param('projectId') projectId: string, @Body() body: { newName: string, }) {
-    return await this.planService.renamePlan(planId, body.newName, projectId);
+  async renamePlan(
+    @Param('planId') planId: string,
+    @Param('projectId') projectId: string,
+    @Body() body: RenameDto,
+    @CurrentUser() user: User,
+  ) {
+    return await this.planService.renamePlan(
+      planId,
+      body.newName,
+      projectId,
+      user.id,
+    );
   }
-
 }

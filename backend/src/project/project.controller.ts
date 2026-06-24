@@ -1,67 +1,133 @@
-import { Body, Controller, Delete, FileTypeValidator, Get, MaxFileSizeValidator, Param, ParseFilePipe, Patch, Post, Put, Query, Req, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
-import { AuthenticatedGuard } from "src/auth/authenticated.guard";
-import { CreateProjectDTO } from "./dtos/create-project.dto";
-import { ProjectService } from "./project.service";
-import { CurrentUser } from "src/auth/decorators/current-user.decorator";
-import type { User } from "src/user/interfaces/user.interface";
-import { CreateFolderDto } from "./dtos/create-folder.dto";
-import { FileInterceptor } from "@nestjs/platform-express";
+import {
+  Body,
+  Controller,
+  DefaultValuePipe,
+  Delete,
+  FileTypeValidator,
+  Get,
+  MaxFileSizeValidator,
+  Param,
+  ParseEnumPipe,
+  ParseFilePipe,
+  Patch,
+  Post,
+  Put,
+  Query,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
+import { CreateProjectDTO } from './dtos/create-project.dto';
+import { ProjectService } from './project.service';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import type { User } from 'src/user/interfaces/user.interface';
+import { CreateFolderDto } from './dtos/create-folder.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { RenameDto } from 'src/common/dtos/rename.dto';
+
+enum ProjectSortBy {
+  CREATED_AT = 'createdAt',
+  LAST_OPENED_AT = 'lastOpenedAt',
+  TITLE = 'title',
+}
+
+enum SortOrder {
+  ASC = 'asc',
+  DESC = 'desc',
+}
 
 @UseGuards(AuthenticatedGuard)
 @Controller('api/projects')
 export class ProjectController {
-  constructor(private readonly projectService: ProjectService){}
+  constructor(private readonly projectService: ProjectService) {}
 
-  
   @Post('create')
-  async createProject(@Body() createProjectDto: CreateProjectDTO, @CurrentUser() user: User){
+  async createProject(
+    @Body() createProjectDto: CreateProjectDTO,
+    @CurrentUser() user: User,
+  ) {
     const userId = user.id;
     return this.projectService.createProject(createProjectDto, userId);
   }
 
-  
   @Get('all')
   async getProjects(
     @CurrentUser() user: User,
-    @Query('sortBy') sortBy: "createdAt" | "lastOpenedAt" | "title",
-    @Query('order') order: 'asc' | 'desc'
+    @Query(
+      'sortBy',
+      new DefaultValuePipe(ProjectSortBy.LAST_OPENED_AT),
+      new ParseEnumPipe(ProjectSortBy),
+    )
+    sortBy: ProjectSortBy,
+    @Query(
+      'order',
+      new DefaultValuePipe(SortOrder.DESC),
+      new ParseEnumPipe(SortOrder),
+    )
+    order: SortOrder,
   ) {
     const userId = user.id;
     return this.projectService.getProjects(userId, sortBy, order);
   }
 
-  
   @Get('archived')
   async getArchivedProjects(
     @CurrentUser() user: User,
-    @Query('sortBy') sortBy: "createdAt" | "lastOpenedAt" | "title",
-    @Query('order') order: 'asc' | 'desc'
+    @Query(
+      'sortBy',
+      new DefaultValuePipe(ProjectSortBy.LAST_OPENED_AT),
+      new ParseEnumPipe(ProjectSortBy),
+    )
+    sortBy: ProjectSortBy,
+    @Query(
+      'order',
+      new DefaultValuePipe(SortOrder.DESC),
+      new ParseEnumPipe(SortOrder),
+    )
+    order: SortOrder,
   ) {
     const userId = user.id;
     return this.projectService.getProjects(userId, sortBy, order, true);
   }
 
-  @Get(":projectId")
-  async getProjectById(@Param('projectId') projectId: string, @CurrentUser() user: User) {
+  @Get(':projectId')
+  async getProjectById(
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: User,
+  ) {
     const userId = user.id;
-    return this.projectService.getProject(userId, projectId)
+    return this.projectService.getProject(userId, projectId);
   }
 
-  
   @Put(':projectId/update')
-  async updateProject(@Param('projectId') projectId: string, @Body() createProjectDto: CreateProjectDTO, @CurrentUser() user: User){
+  async updateProject(
+    @Param('projectId') projectId: string,
+    @Body() createProjectDto: CreateProjectDTO,
+    @CurrentUser() user: User,
+  ) {
     const userId = user.id;
-    return this.projectService.updateProject(projectId, createProjectDto, userId);
+    return this.projectService.updateProject(
+      projectId,
+      createProjectDto,
+      userId,
+    );
   }
 
   @Put(':projectId/archive')
-  async archiveProject(@Param('projectId') projectId: string, @CurrentUser() user: User){
+  async archiveProject(
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: User,
+  ) {
     const userId = user.id;
     return this.projectService.archiveProject(projectId, userId);
   }
 
   @Put(':projectId/unarchive')
-  async unarchiveProject(@Param('projectId') projectId: string, @CurrentUser() user: User){
+  async unarchiveProject(
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: User,
+  ) {
     const userId = user.id;
     return this.projectService.unarchiveProject(projectId, userId);
   }
@@ -74,46 +140,79 @@ export class ProjectController {
         validators: [
           new MaxFileSizeValidator({ maxSize: 5000000 }), // Limite à 5 Mégaoctets
           new FileTypeValidator({ fileType: /(jpg|jpeg|png)$/ }), // Accepte uniquement les images
-        ]
-      })
-    ) file: Express.Multer.File,
+        ],
+      }),
+    )
+    file: Express.Multer.File,
     @Param('projectId') projectId: string,
-    @CurrentUser() user: User
+    @CurrentUser() user: User,
   ) {
     const userId = user.id;
     return this.projectService.updateProjectThumbnail(userId, projectId, file);
   }
 
   @Delete(':projectId/delete')
-  async deleteProject(@Param('projectId') projectId: string, @CurrentUser() user: User){
-    return this.projectService.deleteProject(projectId, user.id)
+  async deleteProject(
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.projectService.deleteProject(projectId, user.id);
   }
 
-    // ------ FOLDERS -------
+  // ------ FOLDERS -------
 
   @Get(':projectId/folders/root-folder')
-  async getProjectRootFolder(@Param('projectId') projectId: string) {
-    return this.projectService.getProjectRootFolder(projectId);
+  async getProjectRootFolder(
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.projectService.getProjectRootFolder(projectId, user.id);
   }
 
   @Get(':projectId/folders/:folderId')
-  async getFolder(@Param('projectId') projectId: string, @Param('folderId') folderId: string) {
-    return this.projectService.getFolder(folderId, projectId);
+  async getFolder(
+    @Param('projectId') projectId: string,
+    @Param('folderId') folderId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.projectService.getFolder(folderId, projectId, user.id);
   }
 
   @Post(':projectId/folders/create')
-  async createFolder(@Param('projectId') projectId: string, @Body() createFolderDto: CreateFolderDto) {
-    return this.projectService.createFolder(createFolderDto, projectId);
+  async createFolder(
+    @Param('projectId') projectId: string,
+    @Body() createFolderDto: CreateFolderDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.projectService.createFolder(
+      createFolderDto,
+      projectId,
+      user.id,
+    );
   }
 
   @Delete(':projectId/folders/:folderId/delete')
-  async deleteFolder(@Param('projectId') projectId: string, @Param('folderId') folderId: string) {
-    return this.projectService.deleteFolder(folderId, projectId);
+  async deleteFolder(
+    @Param('projectId') projectId: string,
+    @Param('folderId') folderId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.projectService.deleteFolder(folderId, projectId, user.id);
   }
 
   @Patch(':projectId/folders/:folderId/rename')
-  async renameFolder(@Param('projectId') projectId: string, @Param('folderId') folderId: string, @Body() body: { newName: string }) {
+  async renameFolder(
+    @Param('projectId') projectId: string,
+    @Param('folderId') folderId: string,
+    @Body() body: RenameDto,
+    @CurrentUser() user: User,
+  ) {
     const { newName } = body;
-    return this.projectService.renameFolder(folderId, newName, projectId);
+    return this.projectService.renameFolder(
+      folderId,
+      newName,
+      projectId,
+      user.id,
+    );
   }
 }

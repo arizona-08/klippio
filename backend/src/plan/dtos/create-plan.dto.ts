@@ -1,3 +1,1 @@
-export class CreatePlanDto {
-  
-}
+export class CreatePlanDto {}

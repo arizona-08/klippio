@@ -1,19 +1,35 @@
-import { Injectable, InternalServerErrorException } from "@nestjs/common";
-import { AmazonS3Service } from "src/amazon/amazon-s3.service";
-import { PrismaService } from "src/prisma/prisma.service";
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
+import { AmazonS3Service } from 'src/amazon/amazon-s3.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class PlanService {
-  constructor(private readonly amazonS3Service: AmazonS3Service, private readonly prismaService: PrismaService){}
+  constructor(
+    private readonly amazonS3Service: AmazonS3Service,
+    private readonly prismaService: PrismaService,
+  ) {}
 
-  async uploadPlan(name: string, projectId: string, folderId: string,  userId: number, file: Express.Multer.File) {
-    const { storageKey, temporaryAccessUrl } = await this.amazonS3Service.uploadImage({
-      type: "PLAN",
-      file,
-      userId,
-      projectId,
-    });
+  async uploadPlan(
+    name: string,
+    projectId: string,
+    folderId: string,
+    userId: number,
+    file: Express.Multer.File,
+  ) {
+    await this.assertProjectAccess(projectId, userId);
+    await this.assertFolderBelongsToProject(folderId, projectId);
 
+    const { storageKey, temporaryAccessUrl } =
+      await this.amazonS3Service.uploadImage({
+        type: 'PLAN',
+        file,
+        userId,
+        projectId,
+      });
 
     try {
       const insertedPlan = await this.prismaService.plan.create({
@@ -26,27 +42,38 @@ export class PlanService {
         },
       });
 
-      return {...insertedPlan, temporaryAccessUrl};
+      return { ...insertedPlan, temporaryAccessUrl };
     } catch (error) {
-      console.error("Error when saving plan info in database: ", error);
-      throw new InternalServerErrorException("Erreur lors de l'enregistrement du plan en base de données");
+      console.error('Error when saving plan info in database: ', error);
+      throw new InternalServerErrorException(
+        "Erreur lors de l'enregistrement du plan en base de données",
+      );
     }
   }
 
-  async getPlan(planId: string) {
+  async getPlan(planId: string, userId: number) {
     const existingPlan = await this.prismaService.plan.findUnique({
       where: { id: planId },
+      include: {
+        project: {
+          select: { authorId: true },
+        },
+      },
     });
 
-    if (!existingPlan) {
-      throw new InternalServerErrorException("Plan non trouvé");
+    if (!existingPlan || existingPlan.project.authorId !== userId) {
+      throw new NotFoundException('Plan non trouvé');
     }
 
-    const newTemporaryAccessUrl = await this.amazonS3Service.generatePresignedUrl(existingPlan.documentStorageKey, 3600);
+    const newTemporaryAccessUrl =
+      await this.amazonS3Service.generatePresignedUrl(
+        existingPlan.documentStorageKey,
+        3600,
+      );
 
     const updatedPlan = await this.prismaService.plan.update({
       where: { id: planId },
-      data: { 
+      data: {
         temporaryAccessUrl: newTemporaryAccessUrl,
         lastOpenedAt: new Date(), // Met à jour la date de dernière ouverture
       },
@@ -57,23 +84,35 @@ export class PlanService {
       name: updatedPlan.name,
       documentStorageKey: updatedPlan.documentStorageKey,
       temporaryAccessUrl: updatedPlan.temporaryAccessUrl,
-    }
+    };
   }
 
-  async getPlanById(projectId: string, planId: string) {
+  async getPlanById(projectId: string, planId: string, userId: number) {
     const existingPlan = await this.prismaService.plan.findFirst({
-      where: { id: planId, projectId },
+      where: { id: planId, projectId, project: { authorId: userId } },
+      include: {
+        project: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
     });
 
     if (!existingPlan) {
-      throw new InternalServerErrorException("Plan non trouvé");
+      throw new NotFoundException('Plan non trouvé');
     }
 
-    const newTemporaryAccessUrl = await this.amazonS3Service.generatePresignedUrl(existingPlan.documentStorageKey, 3600);
+    const newTemporaryAccessUrl =
+      await this.amazonS3Service.generatePresignedUrl(
+        existingPlan.documentStorageKey,
+        3600,
+      );
 
     const updatedPlan = await this.prismaService.plan.update({
       where: { id: planId },
-      data: { 
+      data: {
         temporaryAccessUrl: newTemporaryAccessUrl,
         lastOpenedAt: new Date(), // Met à jour la date de dernière ouverture
       },
@@ -84,10 +123,13 @@ export class PlanService {
       name: updatedPlan.name,
       documentStorageKey: updatedPlan.documentStorageKey,
       temporaryAccessUrl: updatedPlan.temporaryAccessUrl,
-    }
+      project: existingPlan.project,
+    };
   }
 
-  async getLastOpenedPlan(projectId: string) {
+  async getLastOpenedPlan(projectId: string, userId: number) {
+    await this.assertProjectAccess(projectId, userId);
+
     const lastOpenedPlan = await this.prismaService.plan.findFirst({
       where: { projectId },
       orderBy: { lastOpenedAt: 'desc' },
@@ -96,23 +138,27 @@ export class PlanService {
           select: {
             id: true,
             title: true,
-          }
+          },
         },
 
         folder: {
           select: {
             id: true,
             name: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     if (!lastOpenedPlan) {
-      return null; 
+      return null;
     }
 
-    const newTemporaryAccessUrl = await this.amazonS3Service.generatePresignedUrl(lastOpenedPlan.documentStorageKey, 3600);
+    const newTemporaryAccessUrl =
+      await this.amazonS3Service.generatePresignedUrl(
+        lastOpenedPlan.documentStorageKey,
+        3600,
+      );
 
     return {
       id: lastOpenedPlan.id,
@@ -122,23 +168,63 @@ export class PlanService {
       project: lastOpenedPlan.project,
       folder: lastOpenedPlan.folder,
     };
-   }
+  }
 
-  
-   async renamePlan(planId: string, newName: string, projectId: string) {
+  async renamePlan(
+    planId: string,
+    newName: string,
+    projectId: string,
+    userId: number,
+  ) {
     try {
+      const existingPlan = await this.prismaService.plan.findFirst({
+        where: { id: planId, projectId, project: { authorId: userId } },
+      });
+
+      if (!existingPlan) {
+        throw new NotFoundException('Plan non trouvé');
+      }
+
       const updatedPlan = await this.prismaService.plan.update({
-        where: { id: planId, projectId },
+        where: { id: planId },
         data: { name: newName },
       });
 
       return updatedPlan;
     } catch (error) {
-      console.error("Error when renaming plan: ", error);
-      throw new InternalServerErrorException("Erreur lors du renommage du plan");
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+
+      console.error('Error when renaming plan: ', error);
+      throw new InternalServerErrorException(
+        'Erreur lors du renommage du plan',
+      );
     }
   }
 
-  
+  private async assertProjectAccess(projectId: string, userId: number) {
+    const project = await this.prismaService.project.findFirst({
+      where: { id: projectId, authorId: userId },
+      select: { id: true },
+    });
 
+    if (!project) {
+      throw new NotFoundException('Projet non trouvé');
+    }
+  }
+
+  private async assertFolderBelongsToProject(
+    folderId: string,
+    projectId: string,
+  ) {
+    const folder = await this.prismaService.folder.findFirst({
+      where: { id: folderId, projectId },
+      select: { id: true },
+    });
+
+    if (!folder) {
+      throw new NotFoundException('Dossier non trouvé');
+    }
+  }
 }

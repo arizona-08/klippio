@@ -1,11 +1,14 @@
-import { IsNotEmpty, IsString } from "class-validator";
+import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
 
-export class ResetPasswordDTO{
+export class ResetPasswordDTO {
   @IsString()
   @IsNotEmpty()
+  @MinLength(10)
+  @MaxLength(128)
   newPassword: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(128)
   confirmNewPassword: string;
 }
