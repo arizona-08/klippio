@@ -2,6 +2,8 @@ services:
 
   reverse-proxy:
       image: traefik:v3.0
+      restart: unless-stopped
+      container_name: traefik
       command:
         - "--providers.docker=true"
         - "--providers.docker.exposedbydefault=false"
@@ -14,64 +16,72 @@ services:
         - "443:443"
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock:ro
+      networks:
+        - klippio-network
 
   frontend_landing:
+    restart: unless-stopped
     container_name: frontend-landing
     build: 
       context: ./frontend/marketing
       dockerfile: Dockerfile.prod
-    ports:
-      - "3001:3000"
     env_file:
       - ./frontend/marketing/.env
-    depends_on:
-      - backend
     networks:
       - klippio-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend-landing.rule=Host(`klippio.sajed-engineering.com`)" # 💡 Ton sous-domaine Application
+      - "traefik.http.routers.frontend-landing.entrypoints=websecure"
+      - "traefik.http.routers.frontend-landing.tls.certresolver=myresolver"
+      - "traefik.http.services.frontend-landing.loadbalancer.server.port=3000"
 
   frontend:
+    restart: unless-stopped
     container_name: frontend-app
     build: 
       context: ./frontend/application
       dockerfile: Dockerfile.prod
-    ports:
-      - "3000:3000"
     env_file:
       - ./frontend/application/.env
     depends_on:
       - backend
     networks:
       - klippio-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend-app.rule=Host(`app.klippio.sajed-engineering.com`)" # 💡 Ton sous-domaine Application
+      - "traefik.http.routers.frontend-app.entrypoints=websecure"
+      - "traefik.http.routers.frontend-app.tls.certresolver=myresolver"
+      - "traefik.http.services.frontend-app.loadbalancer.server.port=3000"
 
   backend:
+    restart: unless-stopped
     container_name: backend
     build:
       context: ./backend
       dockerfile: Dockerfile.prod
-    # ports:
-    #   - "8000:8000"
     env_file:
       - ./backend/.env
     networks:
       - klippio-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`api.klippio.fr`)" # 💡 Ton sous-domaine API
+      - "traefik.http.routers.backend.rule=Host(`api.klippio.sajed-engineering.com`)"
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls.certresolver=myresolver"
       - "traefik.http.services.backend.loadbalancer.server.port=8000"
 
   db:
+    restart: unless-stopped
     container_name: db
-    image: postgres:latest
+    image: postgres:18
     environment:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
     volumes:
       - db_data:/var/lib/postgresql/data
-    ports:
-      - "5432"
     networks:
       - klippio-network
 
