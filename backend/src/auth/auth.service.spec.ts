@@ -30,9 +30,9 @@ describe('AuthService password reset', () => {
     };
 
     const mailService = {
-      resetPasswordMailOptions: jest.fn(
-        (_from: string, _to: string, resetLink: string) => ({ resetLink }),
-      ),
+      resetPasswordMailOptions: jest.fn((_to: string, resetLink: string) => ({
+        resetLink,
+      })),
       sendMail: jest.fn(),
     };
 
@@ -62,9 +62,9 @@ describe('AuthService password reset', () => {
       [number, ForgotPasswordUpdatePayload]
     >;
     const resetMailCalls = mailService.resetPasswordMailOptions.mock
-      .calls as Array<[string, string, string]>;
+      .calls as Array<[string, string]>;
     const updatePayload = updateCalls[0][1];
-    const resetLink = resetMailCalls[0][2];
+    const resetLink = resetMailCalls[0][1];
     const tokenString = new URL(resetLink).searchParams.get('token');
 
     expect(tokenString).toHaveLength(96);

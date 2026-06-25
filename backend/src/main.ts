@@ -33,6 +33,10 @@ function getSessionSecret(): string {
   return 'development-session-secret-change-me';
 }
 
+function getSessionCookieDomain(): string | undefined {
+  return process.env.SESSION_COOKIE_DOMAIN?.trim() || undefined;
+}
+
 function getRequestOrigin(request: Request): string | null {
   const origin = request.get('origin');
   if (origin) return origin;
@@ -130,6 +134,7 @@ async function bootstrap() {
     resave: false,
     saveUninitialized: false,
     cookie: {
+      domain: getSessionCookieDomain(),
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',

@@ -3,6 +3,13 @@
 # Stoppe le script si une commande échoue
 set -e
 
+echo "⏳ Attente du démarrage complet de la base de données..."
+# On utilise la commande native du shell pour attendre que le port 5432 de ton conteneur 'db' réponde
+while ! nc -z db 5432; do
+  sleep 0.5
+done
+echo "✅ Base de données prête !"
+
 # 1. Exécute la migration de la base de données
 echo "Running database migrations..."
 npx prisma migrate deploy

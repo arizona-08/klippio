@@ -122,7 +122,6 @@ export class AuthService {
     const frontendURL = process.env.FRONTEND_URL;
     const resetLink = `${frontendURL}/auth/reset-password?token=${tokenString}`;
     const resetMail = this.mailService.resetPasswordMailOptions(
-      'team@klippio.com',
       email,
       resetLink,
     );

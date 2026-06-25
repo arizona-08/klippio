@@ -1,21 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import nodemailer from 'nodemailer';
 import { MailerOptionInterface } from './interfaces/MailerOptionInterface';
 import { err, ok } from 'src/Error/Result';
 import { MailNotSendedError } from 'src/Error/MailError';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class MailService {
-  getTransporter() {
-    const mailerDSN = process.env.MAILER_DSN;
-    const transporter = nodemailer.createTransport(mailerDSN);
+  constructor(private readonly mailerService: MailerService) {}
 
-    return transporter;
-  }
-
-  resetPasswordMailOptions(from: string, to: string, resetLink: string) {
+  resetPasswordMailOptions(to: string, resetLink: string) {
     const mailerOptions: MailerOptionInterface = {
-      from: `Team Klippio <${from}>`,
+      from: process.env.SMTP_FROM as string,
       to: to,
       subject: 'Réinitialisation du mot de passe',
       html: `<div>
@@ -30,8 +25,7 @@ export class MailService {
 
   async sendMail(mailOptions: MailerOptionInterface) {
     try {
-      const transporter = this.getTransporter();
-      await transporter.sendMail(mailOptions);
+      await this.mailerService.sendMail(mailOptions);
       return ok('Le message a bien été envoyé');
     } catch (error: any) {
       return err(
