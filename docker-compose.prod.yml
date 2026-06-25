@@ -30,9 +30,7 @@ services:
   frontend_landing:
     restart: unless-stopped
     container_name: frontend-landing
-    build: 
-      context: ./frontend/marketing
-      dockerfile: Dockerfile.prod
+    image: ghcr.io/arizona-08/klippio-marketing:latest
     env_file:
       - ./frontend/marketing/.env
     networks:
@@ -47,9 +45,7 @@ services:
   frontend:
     restart: unless-stopped
     container_name: frontend-app
-    build: 
-      context: ./frontend/application
-      dockerfile: Dockerfile.prod
+    image: ghcr.io/arizona-08/klippio-app:latest
     env_file:
       - ./frontend/application/.env
     depends_on:
@@ -66,9 +62,7 @@ services:
   backend:
     restart: unless-stopped
     container_name: backend
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.prod
+    image: ghcr.io/arizona-08/klippio-backend:latest
     env_file:
       - ./backend/.env
     networks:
