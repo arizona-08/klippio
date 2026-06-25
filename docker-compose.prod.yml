@@ -34,7 +34,7 @@ services:
       - "traefik.http.routers.frontend-landing.rule=Host(`klippio.sajed-engineering.com`)" # 💡 Ton sous-domaine Application
       - "traefik.http.routers.frontend-landing.entrypoints=websecure"
       - "traefik.http.routers.frontend-landing.tls.certresolver=myresolver"
-      - "traefik.http.services.frontend-landing.loadbalancer.server.port=3000"
+      - "traefik.http.services.frontend-landing.loadbalancer.server.port=3001"
 
   frontend:
     restart: unless-stopped
