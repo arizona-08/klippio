@@ -9,9 +9,12 @@ services:
         - "--providers.docker.exposedbydefault=false"
         - "--providers.docker.endpoint=unix:///var/run/docker.sock"
         - "--entrypoints.web.address=:80"
+        - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+        - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
         - "--entrypoints.websecure.address=:443"
         - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
         - "--certificatesresolvers.myresolver.acme.email=marc.assi@sajed-engineering.com"
+        - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
       environment:
       # Force Traefik à utiliser une version d'API supportée par Debian moderne
       - DOCKER_API_VERSION=1.40
@@ -20,6 +23,7 @@ services:
         - "443:443"
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock:ro
+        - letsencrypt:/letsencrypt
       networks:
         - klippio-network
 
@@ -91,6 +95,7 @@ services:
 
 volumes:
   db_data:
+  letsencrypt:
 
 networks:
   klippio-network:
