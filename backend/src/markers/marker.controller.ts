@@ -21,7 +21,6 @@ import { CreateMarkerDto } from './dtos/create-marker.dto';
 import { UpdateMarkerDto } from './dtos/update-marker.dto';
 import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
 import { validateUploadedFiles } from 'src/uploads/validate-upload';
-import { parseJsonDto } from 'src/validation/parse-json-dto';
 
 @UseGuards(AuthenticatedGuard)
 @Controller('api/markers')
@@ -37,21 +36,16 @@ export class MarkerController {
     @Param('projectId') projectId: string,
     @Param('planId') planId: string,
     @Query('pageNumber', ParseIntPipe) pageNumber: number,
-    @Body('markerData') stringifiedMarkerData: string,
+    @Body() markerData: CreateMarkerDto,
     @CurrentUser() user: User,
   ) {
     const userId = user.id;
-
-    const parsedMarkerData = parseJsonDto(
-      stringifiedMarkerData,
-      CreateMarkerDto,
-    );
 
     if (pageNumber < 1) {
       throw new BadRequestException('Numéro de page invalide');
     }
 
-    if (parsedMarkerData.photosMetaData.length !== (files?.length ?? 0)) {
+    if (markerData.photosMetaData.length !== (files?.length ?? 0)) {
       throw new BadRequestException('Métadonnées photos incohérentes');
     }
 
@@ -68,7 +62,7 @@ export class MarkerController {
       projectId,
       planId,
       pageNumber,
-      parsedMarkerData,
+      markerData,
       files ?? [],
     );
     return result;
@@ -100,17 +94,13 @@ export class MarkerController {
     @Param('projectId') projectId: string,
     @Param('planId') planId: string,
     @Param('markerId') markerId: string,
-    @Body('markerData') stringifiedMarkerData: string,
+    @Body() markerData: UpdateMarkerDto,
     @UploadedFiles() files: Express.Multer.File[],
     @CurrentUser() user: User,
   ) {
     const userId = user.id;
-    const parsedMarkerData = parseJsonDto(
-      stringifiedMarkerData,
-      UpdateMarkerDto,
-    );
 
-    if (parsedMarkerData.newPhotosMetadata.length !== (files?.length ?? 0)) {
+    if ((markerData.newPhotosMetadata?.length ?? 0) !== (files?.length ?? 0)) {
       throw new BadRequestException('Métadonnées photos incohérentes');
     }
 
@@ -127,7 +117,7 @@ export class MarkerController {
       projectId,
       planId,
       markerId,
-      parsedMarkerData,
+      markerData,
       files ?? [],
     );
     return result;
