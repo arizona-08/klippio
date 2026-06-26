@@ -25,6 +25,7 @@ import type { User } from 'src/user/interfaces/user.interface';
 import { CreateFolderDto } from './dtos/create-folder.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { RenameDto } from 'src/common/dtos/rename.dto';
+import { InviteCollaboratorDto } from './dtos/invite-collaborator.dto';
 
 enum ProjectSortBy {
   CREATED_AT = 'createdAt',
@@ -157,6 +158,36 @@ export class ProjectController {
     @CurrentUser() user: User,
   ) {
     return this.projectService.deleteProject(projectId, user.id);
+  }
+
+  @Post(':projectId/invite')
+  async inviteCollaborator(
+    @Param('projectId') projectId: string,
+    @Body() inviteDto: InviteCollaboratorDto,
+    @CurrentUser() user: User,
+  ) {
+    const userId = user.id;
+    return this.projectService.generateInvitationLink(
+      projectId,
+      userId,
+      inviteDto.invitedEmail,
+      inviteDto.invitedRole
+    );
+  }
+
+  @Get('invitation/:invitationToken')
+  async getInvitationDetails(@Param('invitationToken') invitationToken: string) {
+    return this.projectService.getInvitationDetails(invitationToken);
+  }
+
+  @Post('invitation/:invitationToken/deny')
+  async denyInvitation(@Param('invitationToken') invitationToken: string) {
+    return this.projectService.denyInvitation(invitationToken);
+  }
+
+  @Post('invitation/:invitationToken/accept')
+  async acceptInvitation(@Param('invitationToken') invitationToken: string) {
+    return this.projectService.addCollaboratorToProject(invitationToken);
   }
 
   // ------ FOLDERS -------

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   HttpException,
   Injectable,
@@ -10,6 +11,8 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProjectDTO } from './dtos/create-project.dto';
 import { CreateFolderDto } from './dtos/create-folder.dto';
 import { AmazonS3Service } from 'src/amazon/amazon-s3.service';
+import { MailerOptionInterface } from 'src/mail/interfaces/MailerOptionInterface';
+import { MailService } from 'src/mail/mail.service';
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Unknown error';
@@ -26,6 +29,7 @@ export class ProjectService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly amazonS3Service: AmazonS3Service,
+    private readonly mailService: MailService
   ) {}
 
   async createProject(
@@ -37,6 +41,14 @@ export class ProjectService {
         data: {
           ...createProjectDto,
           authorId: userId,
+        },
+      });
+
+      await this.prismaService.projectCollaborator.create({
+        data: {
+          projectId: createdProject.id,
+          userId: userId,
+          role: 'OWNER',
         },
       });
 
@@ -230,6 +242,19 @@ export class ProjectService {
           updatedAt: true,
           isArchived: true,
           thumbnailStorageKey: true,
+          projectCollaborators: {
+            select: {
+              role: true,
+              user: {
+                select: {
+                  id: true,
+                  firstname: true,
+                  lastname: true,
+                  email: true,
+                }
+              }
+            }
+          },
           _count: {
             select: { plans: true },
           },
@@ -277,6 +302,7 @@ export class ProjectService {
             numberOfPhotos: totalNumberOfPhotos,
             thumbnailTemporaryAccessUrl: thumbnailTemporaryAccessUrl,
             isArchived: projectItem.isArchived,
+            collaborators: projectItem.projectCollaborators
           };
         }),
       );
@@ -387,6 +413,243 @@ export class ProjectService {
       );
     }
   }
+
+  async generateInvitationLink(projectId: string, userId: number, invitedEmail: string, invitedRole: 'VIEWER' | 'EDITOR') {
+    try {
+      const project = await this.prismaService.project.findUnique({
+        where: {
+          id: projectId,
+        },
+        include: {
+          author: {
+            select: {
+              firstname: true,
+              lastname: true,
+              email: true
+            }
+          }
+        }
+      });
+
+      if (!project) {
+        throw new NotFoundException('Project not found');
+      }
+
+      if (project.authorId !== userId) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      // Generate a unique invitation token (you can use a library like uuid)
+      const invitationToken = crypto.randomUUID();
+
+      // Store the invitation token in the database with an expiration date
+      await this.prismaService.projectInvitation.create({
+        data: {
+          projectId,
+          email: invitedEmail,
+          role: invitedRole,
+          token: invitationToken,
+          expiresAt: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000), // 1 day from now
+        },
+      });
+
+      // Return the invitation link (you can customize the URL as needed)
+      const invitationLink = `${process.env.FRONTEND_URL}/invite/${invitationToken}`;
+
+      const mail: MailerOptionInterface = {
+        from: process.env.SMTP_FROM as string,
+        to: invitedEmail,
+        subject: "Invitation à collaborer sur le projet",
+        html: `
+          <p>Bonjour,</p>
+          <p>${project.author.firstname} ${project.author.lastname} vous a invité à collaborer sur le projet "${project.title}".</p>
+          <p>Veuillez cliquer sur le lien ci-dessous pour accepter l'invitation :</p>
+          <a href="${invitationLink}">Accepter l'invitation</a>
+          <p>Cordialement,<br/>Team Klippio</p>
+        `,
+      };
+
+      await this.mailService.sendMail(mail);
+
+      return {
+        success: true,
+        message: 'Invitation link generated successfully',
+        invitationLink,
+      };
+    } catch (error: unknown) {
+      rethrowKnownHttpException(error);
+      throw new InternalServerErrorException(
+        'Failed to generate invitation link',
+        getErrorMessage(error),
+      );
+    }
+  }
+
+  async getInvitationDetails(invitationToken: string) {
+    try {
+      const invitation = await this.prismaService.projectInvitation.findUnique({
+        where: {
+          token: invitationToken,
+        },
+        include: {
+          project: {
+            select: {
+              title: true,
+              author: {
+                select: {
+                  firstname: true,
+                  lastname: true
+                }
+              }
+            }
+          },
+        },
+      });
+
+      if (!invitation) {
+        throw new NotFoundException('Invitation not found');
+      }
+
+      return {
+        invitation
+      }
+    } catch (error: unknown) {
+      rethrowKnownHttpException(error);
+      throw new InternalServerErrorException(
+        'Failed to get invitation details',
+        getErrorMessage(error),
+      );
+    }
+  }
+
+  async denyInvitation(invitationToken: string) {
+    try {
+
+      const invitation = await this.prismaService.projectInvitation.findUnique({
+        where: {
+          token: invitationToken,
+        },
+        select: {
+          email: true,
+          expiresAt: true,
+          project: {
+            select: {
+              title: true,
+              author: {
+                select: {
+                  firstname: true,
+                  lastname: true,
+                  email: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (!invitation) {
+        throw new NotFoundException('Invitation not found');
+      }
+
+      if (invitation.expiresAt < new Date()) {
+        throw new UnauthorizedException('Invitation has expired');
+      }
+
+      await this.prismaService.projectInvitation.update({
+        where: {
+          token: invitationToken
+        },
+        data: {
+          status: 'DECLINED'
+        }
+      })
+
+      const {expiresAt, ...invitationData} = invitation;
+      await this.sendDeniedInvitationEmail(invitationData);
+
+      return {
+        success: true,
+      }
+    } catch (error: unknown) {
+      rethrowKnownHttpException(error);
+      throw new InternalServerErrorException(
+        'Failed to deny invitation',
+        getErrorMessage(error),
+      );
+    }
+    
+  }
+
+  async addCollaboratorToProject(invitationToken: string){
+    try{
+      const invitation = await this.prismaService.projectInvitation.findUnique({
+        where: {
+          token: invitationToken,
+        },
+      });
+
+      if (!invitation) {
+        throw new NotFoundException('Invitation not found');
+      }
+
+      const existingCollaborator = await this.prismaService.projectCollaborator.findFirst({
+        where: {
+          projectId: invitation.projectId,
+          user: {
+            email: invitation.email,
+          },
+        },
+      });
+
+      if (existingCollaborator) {
+        throw new BadRequestException('User is already a collaborator');
+      }
+
+
+    } catch (error: unknown) {
+      rethrowKnownHttpException(error);
+      throw new InternalServerErrorException(
+        'Failed to add collaborator to project',
+        getErrorMessage(error),
+      );
+    }
+  }
+
+  async sendDeniedInvitationEmail(data: {
+    email: string;
+    project: {
+      title: string;
+      author: {
+        firstname: string;
+        lastname: string;
+        email: string;
+      }
+    }
+  }) {
+    try {
+
+      const mail: MailerOptionInterface = {
+        from: process.env.SMTP_FROM as string,
+        to: data.project.author.email,
+        subject: "Rejet de l'invitation à collaborer sur le projet",
+        html: `
+          <p>Bonjour ${data.project.author.firstname} ${data.project.author.lastname},</p>
+          <p>${data.email} à refusé l'invitation à collaborer sur le projet "${data.project.title}".</p>
+          <p>Cordialement,<br/>Team Klippio</p>
+        `,
+      };
+
+      await this.mailService.sendMail(mail);
+
+    } catch (error: unknown) {
+      rethrowKnownHttpException(error);
+      throw new InternalServerErrorException(
+        'Failed to send denied invitation email',
+        getErrorMessage(error),
+      );
+    }
+  }
+
 
   /* ----------------- FOLDERS -------------------- */
 

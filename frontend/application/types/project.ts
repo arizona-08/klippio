@@ -17,11 +17,14 @@ export type ProjectType = {
 }
 
 export type CollaboratorType = {
-  firstname: string;
-  lastname: string;
-  email: string;
-  role: 'owner' | 'editor' | 'viewer';
-  invitationStatus?: 'pending' | 'accepted' | 'declined';
+  role: 'OWNER' | 'EDITOR' | 'VIEWER';
+  user: {
+    id: string;
+    firstname: string;
+    lastname: string;
+    email: string;
+    // invitationStatus?: 'pending' | 'accepted' | 'declined';
+  }
 }
 
 export type PlanTypeDto = {
