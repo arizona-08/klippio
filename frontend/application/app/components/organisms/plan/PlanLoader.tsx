@@ -22,6 +22,17 @@ import CTA from '../../atoms/CTA'
 const Document = dynamic(() => import('react-pdf').then((mod) => mod.Document), { ssr: false });
 const Page = dynamic(() => import('react-pdf').then((mod) => mod.Page), { ssr: false });
 
+function appendMarkerPhotoMetadata(
+  formData: FormData,
+  fieldName: string,
+  photos: Pick<MarkerPhotoType, 'label' | 'comment'>[],
+) {
+  photos.forEach((photo, index) => {
+    formData.append(`${fieldName}[${index}][label]`, photo.label);
+    formData.append(`${fieldName}[${index}][comment]`, photo.comment);
+  });
+}
+
 interface PlanLoaderProps {
   projectId: string;
   onPlanChange?: (plan: PlanType) => void; // Callback pour notifier le changement de plan
@@ -150,17 +161,10 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
 
     const markerFormData = new FormData();
 
-    const markertoRegister = {
-      title: marker.title,
-      coordX: marker.coordX,
-      coordY: marker.coordY,
-      photosMetaData: marker.photos.map(photo => ({
-        label: photo.label,
-        comment: photo.comment,
-      })),
-    }
-
-    markerFormData.append('markerData', JSON.stringify(markertoRegister));
+    markerFormData.append('title', marker.title);
+    markerFormData.append('coordX', String(marker.coordX));
+    markerFormData.append('coordY', String(marker.coordY));
+    appendMarkerPhotoMetadata(markerFormData, 'photosMetaData', marker.photos);
 
     marker.photos.forEach((photo) => {
       markerFormData.append('photos', photo.physicalFile);
@@ -195,30 +199,23 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
     // 3. On extrait les identifiants supprimés de manière sécurisée
     const deletedPhotoIdentifiers = matchingMarker?.photos
       .map(photoItem => photoItem.id)
-      .filter(photoIdentifier => !keptPhotoIdentifiersSet.has(photoIdentifier) && photoIdentifier !== undefined) || [];
+      .filter((photoIdentifier): photoIdentifier is string => photoIdentifier !== undefined && !keptPhotoIdentifiersSet.has(photoIdentifier)) || [];
 
-    const markerToUpdatePayload = {
-      title: marker.title,
-      coordX: marker.coordX,
-      coordY: marker.coordY,
+    updateMarkerFormData.append('title', marker.title);
+    updateMarkerFormData.append('coordX', String(marker.coordX));
+    updateMarkerFormData.append('coordY', String(marker.coordY));
 
-      // On envoie les métadonnées des photos existantes pour les mettre à jour
-      existingPhotosToUpdate: existingPhotos.map(photoItem => ({
-        identifier: photoItem.id,
-        label: photoItem.label,
-        comment: photoItem.comment,
-      })),
+    existingPhotos.forEach((photoItem, index) => {
+      updateMarkerFormData.append(`existingPhotosToUpdate[${index}][identifier]`, photoItem.id as string);
+      updateMarkerFormData.append(`existingPhotosToUpdate[${index}][label]`, photoItem.label);
+      updateMarkerFormData.append(`existingPhotosToUpdate[${index}][comment]`, photoItem.comment);
+    });
 
-      // On envoie les métadonnées des nouvelles photos
-      newPhotosMetadata: newPhotos.map(photoItem => ({
-        label: photoItem.label,
-        comment: photoItem.comment,
-      })),
+    appendMarkerPhotoMetadata(updateMarkerFormData, 'newPhotosMetadata', newPhotos);
 
-      deletedPhotoIdentifiers: deletedPhotoIdentifiers
-    }
-
-    updateMarkerFormData.append('markerData', JSON.stringify(markerToUpdatePayload));
+    deletedPhotoIdentifiers.forEach((photoIdentifier, index) => {
+      updateMarkerFormData.append(`deletedPhotoIdentifiers[${index}]`, photoIdentifier);
+    });
 
     newPhotos.forEach((photo) => {
       updateMarkerFormData.append('newPhotos', photo.physicalFile);
