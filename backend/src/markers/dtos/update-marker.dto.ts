@@ -43,29 +43,34 @@ export class UpdateMarkerDto {
   title: string;
 
   @IsNumber()
+  @Type(() => Number)
   @Min(0)
   @Max(1)
   coordX: number;
 
   @IsNumber()
+  @Type(() => Number)
   @Min(0)
   @Max(1)
   coordY: number;
 
+  @IsOptional()
   @IsArray()
   @ArrayMaxSize(10)
   @ValidateNested({ each: true })
   @Type(() => ExistingMarkerPhotoUpdateDto)
-  existingPhotosToUpdate: ExistingMarkerPhotoUpdateDto[];
+  existingPhotosToUpdate?: ExistingMarkerPhotoUpdateDto[];
 
+  @IsOptional()
   @IsArray()
   @ArrayMaxSize(10)
   @ValidateNested({ each: true })
   @Type(() => NewMarkerPhotoDto)
-  newPhotosMetadata: NewMarkerPhotoDto[];
+  newPhotosMetadata?: NewMarkerPhotoDto[];
 
+  @IsOptional()
   @IsArray()
   @ArrayMaxSize(10)
   @IsUUID(undefined, { each: true })
-  deletedPhotoIdentifiers: string[];
+  deletedPhotoIdentifiers?: string[];
 }

@@ -33,13 +33,11 @@ export class CreateMarkerDto {
   title: string;
 
   @IsNumber()
-  @Min(0)
-  @Max(1)
+  @Type(() => Number)
   coordX: number;
 
   @IsNumber()
-  @Min(0)
-  @Max(1)
+  @Type(() => Number)
   coordY: number;
 
   @IsArray()

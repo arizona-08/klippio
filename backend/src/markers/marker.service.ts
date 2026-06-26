@@ -149,7 +149,7 @@ export class MarkerService {
       });
 
       const updatedExistingPhotos = await Promise.all(
-        markerData.existingPhotosToUpdate.map(async (photo) => {
+        (markerData.existingPhotosToUpdate ?? []).map(async (photo) => {
           const existingPhoto = await this.prismaService.markerPhoto.findFirst({
             where: { id: photo.identifier, markerId },
             select: { id: true },
@@ -182,7 +182,7 @@ export class MarkerService {
       );
 
       // Suppression des photos supprimées
-      if (markerData.deletedPhotoIdentifiers) {
+      if (markerData.deletedPhotoIdentifiers?.length) {
         const photosToDelete = await this.prismaService.markerPhoto.findMany({
           where: {
             id: { in: markerData.deletedPhotoIdentifiers },
@@ -206,32 +206,34 @@ export class MarkerService {
 
       // Ajout des nouvelles photos
       const newPhotosData = await Promise.all(
-        markerData.newPhotosMetadata.map(async (photoMetaData, index) => {
-          const file = files[index];
-          const { storageKey, temporaryAccessUrl } =
-            await this.amazonS3Service.uploadImage({
-              type: 'MARKER_PICTURE',
-              file,
-              userId, // Pass the user ID if necessary
-              projectId, // Pass the project ID if necessary
-              markerId,
+        (markerData.newPhotosMetadata ?? []).map(
+          async (photoMetaData, index) => {
+            const file = files[index];
+            const { storageKey, temporaryAccessUrl } =
+              await this.amazonS3Service.uploadImage({
+                type: 'MARKER_PICTURE',
+                file,
+                userId, // Pass the user ID if necessary
+                projectId, // Pass the project ID if necessary
+                markerId,
+              });
+
+            const insertedPhoto = await this.prismaService.markerPhoto.create({
+              data: {
+                photoLabel: photoMetaData.label,
+                comment: photoMetaData.comment,
+                photoStorageKey: storageKey,
+                temporaryAccessUrl: temporaryAccessUrl,
+                markerId,
+              },
             });
 
-          const insertedPhoto = await this.prismaService.markerPhoto.create({
-            data: {
-              photoLabel: photoMetaData.label,
-              comment: photoMetaData.comment,
-              photoStorageKey: storageKey,
-              temporaryAccessUrl: temporaryAccessUrl,
-              markerId,
-            },
-          });
-
-          return {
-            ...insertedPhoto,
-            label: insertedPhoto.photoLabel,
-          };
-        }),
+            return {
+              ...insertedPhoto,
+              label: insertedPhoto.photoLabel,
+            };
+          },
+        ),
       );
 
       return {
