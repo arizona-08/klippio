@@ -1,5 +1,12 @@
 export type ProjectType = {
   id: string;
+  authorId: number;
+  author?: {
+    id: number;
+    firstname: string;
+    lastname: string;
+    email: string;
+  };
   title: string;
   address: string;
   zipcode: string;
@@ -14,6 +21,7 @@ export type ProjectType = {
   numberOfPhotos: number;
 
   collaborators: CollaboratorType[];
+  invitations: ProjectInvitationType[];
 }
 
 export type CollaboratorType = {
@@ -25,6 +33,29 @@ export type CollaboratorType = {
     email: string;
     // invitationStatus?: 'pending' | 'accepted' | 'declined';
   }
+}
+
+export type ProjectInvitationType = {
+  role: 'OWNER' | 'EDITOR' | 'VIEWER';
+  status: 'PENDING' | 'ACCEPTED' | 'DECLINED';
+  email: string;
+  createdAt: string;
+}
+
+export type ProjectInvitationDetailsType = ProjectInvitationType & {
+  expiresAt: string;
+  project: {
+    id: string;
+    title: string;
+    address: string;
+    city: string;
+    zipcode: string;
+    author: {
+      firstname: string;
+      lastname: string;
+      email: string;
+    };
+  };
 }
 
 export type PlanTypeDto = {

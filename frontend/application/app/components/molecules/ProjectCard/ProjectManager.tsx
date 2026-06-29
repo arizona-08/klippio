@@ -12,12 +12,13 @@ import { useUnarchiveProjectStore } from '@/stores/UnarchiveProjectStore';
 
 interface ProjectManagerProps {
   project: ProjectType;
+  canShareProject: boolean;
   isMenuOpen: boolean;
   openMenu: () => void;
   closeMenu: () => void;
 }
 
-function ProjectManager({ project, isMenuOpen, openMenu, closeMenu }: ProjectManagerProps) {
+function ProjectManager({ project, canShareProject, isMenuOpen, openMenu, closeMenu }: ProjectManagerProps) {
  const isArchived = project.isArchived;
 
   React.useEffect(() => {
@@ -76,7 +77,9 @@ function ProjectManager({ project, isMenuOpen, openMenu, closeMenu }: ProjectMan
             {!isArchived && (
               <>
                 <li className="flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md px-2 py-1 cursor-pointer" onClick={openModifyProjectForm}> <Edit className="w-4 h-4"/> Modifier</li>
-                <li className="flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md px-2 py-1 cursor-pointer" onClick={openShareProjectForm}> <Share className="w-4 h-4"/> Partager</li>
+                {canShareProject && (
+                  <li className="flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md px-2 py-1 cursor-pointer" onClick={openShareProjectForm}> <Share className="w-4 h-4"/> Partager</li>
+                )}
               </>
             ) }
             <li className="flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md px-2 py-1 cursor-pointer" onClick={() => {

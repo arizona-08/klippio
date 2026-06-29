@@ -118,6 +118,64 @@ export async function updateProjectThumbnail(
   return response;
 }
 
+export async function inviteCollaboratorToProject(
+  projectId: string,
+  invitedEmail: string,
+  invitedRole: "VIEWER" | "EDITOR",
+){
+  const response = await fetchFromClient(`/api/projects/${projectId}/invite`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({invitedEmail, invitedRole })
+  });
+
+  return response;
+}
+
+export async function getInvitationDetails(invitationToken: string) {
+  const response = await fetchFromClient(
+    `/api/projects/invitation/${invitationToken}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+  );
+
+  return response;
+}
+
+export async function acceptProjectInvitation(invitationToken: string) {
+  const response = await fetchFromClient(
+    `/api/projects/invitation/${invitationToken}/accept`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+  );
+
+  return response;
+}
+
+export async function denyProjectInvitation(invitationToken: string) {
+  const response = await fetchFromClient(
+    `/api/projects/invitation/${invitationToken}/deny`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+  );
+
+  return response;
+}
+
 // ----- SERVER SIDE FUNCTIONS ------
 
 export async function getProjectsServerSide() {

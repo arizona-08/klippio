@@ -69,12 +69,7 @@ export class ProjectService {
 
   async getProject(userId: number, projectId: string) {
     try {
-      const project = await this.prismaService.project.findFirst({
-        where: {
-          id: projectId,
-          authorId: userId,
-        },
-      });
+      const project = await this.findProjectWithAccess(projectId, userId);
 
       if (!project) {
         throw new NotFoundException('Project not found');
@@ -230,11 +225,23 @@ export class ProjectService {
     try {
       const projects = await this.prismaService.project.findMany({
         where: {
-          authorId: userId,
+          OR: [
+            { authorId: userId },
+            { projectCollaborators: { some: { userId } } },
+          ],
           isArchived: isArchived,
         },
         select: {
           id: true,
+          authorId: true,
+          author: {
+            select: {
+              id: true,
+              firstname: true,
+              lastname: true,
+              email: true,
+            },
+          },
           title: true,
           address: true,
           city: true,
@@ -253,6 +260,14 @@ export class ProjectService {
                   email: true,
                 }
               }
+            }
+          },
+          projectInvitations: {
+            select: {
+              email: true,
+              role: true,
+              status: true,
+              createdAt: true
             }
           },
           _count: {
@@ -293,6 +308,8 @@ export class ProjectService {
 
           return {
             id: projectItem.id,
+            authorId: projectItem.authorId,
+            author: projectItem.author,
             title: projectItem.title,
             address: projectItem.address,
             zipcode: projectItem.zipcode,
@@ -302,7 +319,13 @@ export class ProjectService {
             numberOfPhotos: totalNumberOfPhotos,
             thumbnailTemporaryAccessUrl: thumbnailTemporaryAccessUrl,
             isArchived: projectItem.isArchived,
-            collaborators: projectItem.projectCollaborators
+            collaborators: projectItem.projectCollaborators,
+            invitations:
+              projectItem.authorId === userId
+                ? projectItem.projectInvitations.filter((invitation) =>
+                    ['PENDING', 'DECLINED'].includes(invitation.status),
+                  )
+                : [],
           };
         }),
       );
@@ -316,12 +339,7 @@ export class ProjectService {
 
   async getProjectRootFolder(projectId: string, userId: number) {
     try {
-      const existingProject = await this.prismaService.project.findFirst({
-        where: {
-          id: projectId,
-          authorId: userId,
-        },
-      });
+      const existingProject = await this.findProjectWithAccess(projectId, userId);
 
       if (!existingProject) {
         throw new NotFoundException('Project not found');
@@ -366,18 +384,10 @@ export class ProjectService {
     file: Express.Multer.File,
   ) {
     try {
-      const project = await this.prismaService.project.findUnique({
-        where: {
-          id: projectId,
-        },
-      });
+      const project = await this.findProjectWithAccess(projectId, userId);
 
       if (!project) {
         throw new NotFoundException('Project not found');
-      }
-
-      if (project.authorId !== userId) {
-        throw new UnauthorizedException('Unauthorized');
       }
 
       if (project.thumbnailStorageKey) {
@@ -443,7 +453,7 @@ export class ProjectService {
       const invitationToken = crypto.randomUUID();
 
       // Store the invitation token in the database with an expiration date
-      await this.prismaService.projectInvitation.create({
+      const invitation = await this.prismaService.projectInvitation.create({
         data: {
           projectId,
           email: invitedEmail,
@@ -474,7 +484,7 @@ export class ProjectService {
       return {
         success: true,
         message: 'Invitation link generated successfully',
-        invitationLink,
+        invitation: invitation,
       };
     } catch (error: unknown) {
       rethrowKnownHttpException(error);
@@ -494,11 +504,16 @@ export class ProjectService {
         include: {
           project: {
             select: {
+              id: true,
               title: true,
+              address: true,
+              city: true,
+              zipcode: true,
               author: {
                 select: {
                   firstname: true,
-                  lastname: true
+                  lastname: true,
+                  email: true
                 }
               }
             }
@@ -532,6 +547,7 @@ export class ProjectService {
         select: {
           email: true,
           expiresAt: true,
+          status: true,
           project: {
             select: {
               title: true,
@@ -553,6 +569,10 @@ export class ProjectService {
 
       if (invitation.expiresAt < new Date()) {
         throw new UnauthorizedException('Invitation has expired');
+      }
+
+      if (invitation.status === 'ACCEPTED') {
+        throw new BadRequestException('Invitation has already been accepted');
       }
 
       await this.prismaService.projectInvitation.update({
@@ -580,11 +600,19 @@ export class ProjectService {
     
   }
 
-  async addCollaboratorToProject(invitationToken: string){
+  async addCollaboratorToProject(invitationToken: string, userId: number){
     try{
       const invitation = await this.prismaService.projectInvitation.findUnique({
         where: {
           token: invitationToken,
+        },
+        include: {
+          project: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
         },
       });
 
@@ -592,20 +620,61 @@ export class ProjectService {
         throw new NotFoundException('Invitation not found');
       }
 
-      const existingCollaborator = await this.prismaService.projectCollaborator.findFirst({
+      if (invitation.expiresAt < new Date()) {
+        throw new UnauthorizedException('Invitation has expired');
+      }
+
+      if (invitation.status === 'DECLINED') {
+        throw new BadRequestException('Invitation has been declined');
+      }
+
+      const user = await this.prismaService.user.findUnique({
         where: {
-          projectId: invitation.projectId,
-          user: {
-            email: invitation.email,
-          },
+          id: userId,
+        },
+        select: {
+          id: true,
+          email: true,
         },
       });
 
-      if (existingCollaborator) {
-        throw new BadRequestException('User is already a collaborator');
+      if (!user || user.email !== invitation.email) {
+        throw new UnauthorizedException(
+          "Cette invitation est liée à une autre adresse email",
+        );
       }
 
+      const existingCollaborator = await this.prismaService.projectCollaborator.findFirst({
+        where: {
+          projectId: invitation.projectId,
+          userId: user.id,
+        },
+      });
 
+      if (!existingCollaborator) {
+        await this.prismaService.projectCollaborator.create({
+          data: {
+            projectId: invitation.projectId,
+            userId: user.id,
+            role: invitation.role,
+          },
+        });
+      }
+
+      await this.prismaService.projectInvitation.update({
+        where: {
+          token: invitationToken,
+        },
+        data: {
+          status: 'ACCEPTED',
+        },
+      });
+
+      return {
+        success: true,
+        projectId: invitation.projectId,
+        project: invitation.project,
+      };
     } catch (error: unknown) {
       rethrowKnownHttpException(error);
       throw new InternalServerErrorException(
@@ -655,12 +724,7 @@ export class ProjectService {
 
   async getFolder(folderId: string, projectId: string, userId: number) {
     try {
-      const existingProject = await this.prismaService.project.findFirst({
-        where: {
-          id: projectId,
-          authorId: userId,
-        },
-      });
+      const existingProject = await this.findProjectWithAccess(projectId, userId);
 
       if (!existingProject) {
         throw new NotFoundException('Project not found');
@@ -704,13 +768,7 @@ export class ProjectService {
   ) {
     try {
       const { name, parentFolderId } = createFolderDto;
-      const existingProject = await this.prismaService.project.findFirst({
-        where: {
-          id: projectId,
-          authorId: userId,
-        },
-        select: { id: true },
-      });
+      const existingProject = await this.findProjectWithAccess(projectId, userId);
 
       if (!existingProject) {
         throw new NotFoundException('Project not found');
@@ -825,5 +883,17 @@ export class ProjectService {
     if (!project) {
       throw new NotFoundException('Project not found');
     }
+  }
+
+  private async findProjectWithAccess(projectId: string, userId: number) {
+    return this.prismaService.project.findFirst({
+      where: {
+        id: projectId,
+        OR: [
+          { authorId: userId },
+          { projectCollaborators: { some: { userId } } },
+        ],
+      },
+    });
   }
 }

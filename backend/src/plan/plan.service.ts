@@ -56,12 +56,22 @@ export class PlanService {
       where: { id: planId },
       include: {
         project: {
-          select: { authorId: true },
+          select: {
+            authorId: true,
+            projectCollaborators: {
+              where: { userId },
+              select: { id: true },
+            },
+          },
         },
       },
     });
 
-    if (!existingPlan || existingPlan.project.authorId !== userId) {
+    if (
+      !existingPlan ||
+      (existingPlan.project.authorId !== userId &&
+        existingPlan.project.projectCollaborators.length === 0)
+    ) {
       throw new NotFoundException('Plan non trouvé');
     }
 
@@ -89,7 +99,16 @@ export class PlanService {
 
   async getPlanById(projectId: string, planId: string, userId: number) {
     const existingPlan = await this.prismaService.plan.findFirst({
-      where: { id: planId, projectId, project: { authorId: userId } },
+      where: {
+        id: planId,
+        projectId,
+        project: {
+          OR: [
+            { authorId: userId },
+            { projectCollaborators: { some: { userId } } },
+          ],
+        },
+      },
       include: {
         project: {
           select: {
@@ -178,7 +197,16 @@ export class PlanService {
   ) {
     try {
       const existingPlan = await this.prismaService.plan.findFirst({
-        where: { id: planId, projectId, project: { authorId: userId } },
+        where: {
+          id: planId,
+          projectId,
+          project: {
+            OR: [
+              { authorId: userId },
+              { projectCollaborators: { some: { userId } } },
+            ],
+          },
+        },
       });
 
       if (!existingPlan) {
@@ -205,7 +233,13 @@ export class PlanService {
 
   private async assertProjectAccess(projectId: string, userId: number) {
     const project = await this.prismaService.project.findFirst({
-      where: { id: projectId, authorId: userId },
+      where: {
+        id: projectId,
+        OR: [
+          { authorId: userId },
+          { projectCollaborators: { some: { userId } } },
+        ],
+      },
       select: { id: true },
     });
 

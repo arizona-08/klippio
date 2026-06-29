@@ -69,6 +69,7 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
   const photoInputRef = React.useRef<HTMLInputElement | null>(null);
 
   const [option, setOption] = React.useState<SelectOption>('hand');
+  const markerRequestIdRef = React.useRef(0);
 
   //État pour gérer le dossier actif
   const [activeFolder, setActiveFolder] = React.useState<FolderType | null>(null);
@@ -91,6 +92,14 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
   function selectOption(option: SelectOption) {
     setOption(option);
   }
+
+  useEffect(() => {
+    setCurrentPlan(null);
+    setCurrentFileUrl(null);
+    setMarkers([]);
+    setCurrentPageNumber(1);
+    setNumPages(0);
+  }, [projectId, setCurrentPlan]);
 
   const displayPlan = React.useCallback(({
     planId,
@@ -337,11 +346,23 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
   
   useEffect(() => {
     async function fetchMarkersForCurrentPlan() {
-      if(!currentPlan?.id) return;
-      const response = await getMarkers(currentPlan?.id as string, currentPageNumber);
+      if(!currentPlan?.id) {
+        markerRequestIdRef.current += 1;
+        setMarkers([]);
+        return;
+      }
+
+      const requestId = markerRequestIdRef.current + 1;
+      markerRequestIdRef.current = requestId;
+      setMarkers([]);
+
+      const response = await getMarkers(currentPlan.id, currentPageNumber);
+      if(markerRequestIdRef.current !== requestId) return;
+
       if(response.ok){
         const result = await response.json();
         const fetchedMarkers = result.markers;
+        if(markerRequestIdRef.current !== requestId) return;
         setMarkers(fetchedMarkers);
       } else {
         console.error("Erreur lors de la récupération des marqueurs :", response.statusText);

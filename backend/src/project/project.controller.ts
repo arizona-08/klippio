@@ -17,7 +17,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
+import { AuthenticatedGuard, Public } from 'src/auth/authenticated.guard';
 import { CreateProjectDTO } from './dtos/create-project.dto';
 import { ProjectService } from './project.service';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
@@ -176,18 +176,23 @@ export class ProjectController {
   }
 
   @Get('invitation/:invitationToken')
+  @Public()
   async getInvitationDetails(@Param('invitationToken') invitationToken: string) {
     return this.projectService.getInvitationDetails(invitationToken);
   }
 
   @Post('invitation/:invitationToken/deny')
+  @Public()
   async denyInvitation(@Param('invitationToken') invitationToken: string) {
     return this.projectService.denyInvitation(invitationToken);
   }
 
   @Post('invitation/:invitationToken/accept')
-  async acceptInvitation(@Param('invitationToken') invitationToken: string) {
-    return this.projectService.addCollaboratorToProject(invitationToken);
+  async acceptInvitation(
+    @Param('invitationToken') invitationToken: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.projectService.addCollaboratorToProject(invitationToken, user.id);
   }
 
   // ------ FOLDERS -------

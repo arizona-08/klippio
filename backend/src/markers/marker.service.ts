@@ -289,7 +289,7 @@ export class MarkerService {
       where: {
         id: planId,
         projectId,
-        project: { authorId: userId },
+        project: this.projectAccessWhere(userId),
       },
       select: { id: true },
     });
@@ -303,7 +303,7 @@ export class MarkerService {
     const plan = await this.prismaService.plan.findFirst({
       where: {
         id: planId,
-        project: { authorId: userId },
+        project: this.projectAccessWhere(userId),
       },
       select: { id: true },
     });
@@ -325,7 +325,7 @@ export class MarkerService {
         planId,
         plan: {
           projectId,
-          project: { authorId: userId },
+          project: this.projectAccessWhere(userId),
         },
       },
       select: { id: true },
@@ -341,7 +341,7 @@ export class MarkerService {
       where: {
         id: markerId,
         plan: {
-          project: { authorId: userId },
+          project: this.projectAccessWhere(userId),
         },
       },
       select: { id: true },
@@ -350,5 +350,14 @@ export class MarkerService {
     if (!marker) {
       throw new NotFoundException('Marqueur non trouvé');
     }
+  }
+
+  private projectAccessWhere(userId: number) {
+    return {
+      OR: [
+        { authorId: userId },
+        { projectCollaborators: { some: { userId } } },
+      ],
+    };
   }
 }

@@ -1,7 +1,7 @@
 'use client';
 import { LoginDTO } from '@/proxy/auth/dto/login.dto';
 import Link from 'next/link'
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import React from 'react'
 import { useUser } from '../../../Context/AuthContext/AuthUserProvider';
 import Input from '../../atoms/Input';
@@ -22,6 +22,12 @@ function LoginForm() {
 
   const [errorMessage, setErrorMessage] = React.useState<string | null>();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectParam = searchParams.get('redirect');
+  const redirectPath =
+    redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//')
+      ? redirectParam
+      : '/dashboard';
 
   function setCredentialsInfo(e: React.ChangeEvent<HTMLInputElement>){
     setLoginCredentials({...loginCredentials, [e.target.name]: e.target.value})
@@ -35,7 +41,7 @@ function LoginForm() {
 
     if(response.ok){
       setUser(result.user)
-      router.push('/dashboard');
+      router.push(redirectPath);
     } else {
       setErrorMessage(result.message);
       setIsLoginLoading(false);
@@ -68,7 +74,7 @@ function LoginForm() {
           <CTA type='button' color='primary' text='Connexion' disabled={!isFormValid || isLoginLoading} isLoading={isLoginLoading} />
     
           <p className='mt-2'><Link href="/auth/forgot-password" className='hover:underline hover:text-primary'>Mot de passe oublié ?</Link></p>
-          <p className='mt-2'>Pas encore de compte ? <Link href='/auth/register' className='hover:underline hover:text-primary'>Me créer un compte</Link></p>
+          <p className='mt-2'>Pas encore de compte ? <Link href={`/auth/register?redirect=${encodeURIComponent(redirectPath)}`} className='hover:underline hover:text-primary'>Me créer un compte</Link></p>
         </form>
 
         <div className='relative'>

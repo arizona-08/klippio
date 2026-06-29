@@ -11,7 +11,9 @@ function page() {
           <h1 className="text-2xl mt-8">Connexion</h1>
         </div>
 
-        <LoginForm />
+        <React.Suspense>
+          <LoginForm />
+        </React.Suspense>
       </section>
     </main>
   )
