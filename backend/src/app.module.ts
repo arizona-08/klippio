@@ -13,6 +13,7 @@ import { ProfileModule } from './profile/profile.module';
 import { RecentActivityModule } from './recent-activity/recent-activity.module';
 import { StatsModule } from './stats/stats.module';
 import { MarkerModule } from './markers/marker.module';
+import { RealtimeModule } from './realtime/realtime.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { MarkerModule } from './markers/marker.module';
     ProfileModule,
     RecentActivityModule,
     StatsModule,
+    RealtimeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

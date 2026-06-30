@@ -21,11 +21,15 @@ import { CreateMarkerDto } from './dtos/create-marker.dto';
 import { UpdateMarkerDto } from './dtos/update-marker.dto';
 import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
 import { validateUploadedFiles } from 'src/uploads/validate-upload';
+import { RealtimeService } from 'src/realtime/realtime.service';
 
 @UseGuards(AuthenticatedGuard)
 @Controller('api/markers')
 export class MarkerController {
-  constructor(private readonly markerService: MarkerService) {}
+  constructor(
+    private readonly markerService: MarkerService,
+    private readonly realtimeService: RealtimeService,
+  ) {}
 
   @Post(':projectId/:planId/marker')
   @UseInterceptors(
@@ -65,6 +69,13 @@ export class MarkerController {
       markerData,
       files ?? [],
     );
+    this.realtimeService.emitToProject(projectId, 'marker:created', {
+      projectId,
+      planId,
+      pageNumber,
+      marker: result,
+      actorId: userId,
+    });
     return result;
   }
 
@@ -120,6 +131,13 @@ export class MarkerController {
       markerData,
       files ?? [],
     );
+    this.realtimeService.emitToProject(projectId, 'marker:updated', {
+      projectId,
+      planId,
+      pageNumber: result.updatedMarker.planPageNumber,
+      marker: result.updatedMarker,
+      actorId: userId,
+    });
     return result;
   }
 
@@ -128,7 +146,17 @@ export class MarkerController {
     @Param('markerId') markerId: string,
     @CurrentUser() user: User,
   ) {
-    await this.markerService.deleteMarker(markerId, user.id);
+    const deletedMarker = await this.markerService.deleteMarker(
+      markerId,
+      user.id,
+    );
+    this.realtimeService.emitToProject(deletedMarker.projectId, 'marker:deleted', {
+      projectId: deletedMarker.projectId,
+      planId: deletedMarker.planId,
+      pageNumber: deletedMarker.planPageNumber,
+      markerId,
+      actorId: user.id,
+    });
     return {
       success: true,
       message: 'Marqueur supprimé avec succès',

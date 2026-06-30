@@ -97,6 +97,8 @@ export type MarkerType = {
   id?: string,
   coordX: number,
   coordY: number,
+  planId?: string,
+  planPageNumber?: number,
   title: string,
   photos: MarkerPhotoType[]
 }
