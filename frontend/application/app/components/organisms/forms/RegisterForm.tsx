@@ -3,11 +3,12 @@ import { RegisterDTO } from "@/proxy/auth/dto/register.dto";
 import { RegisterErrors } from "@/proxy/auth/errors/register.error";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 import Input from "../../atoms/Input";
-import { register } from "@/proxy/auth/auth-functions";
+import { login, register } from "@/proxy/auth/auth-functions";
 import CTA from "../../atoms/CTA";
+import { useUser } from "@/app/Context/AuthContext/AuthUserProvider";
 
 function RegisterForm() {
   const [registerCredentials, setRegisterCredentials] =
@@ -37,6 +38,13 @@ function RegisterForm() {
   >(null);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectParam = searchParams.get("redirect");
+  const redirectPath =
+    redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//")
+      ? redirectParam
+      : "/auth/login";
+  const { setUser } = useUser();
 
   function createErrorObject(errors: string[]) {
     const errorObj: Record<string, string[]> = {};
@@ -70,7 +78,19 @@ function RegisterForm() {
     }
 
     if (response.status === 201) {
-      router.push("/auth/login");
+      const loginResponse = await login({
+        email: registerCredentials.email,
+        password: registerCredentials.password,
+      });
+      const loginResult = await loginResponse.json();
+
+      if (loginResponse.ok) {
+        setUser(loginResult.user);
+        router.push(redirectPath);
+        return;
+      }
+
+      router.push(`/auth/login?redirect=${encodeURIComponent(redirectPath)}`);
     }
   }
 
@@ -204,7 +224,7 @@ function RegisterForm() {
           <p className="mt-4">
             Déja un compte ?{" "}
             <Link
-              href="/auth/login"
+              href={`/auth/login?redirect=${encodeURIComponent(redirectPath)}`}
               className="hover:underline hover:text-blue-500"
             >
               Me connecter

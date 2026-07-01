@@ -1,5 +1,12 @@
 export type ProjectType = {
   id: string;
+  authorId: number;
+  author?: {
+    id: number;
+    firstname: string;
+    lastname: string;
+    email: string;
+  };
   title: string;
   address: string;
   zipcode: string;
@@ -14,14 +21,41 @@ export type ProjectType = {
   numberOfPhotos: number;
 
   collaborators: CollaboratorType[];
+  invitations: ProjectInvitationType[];
 }
 
 export type CollaboratorType = {
-  firstname: string;
-  lastname: string;
+  role: 'OWNER' | 'EDITOR' | 'VIEWER';
+  user: {
+    id: string;
+    firstname: string;
+    lastname: string;
+    email: string;
+    // invitationStatus?: 'pending' | 'accepted' | 'declined';
+  }
+}
+
+export type ProjectInvitationType = {
+  role: 'OWNER' | 'EDITOR' | 'VIEWER';
+  status: 'PENDING' | 'ACCEPTED' | 'DECLINED';
   email: string;
-  role: 'owner' | 'editor' | 'viewer';
-  invitationStatus?: 'pending' | 'accepted' | 'declined';
+  createdAt: string;
+}
+
+export type ProjectInvitationDetailsType = ProjectInvitationType & {
+  expiresAt: string;
+  project: {
+    id: string;
+    title: string;
+    address: string;
+    city: string;
+    zipcode: string;
+    author: {
+      firstname: string;
+      lastname: string;
+      email: string;
+    };
+  };
 }
 
 export type PlanTypeDto = {
@@ -63,6 +97,8 @@ export type MarkerType = {
   id?: string,
   coordX: number,
   coordY: number,
+  planId?: string,
+  planPageNumber?: number,
   title: string,
   photos: MarkerPhotoType[]
 }

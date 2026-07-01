@@ -1,12 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import session from 'express-session';
-import { PrismaSessionStore } from '@quixo3/prisma-session-store';
-import { PrismaClient } from '@prisma/client';
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import { ValidationError } from 'class-validator';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import type { NextFunction, Request, Response } from 'express';
+import { createSessionMiddleware, getAllowedOrigins } from './session/session.config';
 
 const UNSAFE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 const AUTH_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
@@ -15,27 +13,6 @@ const authRateLimitStore = new Map<
   string,
   { count: number; resetAt: number }
 >();
-
-function getAllowedOrigins(): string[] {
-  return (process.env.FRONTEND_URL || 'http://localhost:3000')
-    .split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean);
-}
-
-function getSessionSecret(): string {
-  if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET;
-
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('SESSION_SECRET must be defined in production.');
-  }
-
-  return 'development-session-secret-change-me';
-}
-
-function getSessionCookieDomain(): string | undefined {
-  return process.env.SESSION_COOKIE_DOMAIN?.trim() || undefined;
-}
 
 function getRequestOrigin(request: Request): string | null {
   const origin = request.get('origin');
@@ -129,24 +106,7 @@ async function bootstrap() {
   app.use(csrfOriginGuard(allowedOrigins));
   app.use(authRateLimiter);
 
-  const sessionMiddleware = session({
-    secret: getSessionSecret(),
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      domain: getSessionCookieDomain(),
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 1000 * 60 * 60 * 24,
-    },
-    store: new PrismaSessionStore(new PrismaClient(), {
-      checkPeriod: 2 * 60 * 1000,
-      dbRecordIdIsSessionId: true,
-    }),
-  });
-
-  app.use(sessionMiddleware);
+  app.use(createSessionMiddleware());
 
   app.useGlobalPipes(
     new ValidationPipe({

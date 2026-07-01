@@ -20,11 +20,15 @@ import { PlanService } from './plan.service';
 import { validateUploadedFile } from 'src/uploads/validate-upload';
 import { UploadPlanBodyDto } from './dtos/upload-plan-body.dto';
 import { RenameDto } from 'src/common/dtos/rename.dto';
+import { RealtimeService } from 'src/realtime/realtime.service';
 
 @UseGuards(AuthenticatedGuard)
 @Controller('/api/plans')
 export class PlanController {
-  constructor(private readonly planService: PlanService) {}
+  constructor(
+    private readonly planService: PlanService,
+    private readonly realtimeService: RealtimeService,
+  ) {}
 
   @Post('upload-plan/:projectId')
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 5_000_000 } }))
@@ -57,6 +61,11 @@ export class PlanController {
       user.id,
       file,
     );
+    this.realtimeService.emitToProject(projectId, 'plan:created', {
+      projectId,
+      plan: uploadedPlanInfo,
+      actorId: user.id,
+    });
 
     return {
       message: 'Fichier sauvegardé avec succès',
