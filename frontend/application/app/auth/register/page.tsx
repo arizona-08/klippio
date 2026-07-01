@@ -11,7 +11,9 @@ function page() {
           <h1 className='text-2xl mt-8'>Inscription</h1>
         </div>
 
-        <RegisterForm />
+        <React.Suspense>
+          <RegisterForm />
+        </React.Suspense>
       </section>
     </main>
   )

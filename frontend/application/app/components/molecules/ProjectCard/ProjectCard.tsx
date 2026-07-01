@@ -2,6 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import ProjectManager from './ProjectManager';
 import { ProjectType } from '@/types/project';
+import { User } from '@/app/Context/AuthContext/AuthUserContext';
 import { useCurrentProjectStore } from '@/stores/CurrentProjectStore';
 import { useRouter } from 'next/navigation';
 import ProjectIsArchivedWarningModal from '../ProjectModals/ProjectIsArchivedWarningModal';
@@ -9,11 +10,12 @@ import NProgress from 'nprogress'
 
 interface ProjectCardProps {
   project: ProjectType;
+  currentUser?: User;
   mode: 'basic' | 'archive';
   handleUnarchiveProject: (projectIdToUnarchive: string | null, projectName: string | null) => Promise<void>;
 }
 
-function ProjectCard({ project, mode, handleUnarchiveProject }: ProjectCardProps) {
+function ProjectCard({ project, currentUser, mode, handleUnarchiveProject }: ProjectCardProps) {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const statusLabel = mode === 'archive' || project.isArchived ? 'Archive' : 'Actif';
@@ -23,6 +25,12 @@ function ProjectCard({ project, mode, handleUnarchiveProject }: ProjectCardProps
   const collaboratorsCount = project.collaborators?.length || 0;
   const activityDate = project.updatedAt || project.lastOpenedAt;
   const activityLabel = activityDate ? formatDate(activityDate) : 'Recemment';
+  const isProjectAuthor = currentUser?.id === project.authorId;
+  const authorLabel = isProjectAuthor
+    ? 'moi'
+    : project.author
+      ? `${project.author.firstname} ${project.author.lastname}`
+      : 'inconnu';
 
   function openMenu(){
     setIsMenuOpen(true);
@@ -100,11 +108,13 @@ function ProjectCard({ project, mode, handleUnarchiveProject }: ProjectCardProps
               <h2 className="text-xl font-semibold">{project.title}</h2>
               <ProjectManager
                 project={project}
+                canShareProject={isProjectAuthor}
                 isMenuOpen={isMenuOpen}
                 openMenu={openMenu}
                 closeMenu={closeMenu}
               />
             </div>
+            <p className="mb-1 text-sm text-gray-500">Auteur: {authorLabel}</p>
             <p className="text-gray-700">{project.address}, {project.zipcode} {project.city}</p>
 
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-600">

@@ -14,10 +14,11 @@ import { useCurrentProjectStore } from '@/stores/CurrentProjectStore'
 import { getFolder, getProjectRootFolder } from '@/proxy/folders/folder-functions'
 import { useSearchParams } from 'next/navigation'
 import { addMarker, deleteMarker, editMarker, getMarkers } from '@/proxy/markers/marker-functions'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MousePointer2 } from 'lucide-react'
 import { updateProjectThumbnail } from '@/proxy/projects/project-functions'
 import Image from 'next/image'
 import CTA from '../../atoms/CTA'
+import { io, Socket } from 'socket.io-client'
 
 const Document = dynamic(() => import('react-pdf').then((mod) => mod.Document), { ssr: false });
 const Page = dynamic(() => import('react-pdf').then((mod) => mod.Page), { ssr: false });
@@ -39,8 +40,62 @@ interface PlanLoaderProps {
   
 }
 
+type RemoteCursor = {
+  socketId: string;
+  x: number;
+  y: number;
+  planId: string;
+  pageNumber: number;
+  user?: {
+    id: number;
+    firstname: string;
+    lastname: string;
+    email: string;
+  };
+  updatedAt: string;
+};
+
+type MarkerRealtimePayload = {
+  projectId: string;
+  planId: string;
+  pageNumber: number;
+  marker: MarkerType;
+};
+
+type MarkerDeletedRealtimePayload = {
+  projectId: string;
+  planId: string;
+  pageNumber: number;
+  markerId: string;
+};
+
+type PlanCreatedRealtimePayload = {
+  projectId: string;
+  plan: PlanType & {
+    documentStorageKey?: string;
+  };
+};
+
+function getCursorColor(identifier: string) {
+  const colors = ['#0f766e', '#b91c1c', '#4338ca', '#a16207', '#be185d', '#0369a1'];
+  const hash = Array.from(identifier).reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return colors[hash % colors.length];
+}
+
+function upsertMarker(markers: MarkerType[], markerToUpsert: MarkerType) {
+  if (!markerToUpsert.id) return [...markers, markerToUpsert];
+
+  const markerIndex = markers.findIndex((marker) => marker.id === markerToUpsert.id);
+  if (markerIndex === -1) return [...markers, markerToUpsert];
+
+  return markers.map((marker) =>
+    marker.id === markerToUpsert.id ? markerToUpsert : marker,
+  );
+}
+
 function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
   const [markers, setMarkers] = React.useState<MarkerType[]>([]);
+  const [remoteCursors, setRemoteCursors] = React.useState<Record<string, RemoteCursor>>({});
   const currentClickCoords = React.useRef({x: 0, y: 0})
   const [isModalActive, setIsModalActive] = React.useState<boolean>(false)
   const [temporaryModalMarker, setTemporaryModalMarker] = React.useState<MarkerType | undefined>(undefined)
@@ -69,6 +124,12 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
   const photoInputRef = React.useRef<HTMLInputElement | null>(null);
 
   const [option, setOption] = React.useState<SelectOption>('hand');
+  const markerRequestIdRef = React.useRef(0);
+  const socketRef = React.useRef<Socket | null>(null);
+  const latestCursorSentAtRef = React.useRef(0);
+  const currentPlanIdRef = React.useRef<string | undefined>(undefined);
+  const currentPageNumberRef = React.useRef(1);
+  const temporaryModalMarkerIdRef = React.useRef<string | undefined>(undefined);
 
   //État pour gérer le dossier actif
   const [activeFolder, setActiveFolder] = React.useState<FolderType | null>(null);
@@ -91,6 +152,135 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
   function selectOption(option: SelectOption) {
     setOption(option);
   }
+
+  useEffect(() => {
+    setCurrentPlan(null);
+    setCurrentFileUrl(null);
+    setMarkers([]);
+    setRemoteCursors({});
+    setCurrentPageNumber(1);
+    setNumPages(0);
+  }, [projectId, setCurrentPlan]);
+
+  useEffect(() => {
+    currentPlanIdRef.current = currentPlan?.id;
+  }, [currentPlan?.id]);
+
+  useEffect(() => {
+    currentPageNumberRef.current = currentPageNumber;
+  }, [currentPageNumber]);
+
+  useEffect(() => {
+    temporaryModalMarkerIdRef.current = temporaryModalMarker?.id;
+  }, [temporaryModalMarker?.id]);
+
+  useEffect(() => {
+    if (!process.env.NEXT_PUBLIC_BACKEND_URL) return;
+
+    const socket = io(process.env.NEXT_PUBLIC_BACKEND_URL, {
+      withCredentials: true,
+      transports: ['websocket', 'polling'],
+    });
+
+    socketRef.current = socket;
+    socket.emit('project:join', { projectId });
+
+    socket.on('connect', () => {
+      socket.emit('project:join', { projectId });
+    });
+
+    socket.on('marker:created', (payload: MarkerRealtimePayload) => {
+      if (payload.projectId !== projectId) return;
+      setMarkers((prevMarkers) => {
+        if (
+          payload.planId !== currentPlanIdRef.current ||
+          payload.pageNumber !== currentPageNumberRef.current
+        ) {
+          return prevMarkers;
+        }
+
+        return upsertMarker(prevMarkers, payload.marker);
+      });
+    });
+
+    socket.on('marker:updated', (payload: MarkerRealtimePayload) => {
+      if (payload.projectId !== projectId) return;
+      setMarkers((prevMarkers) => {
+        if (
+          payload.planId !== currentPlanIdRef.current ||
+          payload.pageNumber !== currentPageNumberRef.current
+        ) {
+          return prevMarkers;
+        }
+
+        return prevMarkers.map((marker) =>
+          marker.id === payload.marker.id ? payload.marker : marker,
+        );
+      });
+    });
+
+    socket.on('marker:deleted', (payload: MarkerDeletedRealtimePayload) => {
+      if (payload.projectId !== projectId) return;
+      setMarkers((prevMarkers) => {
+        if (
+          payload.planId !== currentPlanIdRef.current ||
+          payload.pageNumber !== currentPageNumberRef.current
+        ) {
+          return prevMarkers;
+        }
+
+        return prevMarkers.filter((marker) => marker.id !== payload.markerId);
+      });
+      setTemporaryModalMarker((marker) =>
+        marker?.id === payload.markerId ? undefined : marker,
+      );
+      setIsModalActive((isActive) =>
+        temporaryModalMarkerIdRef.current === payload.markerId ? false : isActive,
+      );
+    });
+
+    socket.on('plan:created', (payload: PlanCreatedRealtimePayload) => {
+      if (payload.projectId !== projectId) return;
+
+      setActiveFolder((prevFolder) => {
+        if (!prevFolder || prevFolder.id !== payload.plan.folderId) return prevFolder;
+        if (prevFolder.plans.some((plan) => plan.id === payload.plan.id)) {
+          return prevFolder;
+        }
+
+        return {
+          ...prevFolder,
+          plans: [
+            ...prevFolder.plans,
+            {
+              ...payload.plan,
+              storageKey: payload.plan.storageKey ?? payload.plan.documentStorageKey ?? '',
+            },
+          ],
+        };
+      });
+    });
+
+    socket.on('cursor:move', (cursor: RemoteCursor) => {
+      if (
+        cursor.planId !== currentPlanIdRef.current ||
+        cursor.pageNumber !== currentPageNumberRef.current
+      ) {
+        return;
+      }
+
+      setRemoteCursors((prevCursors) => ({
+        ...prevCursors,
+        [cursor.socketId]: cursor,
+      }));
+    });
+
+    return () => {
+      socket.emit('project:leave', { projectId });
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, [projectId]);
 
   const displayPlan = React.useCallback(({
     planId,
@@ -120,6 +310,26 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
     
     currentClickCoords.current = {x, y};
     photoInputRef.current.click();
+  }
+
+  function handlePlanPointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    if (!planContainerRef.current || !currentPlan?.id) return;
+
+    const now = Date.now();
+    if (now - latestCursorSentAtRef.current < 50) return;
+    latestCursorSentAtRef.current = now;
+
+    const rect = planContainerRef.current.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 100;
+    const y = ((event.clientY - rect.top) / rect.height) * 100;
+
+    socketRef.current?.emit('cursor:move', {
+      projectId,
+      planId: currentPlan.id,
+      pageNumber: currentPageNumber,
+      x,
+      y,
+    });
   }
 
   function chooseMarkerPic(event: React.ChangeEvent<HTMLInputElement>){
@@ -178,7 +388,7 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
       } else {
         const result = await response.json();
         
-        setMarkers(prevMarkers => [...prevMarkers, result]);
+        setMarkers(prevMarkers => upsertMarker(prevMarkers, result));
         setTemporaryModalMarker(undefined);
         handleCloseModal();
       }
@@ -337,11 +547,23 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
   
   useEffect(() => {
     async function fetchMarkersForCurrentPlan() {
-      if(!currentPlan?.id) return;
-      const response = await getMarkers(currentPlan?.id as string, currentPageNumber);
+      if(!currentPlan?.id) {
+        markerRequestIdRef.current += 1;
+        setMarkers([]);
+        return;
+      }
+
+      const requestId = markerRequestIdRef.current + 1;
+      markerRequestIdRef.current = requestId;
+      setMarkers([]);
+
+      const response = await getMarkers(currentPlan.id, currentPageNumber);
+      if(markerRequestIdRef.current !== requestId) return;
+
       if(response.ok){
         const result = await response.json();
         const fetchedMarkers = result.markers;
+        if(markerRequestIdRef.current !== requestId) return;
         setMarkers(fetchedMarkers);
       } else {
         console.error("Erreur lors de la récupération des marqueurs :", response.statusText);
@@ -350,6 +572,29 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
 
     fetchMarkersForCurrentPlan()
   }, [currentPlan?.id, currentPageNumber])
+
+  useEffect(() => {
+    setRemoteCursors({});
+  }, [currentPlan?.id, currentPageNumber]);
+
+  useEffect(() => {
+    const cleanupInterval = window.setInterval(() => {
+      const now = Date.now();
+      setRemoteCursors((prevCursors) => {
+        const activeEntries = Object.entries(prevCursors).filter(([, cursor]) => {
+          return now - new Date(cursor.updatedAt).getTime() < 5000;
+        });
+
+        if (activeEntries.length === Object.keys(prevCursors).length) {
+          return prevCursors;
+        }
+
+        return Object.fromEntries(activeEntries);
+      });
+    }, 1000);
+
+    return () => window.clearInterval(cleanupInterval);
+  }, []);
 
   useEffect(() => {
     if(!activeFolder?.id) {
@@ -380,6 +625,7 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
     if(activeFolder){
       setActiveFolder(prev => {
         if(!prev) return prev;
+        if(prev.plans.some(plan => plan.id === newPlan.id)) return prev;
         return { ...prev, plans: [...prev.plans, newPlan] }
       });
     }
@@ -567,6 +813,7 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
                   ref={planContainerRef} 
                   className="relative bg-white block select-none touch-none" 
                   onClick={handlePlanClick}
+                  onPointerMove={handlePlanPointerMove}
                 >
                   {isPdf ? (
                     <Document file={currentFileUrl} onLoadSuccess={onDocumentLoadSuccess}>
@@ -602,6 +849,32 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
                       {index + 1}
                     </div>
                   ))}
+
+                  {Object.values(remoteCursors).map((cursor) => {
+                    const label =
+                      cursor.user?.firstname || cursor.user?.email || 'Collaborateur';
+                    const color = getCursorColor(cursor.socketId);
+
+                    return (
+                      <div
+                        key={cursor.socketId}
+                        className="pointer-events-none absolute z-20 flex -translate-x-1 -translate-y-1 flex-col gap-1"
+                        style={{ left: `${cursor.x}%`, top: `${cursor.y}%` }}
+                      >
+                        <MousePointer2
+                          className="h-6 w-6 drop-shadow"
+                          fill={color}
+                          style={{ color }}
+                        />
+                        <div
+                          className="max-w-36 truncate rounded px-2 py-0.5 text-xs font-medium text-white shadow"
+                          style={{ backgroundColor: color }}
+                        >
+                          {label}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </TransformComponent>
             </>

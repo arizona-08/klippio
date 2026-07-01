@@ -262,7 +262,13 @@ function ProjectsSection({ projects, mode }: ProjectsSectionProps) {
           <>
             <ul className={`p-4 grid grid-cols-1 gap-6 mt-4 py-6 ${isSideBarOpen ? 'xl:grid-cols-2 2xl:grid-cols-3' : ' md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4'}`}>
                 {displayedProjects.map(project => (
-                  <ProjectCard key={project.id} project={project} mode={mode} handleUnarchiveProject={handleUnarchiveProject} />
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    currentUser={user}
+                    mode={mode}
+                    handleUnarchiveProject={handleUnarchiveProject}
+                  />
                 ))}
             </ul>
 

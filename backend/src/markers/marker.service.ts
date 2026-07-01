@@ -260,7 +260,7 @@ export class MarkerService {
 
   async deleteMarker(markerId: string, userId: number) {
     try {
-      await this.assertMarkerAccessByMarkerId(markerId, userId);
+      const marker = await this.assertMarkerAccessByMarkerId(markerId, userId);
 
       await this.prismaService.markerPhoto.deleteMany({
         where: { markerId },
@@ -269,6 +269,13 @@ export class MarkerService {
       await this.prismaService.marker.delete({
         where: { id: markerId },
       });
+
+      return {
+        id: marker.id,
+        planId: marker.planId,
+        planPageNumber: marker.planPageNumber,
+        projectId: marker.plan.projectId,
+      };
     } catch (error: unknown) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -289,7 +296,7 @@ export class MarkerService {
       where: {
         id: planId,
         projectId,
-        project: { authorId: userId },
+        project: this.projectAccessWhere(userId),
       },
       select: { id: true },
     });
@@ -303,7 +310,7 @@ export class MarkerService {
     const plan = await this.prismaService.plan.findFirst({
       where: {
         id: planId,
-        project: { authorId: userId },
+        project: this.projectAccessWhere(userId),
       },
       select: { id: true },
     });
@@ -325,7 +332,7 @@ export class MarkerService {
         planId,
         plan: {
           projectId,
-          project: { authorId: userId },
+          project: this.projectAccessWhere(userId),
         },
       },
       select: { id: true },
@@ -334,6 +341,8 @@ export class MarkerService {
     if (!marker) {
       throw new NotFoundException('Marqueur non trouvé');
     }
+
+    return marker;
   }
 
   private async assertMarkerAccessByMarkerId(markerId: string, userId: number) {
@@ -341,14 +350,34 @@ export class MarkerService {
       where: {
         id: markerId,
         plan: {
-          project: { authorId: userId },
+          project: this.projectAccessWhere(userId),
         },
       },
-      select: { id: true },
+      select: {
+        id: true,
+        planId: true,
+        planPageNumber: true,
+        plan: {
+          select: {
+            projectId: true,
+          },
+        },
+      },
     });
 
     if (!marker) {
       throw new NotFoundException('Marqueur non trouvé');
     }
+
+    return marker;
+  }
+
+  private projectAccessWhere(userId: number) {
+    return {
+      OR: [
+        { authorId: userId },
+        { projectCollaborators: { some: { userId } } },
+      ],
+    };
   }
 }
