@@ -9,7 +9,6 @@ async function ProjectsSectionLoader({ mode }: ProjectsSectionLoaderProps) {
   const fetchFunction = isBasicMode ? getProjectsServerSide : getArchivedProjectsServerSide;
   const projectsResponse = await fetchFunction();
   const projectsData = await projectsResponse.json();
-  console.log(projectsData);
   return <ProjectsSection projects={projectsData} mode={mode} />;
 }
 
