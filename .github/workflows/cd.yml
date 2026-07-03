@@ -31,13 +31,16 @@ jobs:
           context: ./backend
           file: ./backend/Dockerfile.prod
           push: true
-          tags: ghcr.io/${{ github.repository }}-backend:latest
+          tags: |
+            ghcr.io/${{ github.repository }}-backend:latest
+            ghcr.io/${{ github.repository }}-backend:${{ github.sha }}
 
       - name: Build and push Frontend App
         uses: docker/build-push-action@v5
         with:
           context: ./frontend/application
           file: ./frontend/application/Dockerfile.prod
+          no-cache: true
           push: true
           tags: ghcr.io/${{ github.repository }}-app:latest
 
