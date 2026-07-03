@@ -45,13 +45,11 @@ export class UpdateMarkerDto {
   @IsNumber()
   @Type(() => Number)
   @Min(0)
-  @Max(1)
   coordX: number;
 
   @IsNumber()
   @Type(() => Number)
   @Min(0)
-  @Max(1)
   coordY: number;
 
   @IsOptional()
