@@ -70,6 +70,7 @@ jobs:
           port: ${{ secrets.PROD_SERVER_SSH_PORT }}
           script: |
             cd /home/${{ secrets.PROD_SERVER_USER }}/klippio
+            echo "IMAGE_TAG=${{ github.sha }}" > .env
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d --force-recreate --remove-orphans
