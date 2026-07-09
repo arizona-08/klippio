@@ -44,6 +44,10 @@ jobs:
           no-cache: true
           push: true
           tags: ghcr.io/${{ github.repository }}-app:${{ github.sha }}
+          build-args: |
+            NEXT_PUBLIC_BACKEND_URL=https://api.klippio.sajed-engineering.com
+            NEXT_PUBLIC_AMAZON_S3_REGION=eu-north-1
+            NEXT_PUBLIC_AMAZON_S3_BUCKET_NAME=klippio-s3-bucket
 
       - name: Build and push Frontend Marketing
         uses: docker/build-push-action@v5
@@ -52,6 +56,8 @@ jobs:
           file: ./frontend/marketing/Dockerfile.prod
           push: true
           tags: ghcr.io/${{ github.repository }}-marketing:${{ github.sha }}
+          build-args: |
+            NEXT_PUBLIC_APP_URL=https://app.klippio.sajed-engineering.com
 
   deploy:
     runs-on: ubuntu-latest
