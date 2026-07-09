@@ -1,9 +1,11 @@
 name: Déploiement continu sur le serveur de production
 on:
+  pull_request:
+    branches:
+      - pre-prod
   push:
     branches:
       - pre-prod
-      - main
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
