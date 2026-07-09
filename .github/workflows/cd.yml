@@ -31,6 +31,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./backend
+          no-cache: true
           file: ./backend/Dockerfile.prod
           push: true
           tags: |
