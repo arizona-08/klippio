@@ -34,9 +34,7 @@ jobs:
           no-cache: true
           file: ./backend/Dockerfile.prod
           push: true
-          tags: |
-            ghcr.io/${{ github.repository }}-backend:latest
-            ghcr.io/${{ github.repository }}-backend:${{ github.sha }}
+          tags: ghcr.io/${{ github.repository }}-backend:${{ github.sha }}
 
       - name: Build and push Frontend App
         uses: docker/build-push-action@v5
@@ -45,7 +43,7 @@ jobs:
           file: ./frontend/application/Dockerfile.prod
           no-cache: true
           push: true
-          tags: ghcr.io/${{ github.repository }}-app:latest
+          tags: ghcr.io/${{ github.repository }}-app:${{ github.sha }}
 
       - name: Build and push Frontend Marketing
         uses: docker/build-push-action@v5
@@ -53,7 +51,7 @@ jobs:
           context: ./frontend/marketing
           file: ./frontend/marketing/Dockerfile.prod
           push: true
-          tags: ghcr.io/${{ github.repository }}-marketing:latest
+          tags: ghcr.io/${{ github.repository }}-marketing:${{ github.sha }}
 
   deploy:
     runs-on: ubuntu-latest
