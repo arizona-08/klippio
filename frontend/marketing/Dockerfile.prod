@@ -1,5 +1,9 @@
 FROM node:24-alpine
 
+ARG NEXT_PUBLIC_APP_URL
+
+ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
+
 WORKDIR /app
 COPY package*.json .
 RUN npm install
