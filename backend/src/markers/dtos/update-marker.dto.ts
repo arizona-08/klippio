@@ -42,13 +42,13 @@ export class UpdateMarkerDto {
   @MaxLength(120)
   title: string;
 
-  @IsNumber()
   @Type(() => Number)
+  @IsNumber()
   @Min(0)
   coordX: number;
 
-  @IsNumber()
   @Type(() => Number)
+  @IsNumber()
   @Min(0)
   coordY: number;
 

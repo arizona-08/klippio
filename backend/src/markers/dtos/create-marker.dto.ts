@@ -32,9 +32,11 @@ export class CreateMarkerDto {
   @MaxLength(120)
   title: string;
 
+  @Type(() => Number)
   @IsNumber()
   coordX: number;
 
+  @Type(() => Number)
   @IsNumber()
   coordY: number;
 
