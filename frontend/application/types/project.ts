@@ -27,7 +27,7 @@ export type ProjectType = {
 export type CollaboratorType = {
   role: 'OWNER' | 'EDITOR' | 'VIEWER';
   user: {
-    id: string;
+    id: number;
     firstname: string;
     lastname: string;
     email: string;

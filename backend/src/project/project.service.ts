@@ -495,6 +495,114 @@ export class ProjectService {
     }
   }
 
+  async removeCollaboratorFromProject(
+    projectId: string,
+    collaboratorId: number,
+    userId: number,
+  ) {
+    try {
+      if (!Number.isInteger(collaboratorId)) {
+        throw new NotFoundException('Collaborator not found');
+      }
+
+      const project = await this.prismaService.project.findUnique({
+        where: { id: projectId },
+      });
+
+      if (!project) {
+        throw new NotFoundException('Project not found');
+      }
+
+      if (project.authorId !== userId) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      if (collaboratorId === project.authorId) {
+        throw new BadRequestException('The project owner cannot be removed');
+      }
+
+      const collaborator = await this.prismaService.projectCollaborator.findFirst({
+        where: {
+          projectId,
+          userId: collaboratorId,
+        },
+      });
+
+      if (!collaborator) {
+        throw new NotFoundException('Collaborator not found');
+      }
+
+      if (collaborator.role === 'OWNER') {
+        throw new BadRequestException('The project owner cannot be removed');
+      }
+
+      await this.prismaService.projectCollaborator.delete({
+        where: { id: collaborator.id },
+      });
+
+      return { success: true };
+    } catch (error: unknown) {
+      rethrowKnownHttpException(error);
+      throw new InternalServerErrorException(
+        'Failed to remove collaborator from project',
+        getErrorMessage(error),
+      );
+    }
+  }
+
+  async updateCollaboratorRole(
+    projectId: string,
+    collaboratorId: number,
+    role: 'VIEWER' | 'EDITOR',
+    userId: number,
+  ) {
+    try {
+      if (!Number.isInteger(collaboratorId)) {
+        throw new NotFoundException('Collaborator not found');
+      }
+
+      const project = await this.prismaService.project.findUnique({
+        where: { id: projectId },
+      });
+
+      if (!project) {
+        throw new NotFoundException('Project not found');
+      }
+
+      if (project.authorId !== userId) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      const collaborator = await this.prismaService.projectCollaborator.findFirst({
+        where: {
+          projectId,
+          userId: collaboratorId,
+        },
+      });
+
+      if (!collaborator) {
+        throw new NotFoundException('Collaborator not found');
+      }
+
+      if (collaborator.role === 'OWNER') {
+        throw new BadRequestException('The project owner role cannot be changed');
+      }
+
+      const updatedCollaborator = await this.prismaService.projectCollaborator.update({
+        where: { id: collaborator.id },
+        data: { role },
+      });
+
+      return { success: true, collaborator: updatedCollaborator };
+    } catch (error: unknown) {
+      rethrowKnownHttpException(error);
+      throw new InternalServerErrorException(
+        'Failed to update collaborator role',
+        getErrorMessage(error),
+      );
+    }
+  }
+
   async getInvitationDetails(invitationToken: string) {
     try {
       const invitation = await this.prismaService.projectInvitation.findUnique({
@@ -624,8 +732,8 @@ export class ProjectService {
         throw new UnauthorizedException('Invitation has expired');
       }
 
-      if (invitation.status === 'DECLINED') {
-        throw new BadRequestException('Invitation has been declined');
+      if (invitation.status !== 'PENDING') {
+        throw new BadRequestException('Invitation is no longer valid');
       }
 
       const user = await this.prismaService.user.findUnique({

@@ -26,6 +26,7 @@ import { CreateFolderDto } from './dtos/create-folder.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { RenameDto } from 'src/common/dtos/rename.dto';
 import { InviteCollaboratorDto } from './dtos/invite-collaborator.dto';
+import { UpdateCollaboratorRoleDto } from './dtos/update-collaborator-role.dto';
 
 enum ProjectSortBy {
   CREATED_AT = 'createdAt',
@@ -172,6 +173,34 @@ export class ProjectController {
       userId,
       inviteDto.invitedEmail,
       inviteDto.invitedRole
+    );
+  }
+
+  @Delete(':projectId/collaborators/:collaboratorId')
+  async removeCollaborator(
+    @Param('projectId') projectId: string,
+    @Param('collaboratorId') collaboratorId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.projectService.removeCollaboratorFromProject(
+      projectId,
+      Number(collaboratorId),
+      user.id,
+    );
+  }
+
+  @Patch(':projectId/collaborators/:collaboratorId/role')
+  async updateCollaboratorRole(
+    @Param('projectId') projectId: string,
+    @Param('collaboratorId') collaboratorId: string,
+    @Body() updateCollaboratorRoleDto: UpdateCollaboratorRoleDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.projectService.updateCollaboratorRole(
+      projectId,
+      Number(collaboratorId),
+      updateCollaboratorRoleDto.role,
+      user.id,
     );
   }
 
