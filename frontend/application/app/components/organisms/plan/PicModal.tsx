@@ -16,9 +16,10 @@ interface PicModalInterface {
   handleAddMarker: (marker: MarkerType) => void;
   handleUpdateMarkerPhoto: (marker: MarkerType) => void;
   handleDeleteMarker: (marker: MarkerType) => void;
+  canEdit: boolean;
 }
 
-function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhotoText, handleAddMarker, handleUpdateMarkerPhoto, handleDeleteMarker }: PicModalInterface) {
+function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhotoText, handleAddMarker, handleUpdateMarkerPhoto, handleDeleteMarker, canEdit }: PicModalInterface) {
   const revokePreviewUrls = React.useCallback((photos: MarkerPhotoType[]) => {
     photos.forEach((photo) => {
       const previewUrl = photo.previewUrl as string | undefined;
@@ -168,6 +169,7 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
                   placeholder='Titre du marqueur...'
                   value={marker?.title || ''} 
                   onChange={(e) => handleSetTitle(e, marker as MarkerType)}
+                  readOnly={!canEdit}
                   className='w-full p-2 outline-none bg-transparent hover:bg-white focus:bg-white border border-transparent focus:border-gray-200 rounded-md transition-colors'
                 />
               </h3>
@@ -215,6 +217,7 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
                     placeholder='Ajouter un label précis...'
                     value={localPhotos[currentMarkerPhotoIndex]?.label || ''} 
                     onChange={(e) => handleSetPhotoText(e, localPhotos[currentMarkerPhotoIndex] as MarkerPhotoType, currentMarkerPhotoIndex)}
+                    readOnly={!canEdit}
                     className='w-full p-3 border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-primary'
                   />
                 </div>
@@ -229,11 +232,12 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
                     className='w-full p-3 border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-primary'
                     value={localPhotos[currentMarkerPhotoIndex]?.comment || ''} 
                     onChange={(e) => handleSetPhotoText(e, localPhotos[currentMarkerPhotoIndex] as MarkerPhotoType, currentMarkerPhotoIndex)}
+                    readOnly={!canEdit}
                   ></textarea>
                 </div>
               </div>
 
-              <div className="px-6 my-5">
+              {canEdit && <div className="px-6 my-5">
                 <CTA
                   type='button'
                   color='danger_reverse'
@@ -241,18 +245,18 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
                   disabled={isLocalPhotosEmpty || isOnlyOneLocalPhoto}
                   onClick={() => handleDeleteMarkerPhoto(currentMarkerPhotoIndex)}
                 />
-              </div>
+              </div>}
             </div>
 
             {/* ZONE D'ACTIONS : flex-none, plus besoin de sticky */}
             <div id="actions" className="flex-none w-full flex flex-col-reverse justify-between items-stretch md:flex-row md:items-center p-6 border-t border-gray-100 bg-gray-50 gap-6">
-              <CTA 
+              {canEdit && <CTA
                 type="button" 
                 color="danger" 
                 text="Supprimer le marqueur" 
                 onClick={() => handleDeleteMarker(marker as MarkerType)}
-              />
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:grow md:justify-end">
+              />}
+              {canEdit && <div className="flex flex-col gap-3 md:flex-row md:items-center md:grow md:justify-end">
                 <div className="relative">
                   <div className={`photo-selector absolute -top-2 -translate-y-full mb-5 left-0 bg-white border border-gray-200 rounded-md ${isPhotoSelectorVisible ? 'block' : 'hidden'}`}>
                     <button
@@ -299,7 +303,7 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
                     }
                   }}
                 />
-              </div>
+              </div>}
             </div>
           </div>
 

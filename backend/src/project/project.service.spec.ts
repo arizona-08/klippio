@@ -173,6 +173,20 @@ describe('ProjectService', () => {
     expect(prismaService.project.update).not.toHaveBeenCalled();
   });
 
+  it('returns viewer permissions for a collaborator with read-only access', async () => {
+    const { service, prismaService } = createService();
+    prismaService.project.findFirst.mockResolvedValue({
+      authorId: 12,
+      projectCollaborators: [{ role: 'VIEWER' }],
+    });
+
+    await expect(service.getProjectPermissions('project-1', 99)).resolves.toEqual({
+      role: 'VIEWER',
+      canView: true,
+      canEdit: false,
+    });
+  });
+
   it('removes a collaborator when requested by the project owner', async () => {
     const { service, prismaService } = createService();
     prismaService.project.findUnique.mockResolvedValue({

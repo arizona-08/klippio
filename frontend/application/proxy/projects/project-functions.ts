@@ -25,6 +25,13 @@ export async function getProjectById(projectId: string) {
   return response;
 }
 
+export async function getProjectPermissions(projectId: string) {
+  return fetchFromClient(`/api/projects/${projectId}/permissions`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
 export async function archiveProject(projectId: string) {
   const response = await fetchFromClient(`/api/projects/${projectId}/archive`, {
     method: "PUT",

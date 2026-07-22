@@ -35,6 +35,12 @@ export type CollaboratorType = {
   }
 }
 
+export type ProjectPermissions = {
+  role: 'OWNER' | 'EDITOR' | 'VIEWER';
+  canView: boolean;
+  canEdit: boolean;
+};
+
 export type ProjectInvitationType = {
   role: 'OWNER' | 'EDITOR' | 'VIEWER';
   status: 'PENDING' | 'ACCEPTED' | 'DECLINED';

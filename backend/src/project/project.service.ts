@@ -11,7 +11,6 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProjectDTO } from './dtos/create-project.dto';
 import { CreateFolderDto } from './dtos/create-folder.dto';
 import { AmazonS3Service } from 'src/amazon/amazon-s3.service';
-import { MailerOptionInterface } from 'src/mail/interfaces/MailerOptionInterface';
 import { MailService } from 'src/mail/mail.service';
 
 function getErrorMessage(error: unknown): string {
@@ -80,6 +79,39 @@ export class ProjectService {
       rethrowKnownHttpException(error);
       throw new InternalServerErrorException('Failed to get project');
     }
+  }
+
+  async getProjectPermissions(projectId: string, userId: number) {
+    const project = await this.prismaService.project.findFirst({
+      where: {
+        id: projectId,
+        OR: [
+          { authorId: userId },
+          { projectCollaborators: { some: { userId } } },
+        ],
+      },
+      select: {
+        authorId: true,
+        projectCollaborators: {
+          where: { userId },
+          select: { role: true },
+        },
+      },
+    });
+
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
+
+    const role = project.authorId === userId
+      ? 'OWNER'
+      : project.projectCollaborators[0]?.role;
+
+    return {
+      role,
+      canView: true,
+      canEdit: role === 'OWNER' || role === 'EDITOR',
+    };
   }
 
   async updateProject(
@@ -384,7 +416,7 @@ export class ProjectService {
     file: Express.Multer.File,
   ) {
     try {
-      const project = await this.findProjectWithAccess(projectId, userId);
+      const project = await this.findProjectWithEditAccess(projectId, userId);
 
       if (!project) {
         throw new NotFoundException('Project not found');
@@ -466,18 +498,12 @@ export class ProjectService {
       // Return the invitation link (you can customize the URL as needed)
       const invitationLink = `${process.env.FRONTEND_URL}/invite/${invitationToken}`;
 
-      const mail: MailerOptionInterface = {
-        from: process.env.SMTP_FROM as string,
+      const mail = this.mailService.invitationMailOptions({
         to: invitedEmail,
-        subject: "Invitation à collaborer sur le projet",
-        html: `
-          <p>Bonjour,</p>
-          <p>${project.author.firstname} ${project.author.lastname} vous a invité à collaborer sur le projet "${project.title}".</p>
-          <p>Veuillez cliquer sur le lien ci-dessous pour accepter l'invitation :</p>
-          <a href="${invitationLink}">Accepter l'invitation</a>
-          <p>Cordialement,<br/>Team Klippio</p>
-        `,
-      };
+        inviterName: `${project.author.firstname} ${project.author.lastname}`,
+        projectTitle: project.title,
+        invitationLink,
+      });
 
       await this.mailService.sendMail(mail);
 
@@ -805,16 +831,12 @@ export class ProjectService {
   }) {
     try {
 
-      const mail: MailerOptionInterface = {
-        from: process.env.SMTP_FROM as string,
+      const mail = this.mailService.invitationDeclinedMailOptions({
         to: data.project.author.email,
-        subject: "Rejet de l'invitation à collaborer sur le projet",
-        html: `
-          <p>Bonjour ${data.project.author.firstname} ${data.project.author.lastname},</p>
-          <p>${data.email} à refusé l'invitation à collaborer sur le projet "${data.project.title}".</p>
-          <p>Cordialement,<br/>Team Klippio</p>
-        `,
-      };
+        ownerName: `${data.project.author.firstname} ${data.project.author.lastname}`,
+        inviteeEmail: data.email,
+        projectTitle: data.project.title,
+      });
 
       await this.mailService.sendMail(mail);
 
@@ -1000,6 +1022,18 @@ export class ProjectService {
         OR: [
           { authorId: userId },
           { projectCollaborators: { some: { userId } } },
+        ],
+      },
+    });
+  }
+
+  private async findProjectWithEditAccess(projectId: string, userId: number) {
+    return this.prismaService.project.findFirst({
+      where: {
+        id: projectId,
+        OR: [
+          { authorId: userId },
+          { projectCollaborators: { some: { userId, role: 'EDITOR' } } },
         ],
       },
     });

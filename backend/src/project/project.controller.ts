@@ -102,6 +102,14 @@ export class ProjectController {
     return this.projectService.getProject(userId, projectId);
   }
 
+  @Get(':projectId/permissions')
+  async getProjectPermissions(
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.projectService.getProjectPermissions(projectId, user.id);
+  }
+
   @Put(':projectId/update')
   async updateProject(
     @Param('projectId') projectId: string,
