@@ -14,6 +14,7 @@ import { RecentActivityModule } from './recent-activity/recent-activity.module';
 import { StatsModule } from './stats/stats.module';
 import { MarkerModule } from './markers/marker.module';
 import { RealtimeModule } from './realtime/realtime.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { RealtimeModule } from './realtime/realtime.module';
     RecentActivityModule,
     StatsModule,
     RealtimeModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

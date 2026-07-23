@@ -41,6 +41,19 @@ export type ProjectPermissions = {
   canEdit: boolean;
 };
 
+export type NotificationType = 'INVITATION' | 'ROLE_CHANGED' | 'ACCESS_REMOVED';
+
+export type NotificationItem = {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  projectId?: string | null;
+  invitationToken?: string;
+  createdAt: string;
+  isRead: boolean;
+};
+
 export type ProjectInvitationType = {
   role: 'OWNER' | 'EDITOR' | 'VIEWER';
   status: 'PENDING' | 'ACCEPTED' | 'DECLINED';

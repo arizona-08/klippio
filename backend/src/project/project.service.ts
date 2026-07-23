@@ -12,6 +12,7 @@ import { CreateProjectDTO } from './dtos/create-project.dto';
 import { CreateFolderDto } from './dtos/create-folder.dto';
 import { AmazonS3Service } from 'src/amazon/amazon-s3.service';
 import { MailService } from 'src/mail/mail.service';
+import { RealtimeService } from 'src/realtime/realtime.service';
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Unknown error';
@@ -28,7 +29,8 @@ export class ProjectService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly amazonS3Service: AmazonS3Service,
-    private readonly mailService: MailService
+    private readonly mailService: MailService,
+    private readonly realtimeService: RealtimeService,
   ) {}
 
   async createProject(
@@ -507,6 +509,24 @@ export class ProjectService {
 
       await this.mailService.sendMail(mail);
 
+      const invitedUser = await this.prismaService.user.findUnique({
+        where: { email: invitedEmail },
+        select: { id: true },
+      });
+
+      if (invitedUser) {
+        this.realtimeService.emitToUser(invitedUser.id, 'notification:created', {
+          id: `invitation-${invitation.id}`,
+          type: 'INVITATION',
+          title: 'Nouvelle invitation',
+          message: `${project.author.firstname} ${project.author.lastname} vous invite à rejoindre « ${project.title} » en tant que ${invitedRole === 'EDITOR' ? 'éditeur' : 'lecteur'}.`,
+          projectId,
+          invitationToken,
+          createdAt: invitation.createdAt,
+          isRead: false,
+        });
+      }
+
       return {
         success: true,
         message: 'Invitation link generated successfully',
@@ -561,6 +581,17 @@ export class ProjectService {
       if (collaborator.role === 'OWNER') {
         throw new BadRequestException('The project owner cannot be removed');
       }
+
+      const notification = await this.prismaService.notification.create({
+        data: {
+          userId: collaborator.userId,
+          type: 'ACCESS_REMOVED',
+          title: 'Accès au projet retiré',
+          message: `Votre accès au projet « ${project.title} » a été retiré.`,
+          projectId,
+        },
+      });
+      this.realtimeService.emitToUser(collaborator.userId, 'notification:created', notification);
 
       await this.prismaService.projectCollaborator.delete({
         where: { id: collaborator.id },
@@ -618,6 +649,17 @@ export class ProjectService {
         where: { id: collaborator.id },
         data: { role },
       });
+
+      const notification = await this.prismaService.notification.create({
+        data: {
+          userId: collaborator.userId,
+          type: 'ROLE_CHANGED',
+          title: 'Rôle mis à jour',
+          message: `Votre rôle sur le projet « ${project.title} » est désormais ${role === 'EDITOR' ? 'éditeur' : 'lecteur'}.`,
+          projectId,
+        },
+      });
+      this.realtimeService.emitToUser(collaborator.userId, 'notification:created', notification);
 
       return { success: true, collaborator: updatedCollaborator };
     } catch (error: unknown) {

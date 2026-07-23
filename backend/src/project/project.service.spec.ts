@@ -25,6 +25,9 @@ describe('ProjectService', () => {
         findUnique: jest.fn(),
         update: jest.fn(),
       },
+      notification: {
+        create: jest.fn(),
+      },
       folder: {
         create: jest.fn(),
       },
@@ -38,16 +41,21 @@ describe('ProjectService', () => {
     const mailService = {
       sendMail: jest.fn(),
     };
+    const realtimeService = {
+      emitToUser: jest.fn(),
+    };
 
     return {
       service: new ProjectService(
         prismaService as never,
         amazonS3Service as never,
         mailService as never,
+        realtimeService as never,
       ),
       prismaService,
       amazonS3Service,
       mailService,
+      realtimeService,
     };
   }
 
