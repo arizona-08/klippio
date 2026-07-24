@@ -1,305 +1,129 @@
 import Image from "next/image";
-import { Inter, Manrope } from "next/font/google";
+import Link from "next/link";
 
-const display = Manrope({
-  subsets: ["latin"],
-  weight: ["600", "700"],
-  variable: "--font-display",
-});
+const applicationUrl = "https://app.klippio.sajed-engineering.com";
 
-const body = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-body",
-});
+const features = [
+  {
+    number: "01",
+    title: "Visualisez le chantier",
+    text: "Ouvrez le plan, zoomez et retrouvez chaque observation exactement là où elle a été relevée.",
+  },
+  {
+    number: "02",
+    title: "Documentez sur place",
+    text: "Ajoutez une photo, un libellé et le contexte nécessaire pour que la bonne personne puisse intervenir.",
+  },
+  {
+    number: "03",
+    title: "Partagez une vision claire",
+    text: "Les équipes disposent du même niveau d’information, sans devoir reconstituer les échanges en fin de journée.",
+  },
+];
 
 export default function Home() {
+
+
   return (
-    <div
-      className={`${display.variable} ${body.variable} min-h-screen bg-white text-[#101612]`}
-    >
-      <header className="relative overflow-hidden border-b border-black/5">
-        <div className="absolute -left-40 -top-24 h-72 w-72 rounded-full bg-[#00AF63]/10 blur-3xl" />
-        <div className="absolute right-0 top-0 h-64 w-64 rounded-full bg-[#00AF63]/15 blur-3xl" />
-        <nav className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6 md:px-10">
-          <div className="flex items-center gap-3">
-            <div className="px-2 py-1">
-              <Image
-                src="/logos/logo_long_black.svg"
-                alt="Klippio"
-                width={120}
-                height={34}
-                priority
-              />
+    <main className="min-h-screen overflow-hidden bg-white font-(--font-body) text-[#101612]">
+
+      <div className=" px-3 py-3 sm:px-5 sm:py-5 lg:px-8">
+        <section className="relative overflow-hidden rounded-4xl border border-black/5 bg-[#f9fbfe] px-5 pt-5 shadow-[0_28px_70px_-52px_rgba(16,22,18,0.55)] sm:px-8 sm:pt-7">
+          <div className="absolute left-1/2 top-28 h-96 w-[min(80vw,780px)] -translate-x-1/2 rounded-full bg-white/80 blur-3xl" />
+          <header className="relative z-10 flex items-center justify-between">
+            <Link href="/" className="flex items-center" aria-label="Klippio, accueil">
+              <Image src="/logos/logo_long_black.svg" alt="Klippio" width={112} height={32} priority />
+            </Link>
+            <div className="flex items-center gap-2 sm:gap-5">
+              <a className="hidden text-sm font-semibold text-gray-700 transition-colors hover:text-primary sm:inline-flex" href="#contact">Nous contacter</a>
+              <a className="rounded-xl bg-[#101612] px-4 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 hover:bg-primary sm:px-5" href={`${applicationUrl}/auth/register`}>Commencer</a>
+            </div>
+          </header>
+
+          <div className="relative z-10 mx-auto max-w-3xl pb-10 pt-16 text-center sm:pb-14 sm:pt-20">
+            <h1 className="font-[var(--font-display)] text-4xl font-semibold leading-[0.98] tracking-[-0.06em] text-[#101612] sm:text-5xl lg:text-6xl">Pilotez chaque <span className="text-primary">observation</span><br />sans perdre le plan.</h1>
+            <p className="mx-auto mt-5 max-w-xl text-sm leading-6 text-gray-600 sm:text-base">Klippio rassemble les réserves, photos et commentaires de chantier dans une vue claire, partagée par toute l&apos;équipe.</p>
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              <a className="rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[#009a56] hover:shadow-md" href={`${applicationUrl}/auth/register`}>Créer un projet</a>
+              <a className="rounded-xl border border-primary bg-white/70 px-6 py-3 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-white" href="#methode">En savoir plus</a>
             </div>
           </div>
-          <div className="hidden items-center gap-8 text-sm font-medium text-black/70 lg:flex">
-            <a className="transition hover:text-black" href="#fonctionnalites">
-              Fonctionnalités
-            </a>
-            <a className="transition hover:text-black" href="#usage">
-              Usage
-            </a>
-            <a className="transition hover:text-black" href="#resultats">
-              Résultats
-            </a>
-            <a className="transition hover:text-black" href="#contact">
-              Contact
-            </a>
-          </div>
-          <div className="flex items-center gap-3">
-            <button className="hidden rounded-full border border-black/10 px-5 py-2 text-sm font-medium text-black/70 transition hover:border-black/20 hover:text-black md:inline-flex">
-              Se connecter
-            </button>
-            <button className="rounded-full bg-[#00AF63] px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#009a56]">
-              S&apos;inscrire gratuitement
-            </button>
-          </div>
-        </nav>
-        <section className="mx-auto grid w-full max-w-6xl items-center gap-12 px-6 pb-16 pt-6 md:grid-cols-[1.1fr_0.9fr] md:px-10 md:pb-20">
-          <div className="flex flex-col gap-6">
-            <p className="w-fit rounded-full bg-[#00AF63]/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#00AF63]">
-              Gestion terrain en temps réel
-            </p>
-            <h1 className="font-[var(--font-display)] text-4xl leading-[1.05] tracking-tight text-black sm:text-5xl lg:text-6xl">
-              Photographiez, placez, partagez tout sur le plan du chantier
-            </h1>
-            <p className="max-w-xl text-base leading-7 text-black/65 sm:text-lg">
-              Klippio aide les équipes du batiment à capturer les défauts, les
-              idées d&apos;amélioration et les points de controle directement sur le
-              plan. Fini les notes perdues, tout est au bon endroit avant la fin
-              de la journée.
-            </p>
-            <div className="flex flex-wrap items-center gap-4">
-              <button className="rounded-full bg-[#00AF63] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#009a56]">
-                Essayer gratuitement
-              </button>
-              <button className="rounded-full border border-black/15 px-6 py-3 text-sm font-semibold text-black/70 transition hover:border-black/30 hover:text-black">
-                Voir une visite guidee
-              </button>
-            </div>
-            <div className="flex items-center gap-6 text-xs font-medium uppercase tracking-[0.2em] text-black/40">
-              <span>Entreprises generales</span>
-              <span>Architectes</span>
-              <span>Bureaux d&apos;études</span>
-            </div>
-          </div>
-          <div className="relative">
-            <div className="absolute -left-6 top-10 h-40 w-40 rounded-full border border-black/10 bg-white/90" />
-            <div className="absolute -right-4 bottom-10 h-20 w-20 rounded-full border border-black/10 bg-white/80" />
-            <div className="relative overflow-hidden rounded-[32px] border border-black/10 bg-[#f7faf8] shadow-[0_30px_80px_-60px_rgba(0,0,0,0.6)]">
-              <div className="grid grid-cols-[1.1fr_0.9fr] gap-0">
-                <div className="p-6">
-                  <div className="flex items-center gap-3">
-                    <span className="h-2.5 w-2.5 rounded-full bg-[#00AF63]" />
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-black/50">
-                      Plan interactif
-                    </p>
-                  </div>
-                  <div className="mt-4 space-y-3">
-                    {Array.from({ length: 5 }).map((_, index) => (
-                      <div
-                        key={`row-${index}`}
-                        className="flex items-center justify-between rounded-xl border border-black/5 bg-white px-4 py-3"
-                      >
-                        <div className="space-y-2">
-                          <div className="h-2.5 w-28 rounded-full bg-black/10" />
-                          <div className="h-2.5 w-20 rounded-full bg-black/10" />
-                        </div>
-                        <div className="h-6 w-6 rounded-full bg-[#00AF63]/15" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="relative bg-[#00AF63] text-white">
-                  <div className="absolute inset-0 opacity-20">
-                    <div className="h-full w-full bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.5),_transparent_60%)]" />
-                  </div>
-                  <div className="relative flex h-full flex-col justify-between p-6">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/70">
-                        Jour 12
-                      </p>
-                      <p className="mt-2 text-2xl font-semibold">
-                        18 points ouverts
-                      </p>
-                      <p className="mt-2 text-sm text-white/80">
-                        Photos classees par zone, validation en un clic.
-                      </p>
-                    </div>
-                    <div className="rounded-2xl bg-white/15 p-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em]">
-                        Derniere capture
-                      </p>
-                      <p className="mt-2 text-sm text-white/85">
-                        Etancheite facade Nord - a corriger avant reception.
-                      </p>
-                      <div className="mt-3 flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-white/30" />
-                        <div>
-                          <p className="text-xs font-semibold">Camille L.</p>
-                          <p className="text-xs text-white/70">Il y a 12 min</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+
+          <div className="relative z-10 mx-auto max-w-[1100px] rounded-t-2xl border-x border-t border-white/80 bg-white/60 p-1.5 shadow-[0_-14px_34px_-28px_rgba(16,22,18,0.55)] sm:p-2.5">
+            <div className="overflow-hidden rounded-t-xl border border-gray-200 bg-white">
+              <Image src="/images/application_shots/plan_loader.png" alt="Plan interactif d'un chantier dans l'application Klippio" width={1920} height={911} priority className="h-auto w-full" sizes="(max-width: 1280px) 100vw, 76vw" />
             </div>
           </div>
         </section>
-      </header>
+      </div>
 
-      <section
-        id="resultats"
-        className="border-y border-black/5 bg-[#0d1a14] text-white"
-      >
-        <div className="mx-auto grid w-full max-w-6xl gap-10 px-6 py-12 md:grid-cols-[1.4fr_1fr] md:px-10">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/40">
-              Resultats terrain
-            </p>
-            <h2 className="mt-4 font-[var(--font-display)] text-3xl tracking-tight text-white sm:text-4xl">
-              Chaque projet gagne en clarte et en rapidite
-            </h2>
+      <section id="fonctionnalites" className="border-y border-black/5 bg-white">
+        <div className="mx-auto max-w-[1320px] px-6 py-20 lg:px-8">
+          <div className="max-w-2xl">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Les fondamentaux Klippio</p>
+            <h2 className="mt-4 font-[var(--font-display)] text-3xl font-semibold tracking-[-0.045em] sm:text-4xl">Un flux simple, de la constatation à la résolution.</h2>
           </div>
-          <div className="grid grid-cols-2 gap-6">
-            {[
-              { value: "120%", label: "Reduction des aller-retours" },
-              { value: "2x", label: "Validation plus rapide" },
-              { value: "14h", label: "Temps gagne par semaine" },
-              { value: "96%", label: "Photos retrouvees" },
-            ].map((stat) => (
-              <div key={stat.value} className="space-y-2">
-                <p className="text-2xl font-semibold text-[#00AF63]">
-                  {stat.value}
-                </p>
-                <p className="text-sm text-white/70">{stat.label}</p>
-              </div>
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {features.map((feature) => (
+              <article key={feature.number} className="rounded-2xl border border-gray-200 bg-[#fafcfb] p-6 transition-transform hover:-translate-y-1 hover:shadow-md">
+                <span className="text-sm font-bold text-primary">{feature.number}</span>
+                <h3 className="mt-8 text-lg font-semibold text-gray-900">{feature.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-gray-600">{feature.text}</p>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section
-        id="fonctionnalites"
-        className="mx-auto w-full max-w-6xl px-6 py-16 md:px-10"
-      >
-        <div className="grid gap-10 md:grid-cols-[0.9fr_1.1fr]">
-          <div className="space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#00AF63]">
-              Un outil pense chantier
-            </p>
-            <h2 className="font-[var(--font-display)] text-3xl tracking-tight text-black sm:text-4xl">
-              Le plan devient votre terrain de communication
-            </h2>
-            <p className="text-sm leading-7 text-black/65">
-              Chaque photo est automatiquement positionnee sur le plan, taggee
-              par zone et partagee avec les bonnes equipes. Les decisions sont
-              tracees, les validations documentees.
-            </p>
+      <section id="methode" className="mx-auto grid max-w-[1320px] gap-10 px-6 py-20 lg:grid-cols-[0.8fr_1.2fr] lg:items-start lg:px-8">
+        <div className="max-w-md">
+          <p className="inline-flex rounded-full border border-gray-200 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-gray-600">Avantages</p>
+          <h2 className="mt-5 font-[var(--font-display)] text-3xl font-semibold tracking-[-0.045em] sm:text-4xl">Pourquoi choisir <span className="text-primary">Klippio</span> ?</h2>
+          <p className="mt-5 text-sm leading-7 text-gray-600">Un outil conçu pour réduire la friction entre la constatation sur site, la compréhension du problème et son suivi par les équipes.</p>
+          <a className="mt-7 inline-flex rounded-xl border border-primary px-5 py-3 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-white" href={`${applicationUrl}/auth/register`}>Essayer l&apos;application</a>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <article className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-sm font-bold text-primary">01</span>
+            <h3 className="mt-8 text-lg font-semibold text-gray-900">Une vision partagée</h3>
+            <p className="mt-3 text-sm leading-6 text-gray-600">Chaque remarque est positionnée sur le même plan, pour que chacun parle du même endroit.</p>
+          </article>
+          <article className="rounded-2xl bg-[linear-gradient(135deg,#00af63_0%,#009a56_55%,#087044_100%)] p-6 text-white shadow-[0_20px_42px_-28px_rgba(0,130,75,0.8)]">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-sm font-bold text-white">02</span>
+            <h3 className="mt-8 text-lg font-semibold">Des informations exploitables</h3>
+            <p className="mt-3 text-sm leading-6 text-white/80">Photo, libellé et commentaire restent réunis pour comprendre une observation sans aller-retour inutile.</p>
+          </article>
+          <article className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-sm font-bold text-primary">03</span>
+            <h3 className="mt-8 text-lg font-semibold text-gray-900">Un suivi plus fluide</h3>
+            <p className="mt-3 text-sm leading-6 text-gray-600">Les équipes retrouvent rapidement les points ouverts et peuvent se concentrer sur les actions à mener.</p>
+          </article>
+          <article className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-sm font-bold text-primary">04</span>
+            <h3 className="mt-8 text-lg font-semibold text-gray-900">Adapté au terrain</h3>
+            <p className="mt-3 text-sm leading-6 text-gray-600">Une interface claire sur ordinateur, tablette ou mobile, pensée pour être utile directement sur chantier.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="contact" className="px-4 pb-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-[1440px] flex-col gap-7 rounded-[28px] bg-[#101d16] px-6 py-10 text-white sm:px-10 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#77dfaa]">Klippio par SAJED Engineering</p>
+            <h2 className="mt-4 font-[var(--font-display)] text-3xl font-semibold tracking-[-0.045em] sm:text-4xl">Prêt à remettre le plan au centre du chantier ?</h2>
+            <p className="mt-4 text-sm leading-6 text-white/65">Créez votre espace Klippio et centralisez vos observations dès le premier projet.</p>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {[
-              {
-                title: "Pointage precis",
-                text: "Marquez un defaut, ajoutez une note vocale ou un commentaire.",
-              },
-              {
-                title: "Photos instantanees",
-                text: "Capturez, annotez et envoyez en quelques secondes.",
-              },
-              {
-                title: "Suivi des actions",
-                text: "Assignez une equipe, fixez une echeance, suivez l'avancement.",
-              },
-              {
-                title: "Rapports exportables",
-                text: "Partagez les points ouverts en PDF ou via un lien.",
-              },
-            ].map((feature) => (
-              <div
-                key={feature.title}
-                className="rounded-2xl border border-black/5 bg-white p-5 shadow-[0_18px_40px_-35px_rgba(0,0,0,0.35)]"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="h-10 w-10 rounded-full bg-[#00AF63]/10" />
-                  <p className="text-sm font-semibold">{feature.title}</p>
-                </div>
-                <p className="mt-4 text-sm text-black/60">{feature.text}</p>
-              </div>
-            ))}
+          <div className="flex flex-wrap gap-3">
+            <a className="rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#009a56]" href={`${applicationUrl}/auth/register`}>Accéder à Klippio</a>
+            <a className="rounded-xl border border-white/20 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10" href="https://sajed-engineering.com">Découvrir SAJED Engineering</a>
           </div>
         </div>
       </section>
 
-      <section
-        id="usage"
-        className="mx-auto w-full max-w-6xl px-6 pb-20 md:px-10"
-      >
-        <div className="grid gap-10 rounded-[28px] border border-black/5 bg-[#f7faf8] p-8 md:grid-cols-[1.1fr_0.9fr]">
-          <div className="space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-black/40">
-              Comment ca marche
-            </p>
-            <h3 className="font-[var(--font-display)] text-2xl tracking-tight text-black sm:text-3xl">
-              3 etapes terrain, zero paperasse
-            </h3>
-            <div className="space-y-4 text-sm text-black/65">
-              <p>
-                1. Ouvrez le plan du chantier sur mobile ou tablette.
-              </p>
-              <p>2. Capturez une photo et positionnez-la instantanement.</p>
-              <p>
-                3. Partagez les points ouverts avec les equipes et le client.
-              </p>
-            </div>
-          </div>
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-black/5 bg-white p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-black/40">
-                Equipe chantier
-              </p>
-              <p className="mt-3 text-sm text-black/65">
-                &quot;On retrouve instantanement toutes les photos et les remarques
-                zone par zone. On ne perd plus une demi-journee a tout
-                reconstituer.&quot;
-              </p>
-            </div>
-            <div className="rounded-2xl border border-black/5 bg-white p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-black/40">
-                Conducteur de travaux
-              </p>
-              <p className="mt-3 text-sm text-black/65">
-                &quot;Les validations sont fluides, et les rapports sont prets a
-                envoyer en fin de journee.&quot;
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <footer
-        id="contact"
-        className="border-t border-black/5 bg-white"
-      >
-        <div className="mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-6 px-6 py-10 md:flex-row md:items-center md:px-10">
-          <div>
-            <p className="font-semibold">Pret pour votre prochain chantier ?</p>
-            <p className="text-sm text-black/60">
-              Nos experts vous repondent en moins de 24h.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <button className="rounded-full bg-[#00AF63] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#009a56]">
-              Planifier une demo
-            </button>
-            <button className="rounded-full border border-black/15 px-6 py-3 text-sm font-semibold text-black/70 transition hover:border-black/30 hover:text-black">
-              Contacter l&apos;equipe
-            </button>
-          </div>
-        </div>
+      <footer className="mx-auto flex max-w-[1320px] flex-col gap-3 px-6 py-8 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between lg:px-8">
+        <p>© {new Date().getFullYear()} Klippio, une solution SAJED Engineering.</p>
+        <div className="flex gap-5"><a className="hover:text-primary" href={applicationUrl}>Application Klippio</a><a className="hover:text-primary" href="https://sajed-engineering.com">sajed-engineering.com</a></div>
       </footer>
-    </div>
+    </main>
   );
 }

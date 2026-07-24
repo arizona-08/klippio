@@ -12,8 +12,11 @@ const albertSans = Albert_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Klippio App",
-  description: "Votre application de gestion de suivi de chantier",
+  metadataBase: new URL("https://app.klippio.sajed-engineering.com"),
+  title: "Klippio App | Suivi de chantier sur plan",
+  description: "Accédez à Klippio, l'application SAJED Engineering pour gérer les observations et photos de chantier directement sur plan.",
+  alternates: { canonical: "/" },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({
