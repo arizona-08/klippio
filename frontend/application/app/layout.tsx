@@ -17,7 +17,6 @@ export const metadata: Metadata = {
   description: "Accédez à Klippio, l'application SAJED Engineering pour gérer les observations et photos de chantier directement sur plan.",
   icons: {
     icon: "/logos/logo_icon_green.svg",
-    shortcut: "/favicon-16x16.png",
   },
   alternates: { canonical: "/" },
   robots: { index: true, follow: true },
