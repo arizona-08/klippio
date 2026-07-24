@@ -14,10 +14,9 @@ import { useCurrentProjectStore } from '@/stores/CurrentProjectStore'
 import { getFolder, getProjectRootFolder } from '@/proxy/folders/folder-functions'
 import { useSearchParams } from 'next/navigation'
 import { addMarker, deleteMarker, editMarker, getMarkers } from '@/proxy/markers/marker-functions'
-import { ChevronLeft, ChevronRight, MousePointer2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, FileUp, MapPinned, MousePointer2 } from 'lucide-react'
 import { updateProjectThumbnail } from '@/proxy/projects/project-functions'
 import Image from 'next/image'
-import CTA from '../../atoms/CTA'
 import { io, Socket } from 'socket.io-client'
 
 const Document = dynamic(() => import('react-pdf').then((mod) => mod.Document), { ssr: false });
@@ -37,7 +36,7 @@ function appendMarkerPhotoMetadata(
 interface PlanLoaderProps {
   projectId: string;
   canEdit: boolean;
-  onPlanChange?: (plan: PlanType) => void; // Callback pour notifier le changement de plan
+  onPlanChange?: (plan: PlanType | null) => void; // Callback pour notifier le changement de plan
   
 }
 
@@ -75,6 +74,11 @@ type PlanCreatedRealtimePayload = {
   plan: PlanType & {
     documentStorageKey?: string;
   };
+};
+
+type PlanDeletedRealtimePayload = {
+  projectId: string;
+  planId: string;
 };
 
 function getCursorColor(identifier: string) {
@@ -131,6 +135,7 @@ function PlanLoader({ projectId, canEdit, onPlanChange }: PlanLoaderProps) {
   const currentPlanIdRef = React.useRef<string | undefined>(undefined);
   const currentPageNumberRef = React.useRef(1);
   const temporaryModalMarkerIdRef = React.useRef<string | undefined>(undefined);
+  const onPlanChangeRef = React.useRef(onPlanChange);
 
   //État pour gérer le dossier actif
   const [activeFolder, setActiveFolder] = React.useState<FolderType | null>(null);
@@ -174,6 +179,10 @@ function PlanLoader({ projectId, canEdit, onPlanChange }: PlanLoaderProps) {
   useEffect(() => {
     temporaryModalMarkerIdRef.current = temporaryModalMarker?.id;
   }, [temporaryModalMarker?.id]);
+
+  useEffect(() => {
+    onPlanChangeRef.current = onPlanChange;
+  }, [onPlanChange]);
 
   useEffect(() => {
     if (!process.env.NEXT_PUBLIC_BACKEND_URL) return;
@@ -262,6 +271,28 @@ function PlanLoader({ projectId, canEdit, onPlanChange }: PlanLoaderProps) {
       });
     });
 
+    socket.on('plan:deleted', (payload: PlanDeletedRealtimePayload) => {
+      if (payload.projectId !== projectId) return;
+
+      setActiveFolder((prevFolder) => {
+        if (!prevFolder) return prevFolder;
+        return {
+          ...prevFolder,
+          plans: prevFolder.plans.filter((plan) => plan.id !== payload.planId),
+        };
+      });
+
+      if (currentPlanIdRef.current === payload.planId) {
+        setCurrentPlan(null);
+        setCurrentFileUrl(null);
+        setMarkers([]);
+        setRemoteCursors({});
+        setTemporaryModalMarker(undefined);
+        setIsModalActive(false);
+        onPlanChangeRef.current?.(null);
+      }
+    });
+
     socket.on('cursor:move', (cursor: RemoteCursor) => {
       if (
         cursor.planId !== currentPlanIdRef.current ||
@@ -281,7 +312,7 @@ function PlanLoader({ projectId, canEdit, onPlanChange }: PlanLoaderProps) {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [projectId]);
+  }, [projectId, setCurrentPlan]);
 
   const displayPlan = React.useCallback(({
     planId,
@@ -644,6 +675,16 @@ function PlanLoader({ projectId, canEdit, onPlanChange }: PlanLoaderProps) {
         return { ...prev, plans: prev.plans.filter(plan => plan.id !== nodeId) }
       }
     })
+
+    if (type === 'plan' && currentPlanIdRef.current === nodeId) {
+      setCurrentPlan(null);
+      setCurrentFileUrl(null);
+      setMarkers([]);
+      setRemoteCursors({});
+      setTemporaryModalMarker(undefined);
+      setIsModalActive(false);
+      onPlanChange?.(null);
+    }
   }
 
   function updateUIOnRenameNode(nodeId: string, newName: string, type: 'folder' | 'plan'){
@@ -766,22 +807,19 @@ function PlanLoader({ projectId, canEdit, onPlanChange }: PlanLoaderProps) {
   }
   
   return (
-    <div className="relative w-full h-full bg-gray-100  flex flex-col">
+    <div className="relative flex h-full w-full flex-col overflow-hidden bg-[#f4f7f5]">
       
       {!currentFileUrl ? (
-        <div id="plan-upload-container" className="w-full max-w-sm relative top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-50 p-6 rounded-lg border border-gray-200" ref={planUploadContainerRef}>
-          <div className="text-center mb-4">
-            <h2 className="block text-lg font-medium mb-2">Vous n&apos;avez aucun plan pour le moment</h2>
-            <p>Chargez-en un ici</p>
-          </div>
-
-          <div className="flex justify-center">
-            <CTA 
-              color="primary"
-              type='button'
-              text='Charger un plan'
-              onClick={() => setIsAddPlanModalActive(true)}
-            />
+        <div className="flex h-full w-full items-center justify-center p-6" ref={planUploadContainerRef}>
+          <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <MapPinned className="h-7 w-7" />
+            </div>
+            <h2 className="mt-5 text-xl font-semibold text-gray-900">Aucun plan affiché</h2>
+            <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-gray-600">Importez un plan pour centraliser les observations et les suivre directement sur le chantier.</p>
+            <div className="mt-6 flex justify-center">
+              {canEdit ? <button type="button" className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary/90" onClick={() => setIsAddPlanModalActive(true)}><FileUp className="h-4 w-4" />Importer un plan</button> : <p className="rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-500">Choisissez un plan depuis le menu en haut à droite.</p>}
+            </div>
           </div>
         </div>
       ) : (
@@ -798,12 +836,10 @@ function PlanLoader({ projectId, canEdit, onPlanChange }: PlanLoaderProps) {
           {() => (
             <>
               {isPdf && (
-                <div className="min-w-30 max-w-60 w-full absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center justify-between gap-4 bg-white p-2 rounded-lg shadow-md">
-                  <ChevronLeft className="cursor-pointer rounded-full w-8 h-8 hover:bg-gray-200" onClick={navigatePreviousPage}/>
-                  <p className="select-none">
-                    Page {currentPageNumber} sur {numPages || '...'}
-                  </p>
-                  <ChevronRight className="cursor-pointer rounded-full w-8 h-8 hover:bg-gray-200" onClick={navigateNextPage}/>
+                <div className="absolute bottom-5 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 rounded-xl border border-gray-200 bg-white/95 p-1.5 shadow-lg backdrop-blur">
+                  <button type="button" className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-600 transition-colors hover:bg-gray-100 disabled:opacity-40" onClick={navigatePreviousPage} disabled={currentPageNumber === 1} aria-label="Page précédente"><ChevronLeft className="h-4 w-4" /></button>
+                  <p className="min-w-28 select-none text-center text-xs font-semibold text-gray-700">Page {currentPageNumber} <span className="font-normal text-gray-400">sur</span> {numPages || '...'}</p>
+                  <button type="button" className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-600 transition-colors hover:bg-gray-100 disabled:opacity-40" onClick={navigateNextPage} disabled={Boolean(numPages && currentPageNumber === numPages)} aria-label="Page suivante"><ChevronRight className="h-4 w-4" /></button>
                 </div>
               )}
 
@@ -815,7 +851,7 @@ function PlanLoader({ projectId, canEdit, onPlanChange }: PlanLoaderProps) {
                 {/* 💡 CORRECTION : 'inline-block' ou 'block' pour que le wrapper épouse la taille exacte du plan */}
                 <div 
                   ref={planContainerRef} 
-                  className="relative bg-white block select-none touch-none" 
+                  className="relative block select-none touch-none bg-white shadow-sm"
                   onClick={handlePlanClick}
                   onPointerMove={handlePlanPointerMove}
                 >
@@ -846,7 +882,7 @@ function PlanLoader({ projectId, canEdit, onPlanChange }: PlanLoaderProps) {
                   {markers.map((marker, index) => (
                     <div
                       key={marker.id ?? index}
-                      className="marker absolute w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-sm cursor-pointer border-2 border-white shadow-lg transform -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform z-10"
+                      className="marker absolute z-10 flex h-7 w-7 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-red-500 text-xs font-bold text-white shadow-md transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2"
                       style={{ left: `${marker.coordX}%`, top: `${marker.coordY}%` }}
                       onClick={(e) => handleMarkerClick(e, marker)}
                     >
@@ -885,6 +921,11 @@ function PlanLoader({ projectId, canEdit, onPlanChange }: PlanLoaderProps) {
           )}
         </TransformWrapper>
       )}
+
+      {currentPlan && <div className="pointer-events-none absolute left-4 top-4 z-30 hidden rounded-xl border border-gray-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur sm:flex sm:items-center sm:gap-2">
+        {option === 'pin' ? <MapPinned className="h-4 w-4 text-primary" /> : <MousePointer2 className="h-4 w-4 text-gray-500" />}
+        <p className="text-xs font-medium text-gray-700">{option === 'pin' ? 'Cliquez sur le plan pour ajouter un point' : 'Utilisez la molette pour zoomer et faites glisser pour naviguer'}</p>
+      </div>}
 
 
 

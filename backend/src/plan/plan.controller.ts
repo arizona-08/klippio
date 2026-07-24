@@ -9,6 +9,7 @@ import {
   Param,
   UseGuards,
   Body,
+  Delete,
   Get,
   Patch,
 } from '@nestjs/common';
@@ -108,5 +109,24 @@ export class PlanController {
       projectId,
       user.id,
     );
+  }
+
+  @Delete(':planId')
+  async deletePlan(
+    @Param('planId') planId: string,
+    @CurrentUser() user: User,
+  ) {
+    const deletedPlan = await this.planService.deletePlan(planId, user.id);
+
+    this.realtimeService.emitToProject(deletedPlan.projectId, 'plan:deleted', {
+      projectId: deletedPlan.projectId,
+      planId: deletedPlan.id,
+      actorId: user.id,
+    });
+
+    return {
+      success: true,
+      message: 'Plan supprimé avec succès',
+    };
   }
 }

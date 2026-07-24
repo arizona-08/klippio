@@ -221,10 +221,10 @@ function AppMenu() {
               )}
             </div>
 
-            <div className={`user-infos max-w-2/5 ${isSidebarOpen ? '' : 'hidden'}`}>
+            <div className={`user-infos min-w-0 flex-1 ${isSidebarOpen ? '' : 'hidden'}`}>
               
-              <p className="line-clamp-1 font-medium">{user?.firstname} {user?.lastname}</p>
-              <p className="line-clamp-1 text-sm opacity-85">{user?.email}</p>
+              <p className="truncate font-medium">{user?.firstname} {user?.lastname}</p>
+              <p className="truncate text-sm opacity-85">{user?.email}</p>
             </div>
 
           </Link>

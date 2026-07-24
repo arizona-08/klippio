@@ -227,6 +227,54 @@ export class PlanService {
     }
   }
 
+  async deletePlan(planId: string, userId: number) {
+    try {
+      const existingPlan = await this.prismaService.plan.findFirst({
+        where: {
+          id: planId,
+          project: this.projectAccessWhere(userId, true),
+        },
+        include: {
+          markers: {
+            include: {
+              markerPhotos: {
+                select: { photoStorageKey: true },
+              },
+            },
+          },
+        },
+      });
+
+      if (!existingPlan) {
+        throw new NotFoundException('Plan non trouvé');
+      }
+
+      const storageKeys = [
+        existingPlan.documentStorageKey,
+        ...existingPlan.markers.flatMap((marker) =>
+          marker.markerPhotos.map((photo) => photo.photoStorageKey),
+        ),
+      ];
+
+      await Promise.all(
+        storageKeys.map((storageKey) => this.amazonS3Service.deleteImage(storageKey)),
+      );
+
+      await this.prismaService.plan.delete({
+        where: { id: planId },
+      });
+
+      return { id: existingPlan.id, projectId: existingPlan.projectId };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+
+      console.error('Error when deleting plan: ', error);
+      throw new InternalServerErrorException('Erreur lors de la suppression du plan');
+    }
+  }
+
   private async assertProjectAccess(
     projectId: string,
     userId: number,

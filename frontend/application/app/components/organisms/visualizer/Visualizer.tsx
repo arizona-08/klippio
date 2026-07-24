@@ -41,7 +41,7 @@ function Visualizer({ project_id }: VisualizerProps) {
     fetchProject();
   }, [project_id]);
 
-  const handlePlanChange = React.useCallback((plan: PlanType) => {
+  const handlePlanChange = React.useCallback((plan: PlanType | null) => {
     setCurrentPlan(plan);
   }, []);
 
