@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { AmazonS3Service } from 'src/amazon/amazon-s3.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 import { CreateMarkerDto } from './dtos/create-marker.dto';
 import { UpdateMarkerDto } from './dtos/update-marker.dto';
 
@@ -28,7 +29,7 @@ export class MarkerService {
     files: Express.Multer.File[],
   ) {
     try {
-      await this.assertPlanAccess(projectId, planId, userId);
+      await this.assertPlanAccess(projectId, planId, userId, true);
 
       const insertedMarker = await this.prismaService.marker.create({
         data: {
@@ -137,7 +138,7 @@ export class MarkerService {
   ) {
     //update des données du marker
     try {
-      await this.assertMarkerAccess(markerId, planId, projectId, userId);
+      await this.assertMarkerAccess(markerId, planId, projectId, userId, true);
 
       const updatedMarker = await this.prismaService.marker.update({
         where: { id: markerId },
@@ -260,7 +261,7 @@ export class MarkerService {
 
   async deleteMarker(markerId: string, userId: number) {
     try {
-      const marker = await this.assertMarkerAccessByMarkerId(markerId, userId);
+      const marker = await this.assertMarkerAccessByMarkerId(markerId, userId, true);
 
       await this.prismaService.markerPhoto.deleteMany({
         where: { markerId },
@@ -291,12 +292,13 @@ export class MarkerService {
     projectId: string,
     planId: string,
     userId: number,
+    requiresEditor = false,
   ) {
     const plan = await this.prismaService.plan.findFirst({
       where: {
         id: planId,
         projectId,
-        project: this.projectAccessWhere(userId),
+        project: this.projectAccessWhere(userId, requiresEditor),
       },
       select: { id: true },
     });
@@ -325,6 +327,7 @@ export class MarkerService {
     planId: string,
     projectId: string,
     userId: number,
+    requiresEditor = false,
   ) {
     const marker = await this.prismaService.marker.findFirst({
       where: {
@@ -332,7 +335,7 @@ export class MarkerService {
         planId,
         plan: {
           projectId,
-          project: this.projectAccessWhere(userId),
+          project: this.projectAccessWhere(userId, requiresEditor),
         },
       },
       select: { id: true },
@@ -345,12 +348,16 @@ export class MarkerService {
     return marker;
   }
 
-  private async assertMarkerAccessByMarkerId(markerId: string, userId: number) {
+  private async assertMarkerAccessByMarkerId(
+    markerId: string,
+    userId: number,
+    requiresEditor = false,
+  ) {
     const marker = await this.prismaService.marker.findFirst({
       where: {
         id: markerId,
         plan: {
-          project: this.projectAccessWhere(userId),
+          project: this.projectAccessWhere(userId, requiresEditor),
         },
       },
       select: {
@@ -372,11 +379,18 @@ export class MarkerService {
     return marker;
   }
 
-  private projectAccessWhere(userId: number) {
+  private projectAccessWhere(
+    userId: number,
+    requiresEditor = false,
+  ): Prisma.ProjectWhereInput {
     return {
       OR: [
         { authorId: userId },
-        { projectCollaborators: { some: { userId } } },
+        {
+          projectCollaborators: {
+            some: requiresEditor ? { userId, role: 'EDITOR' } : { userId },
+          },
+        },
       ],
     };
   }

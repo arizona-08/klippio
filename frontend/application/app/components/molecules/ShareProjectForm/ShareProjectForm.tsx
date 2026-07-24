@@ -4,8 +4,12 @@ import Input from '../../atoms/Input';
 import { useOverlayStore } from '@/stores/OverlayStore';
 import { useShareProjectModalStore } from '@/stores/ShareProjectModalStore';
 import CTA from '../../atoms/CTA';
-import { inviteCollaboratorToProject } from '@/proxy/projects/project-functions';
-import { ProjectInvitationType } from '@/types/project';
+import {
+  inviteCollaboratorToProject,
+  removeCollaboratorFromProject,
+  updateCollaboratorRole,
+} from '@/proxy/projects/project-functions';
+import { CollaboratorType, ProjectInvitationType } from '@/types/project';
 import { formatDate } from '@/utils/date';
 
 
@@ -17,10 +21,14 @@ function ShareProjectForm({ closeForm }: ShareProjectFormProps) {
   const closeOverlay = useOverlayStore((state) => state.closeOverlay);
   const projectToShare = useShareProjectModalStore((state) => state.projectToShare);
   const [invitationsMasterList, setInvitationsMasterList] = React.useState<ProjectInvitationType[]>([]);
+  const [collaborators, setCollaborators] = React.useState<CollaboratorType[]>([]);
+  const [collaboratorBeingRemoved, setCollaboratorBeingRemoved] = React.useState<number | null>(null);
+  const [collaboratorBeingUpdated, setCollaboratorBeingUpdated] = React.useState<number | null>(null);
 
   useEffect(() => {
     setInvitationsMasterList(projectToShare?.invitations || []);
-  }, [projectToShare?.invitations])
+    setCollaborators(projectToShare?.collaborators || []);
+  }, [projectToShare?.collaborators, projectToShare?.invitations])
 
   const [selectedRole, setSelectedRole] = React.useState<"EDITOR" | "VIEWER">("EDITOR");
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = React.useState<boolean>(false);
@@ -53,6 +61,58 @@ function ShareProjectForm({ closeForm }: ShareProjectFormProps) {
     const data = await response.json();
     console.log(data.message);
     setInvitationsMasterList((prev) => [...prev, data.invitation]);
+  }
+
+  async function handleRemoveCollaborator(collaborator: CollaboratorType) {
+    if (!projectToShare || collaborator.role === 'OWNER') return;
+
+    setCollaboratorBeingRemoved(collaborator.user.id);
+    const response = await removeCollaboratorFromProject(
+      projectToShare.id,
+      collaborator.user.id,
+    );
+
+    if (!response.ok) {
+      console.error('Error removing collaborator:', response.statusText);
+      setCollaboratorBeingRemoved(null);
+      return;
+    }
+
+    setCollaborators((currentCollaborators) =>
+      currentCollaborators.filter(
+        (currentCollaborator) => currentCollaborator.user.id !== collaborator.user.id,
+      ),
+    );
+    setCollaboratorBeingRemoved(null);
+  }
+
+  async function handleCollaboratorRoleChange(
+    collaborator: CollaboratorType,
+    role: "VIEWER" | "EDITOR",
+  ) {
+    if (!projectToShare || collaborator.role === role) return;
+
+    setCollaboratorBeingUpdated(collaborator.user.id);
+    const response = await updateCollaboratorRole(
+      projectToShare.id,
+      collaborator.user.id,
+      role,
+    );
+
+    if (!response.ok) {
+      console.error('Error updating collaborator role:', response.statusText);
+      setCollaboratorBeingUpdated(null);
+      return;
+    }
+
+    setCollaborators((currentCollaborators) =>
+      currentCollaborators.map((currentCollaborator) =>
+        currentCollaborator.user.id === collaborator.user.id
+          ? { ...currentCollaborator, role }
+          : currentCollaborator,
+      ),
+    );
+    setCollaboratorBeingUpdated(null);
   }
 
   const showCollaborators = collaboratorsEmail.length > 0;
@@ -109,8 +169,8 @@ function ShareProjectForm({ closeForm }: ShareProjectFormProps) {
             <div className="bg-gray-50 p-2 rounded-md">
 
               <ul className='space-y-4'>
-                {projectToShare.collaborators.map((collaborator, index) => (
-                  <li key={index} className='flex items-center justify-between'>
+                {collaborators.map((collaborator) => (
+                  <li key={collaborator.user.id} className='flex items-center justify-between'>
                     <div className="flex items-center gap-3">
                       <div className="profile-pic-container w-8 h-8 bg-gray-200 rounded-full"></div>
 
@@ -120,7 +180,39 @@ function ShareProjectForm({ closeForm }: ShareProjectFormProps) {
                       </div>
                     </div>
 
-                    {collaborator.role === 'OWNER' && <span className='text-xs text-primary-light bg-primary/60 px-2 py-1 rounded-full'>Propriétaire</span>}
+                    {collaborator.role === 'OWNER' ? (
+                      <span className='text-xs text-primary-light bg-primary/60 px-2 py-1 rounded-full'>Propriétaire</span>
+                    ) : (
+                      <div className='flex flex-col items-end gap-2'>
+                        <select
+                          aria-label={`Rôle de ${collaborator.user.firstname} ${collaborator.user.lastname}`}
+                          className='rounded-md border border-gray-300 bg-white px-2 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50'
+                          value={collaborator.role}
+                          disabled={
+                            collaboratorBeingUpdated === collaborator.user.id ||
+                            collaboratorBeingRemoved === collaborator.user.id
+                          }
+                          onChange={(event) => handleCollaboratorRoleChange(
+                            collaborator,
+                            event.target.value as "VIEWER" | "EDITOR",
+                          )}
+                        >
+                          <option value='VIEWER'>Lecteur</option>
+                          <option value='EDITOR'>Éditeur</option>
+                        </select>
+                        <button
+                          type='button'
+                          className='text-sm text-danger hover:underline disabled:cursor-not-allowed disabled:opacity-50'
+                          disabled={
+                            collaboratorBeingRemoved === collaborator.user.id ||
+                            collaboratorBeingUpdated === collaborator.user.id
+                          }
+                          onClick={() => handleRemoveCollaborator(collaborator)}
+                        >
+                          {collaboratorBeingRemoved === collaborator.user.id ? 'Retrait…' : 'Retirer'}
+                        </button>
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>

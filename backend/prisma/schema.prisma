@@ -31,6 +31,7 @@ model User {
   userPictures   UserPictures[]
   userActivities UsersActivity[]
   collaborationProjects ProjectCollaborator[]
+  notifications Notification[]
 }
 
 enum Role {
@@ -117,6 +118,26 @@ enum CollaboratorRole {
   VIEWER
   EDITOR
   OWNER
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    Int
+  type      NotificationType
+  title     String
+  message   String
+  projectId String?
+  createdAt DateTime         @default(now())
+  isRead    Boolean          @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+enum NotificationType {
+  ROLE_CHANGED
+  ACCESS_REMOVED
 }
 
 model Plan {

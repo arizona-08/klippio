@@ -25,6 +25,13 @@ export async function getProjectById(projectId: string) {
   return response;
 }
 
+export async function getProjectPermissions(projectId: string) {
+  return fetchFromClient(`/api/projects/${projectId}/permissions`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
 export async function archiveProject(projectId: string) {
   const response = await fetchFromClient(`/api/projects/${projectId}/archive`, {
     method: "PUT",
@@ -132,6 +139,38 @@ export async function inviteCollaboratorToProject(
   });
 
   return response;
+}
+
+export async function removeCollaboratorFromProject(
+  projectId: string,
+  collaboratorId: number,
+) {
+  return fetchFromClient(
+    `/api/projects/${projectId}/collaborators/${collaboratorId}`,
+    {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+  );
+}
+
+export async function updateCollaboratorRole(
+  projectId: string,
+  collaboratorId: number,
+  role: "VIEWER" | "EDITOR",
+) {
+  return fetchFromClient(
+    `/api/projects/${projectId}/collaborators/${collaboratorId}/role`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ role }),
+    },
+  );
 }
 
 export async function getInvitationDetails(invitationToken: string) {

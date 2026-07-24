@@ -22,6 +22,7 @@ interface ProjectFoldersProps {
   updateUIOnRenameNode(nodeId: string, newName: string, type: 'folder' | 'plan'): void;
   triggerNavigateToFolder(folderId: string): void;
   triggerLoadPlan(planId: string): void;
+  canEdit: boolean;
 }
 
 function ProjectFolders({ 
@@ -32,7 +33,8 @@ function ProjectFolders({
   updateUIOnDeleteNode,
   updateUIOnRenameNode,
   triggerNavigateToFolder,
-  triggerLoadPlan
+  triggerLoadPlan,
+  canEdit,
 }: ProjectFoldersProps)
 {
 
@@ -126,13 +128,13 @@ function ProjectFolders({
               <h2 className="text-xl font-semibold ">Sélectionner un plan</h2>
             </div>
             <div className="create-actions flex-1 flex items-center justify-end gap-1">
-              <div className="p-1 hover:bg-gray-100 rounded-md" onClick={() => setIsAddPlanModalOpen(true)}>
+              {canEdit && <div className="p-1 hover:bg-gray-100 rounded-md" onClick={() => setIsAddPlanModalOpen(true)}>
                 <FilePlusCorner className="h-6 w-6"/>
-              </div>
+              </div>}
 
-              <div className="p-1 hover:bg-gray-100 rounded-md" onClick={() => setIsCreateFolderModalOpen(true)}>
+              {canEdit && <div className="p-1 hover:bg-gray-100 rounded-md" onClick={() => setIsCreateFolderModalOpen(true)}>
                 <FolderPlus className="h-6 w-6"/>
-              </div>
+              </div>}
             </div>
           </div>
         </div>
@@ -147,6 +149,7 @@ function ProjectFolders({
                   navigateToFolder={onNavigateToFolder}
                   handleOnDelete={onDeleteNode}
                   handleOnRename={onRenameNode}
+                  canEdit={canEdit}
                 />
               ))}
 
@@ -158,6 +161,7 @@ function ProjectFolders({
                   loadPlan={onLoadPlan}
                   handleOnDelete={onDeleteNode}
                   handleOnRename={onRenameNode}
+                  canEdit={canEdit}
                 />
               ))}
             </ul>

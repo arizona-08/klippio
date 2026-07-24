@@ -7,14 +7,41 @@ import { useUser } from '@/app/Context/AuthContext/AuthUserProvider'
 import AppMenuLink from '../../atoms/AppMenuLink'
 import Image from 'next/image'
 import { logout } from '@/proxy/auth/auth-functions'
-import { Archive, Book, Home, LogInIcon, LogOut, User } from 'lucide-react'
+import { Archive, Bell, Book, Home, LogInIcon, LogOut, User } from 'lucide-react'
 import { useSidebarStore } from '@/stores/SidebarStore'
 import useViewportWidth from '@/app/hooks/useViewportWidth'
 import Logo from '../../atoms/Logo'
+import { getNotifications } from '@/proxy/notifications/notification-functions'
+import { io } from 'socket.io-client'
 
 function AppMenu() {
   useViewportWidth()
   const {user, setUser} = useUser();
+  const [unreadNotifications, setUnreadNotifications] = React.useState(0);
+
+  React.useEffect(() => {
+    async function loadUnreadNotifications() {
+      const response = await getNotifications();
+      if (!response.ok) return;
+      const result = await response.json();
+      setUnreadNotifications(result.unreadCount || 0);
+    }
+
+    if (user) loadUnreadNotifications();
+  }, [user]);
+
+  React.useEffect(() => {
+    if (!user || !process.env.NEXT_PUBLIC_BACKEND_URL) return;
+
+    const socket = io(process.env.NEXT_PUBLIC_BACKEND_URL, { withCredentials: true });
+    socket.on('notification:created', () => {
+      setUnreadNotifications((count) => count + 1);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [user]);
 
   const appMenuLinks = [
     {
@@ -31,6 +58,11 @@ function AppMenu() {
       label: 'Mes Archives',
       href: '/dashboard/archives',
       icon: <Archive className='text-white'/>
+    },
+    {
+      label: 'Notifications',
+      href: '/dashboard/notifications',
+      icon: <span className='relative'><Bell className='text-white'/>{unreadNotifications > 0 && <span className='absolute -right-2 -top-2 min-w-4 rounded-full bg-white px-1 text-center text-[10px] font-bold leading-4 text-primary'>{unreadNotifications > 9 ? '9+' : unreadNotifications}</span>}</span>
     },
     // {
     //   label: 'Mon Équipe',

@@ -13,24 +13,25 @@ interface ProjectNodeProps {
   handleOnRename: (nodeId: string, newName: string,  type: 'folder' | 'plan') => void;
   navigateToFolder?: (folderId: string) => void;
   loadPlan?: (planId: string) => void;
+  canEdit: boolean;
 }
 
 
-function ProjectNode({ node, type, handleOnDelete, handleOnRename, navigateToFolder, loadPlan }: ProjectNodeProps) {
+function ProjectNode({ node, type, handleOnDelete, handleOnRename, navigateToFolder, loadPlan, canEdit }: ProjectNodeProps) {
   const [isActionCardOpen, setIsActionCardOpen] = React.useState(false);
   const [isRenameModalOpen, setIsRenameModalOpen] = React.useState(false);
   const triggerRef = React.useRef<HTMLDivElement>(null);
 
   return (
     <>
-      <RenameNodeModal
+      {canEdit && <RenameNodeModal
         nodeId={node.id}
         isRenameModalOpen={isRenameModalOpen}
         currentName={node.name}
         type={type}
         onRename={handleOnRename}
         closeRenameModal={() => setIsRenameModalOpen(false)}
-      />
+      />}
       <li
         className="relative w-full h-full flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
         onClick={() => {
@@ -51,16 +52,16 @@ function ProjectNode({ node, type, handleOnDelete, handleOnRename, navigateToFol
         </div>
 
         {/* dots & folder actions*/}
-        <div className="" onClick={(e) => {
+        {canEdit && <div className="" onClick={(e) => {
           e.stopPropagation();
           setIsActionCardOpen(true)
           }}
           ref={triggerRef}
         >
           <EllipsisVertical />
-        </div>
+        </div>}
 
-        <ActionCard
+        {canEdit && <ActionCard
           isActionCardOpen={isActionCardOpen}
           onDelete={() => handleOnDelete(node.id, type)}
           showRenameModal={() => {
@@ -69,7 +70,7 @@ function ProjectNode({ node, type, handleOnDelete, handleOnRename, navigateToFol
           }}
           closeActionCard={() => setIsActionCardOpen(false)}
           triggerRef={triggerRef}
-        />
+        />}
       </li>
     </>
   )

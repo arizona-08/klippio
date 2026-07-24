@@ -5,9 +5,10 @@ export type SelectOption = "hand" | "pin" | "filter" | "add";
 interface VisualizerMenuProps {
   option: SelectOption;
   selectOption: (option: SelectOption) => void;
+  canEdit: boolean;
 }
 
-function VisualizerMenu({ option, selectOption }: VisualizerMenuProps) {
+function VisualizerMenu({ option, selectOption, canEdit }: VisualizerMenuProps) {
   const [isMenuOpen, setIsMenuOpen] = React.useState(true);
 
   function toggleMenu() {
@@ -28,13 +29,15 @@ function VisualizerMenu({ option, selectOption }: VisualizerMenuProps) {
         >
           <Hand className="stroke-1" />
         </div>
-        <div
-          className={`hover:text-white hover:bg-primary p-1 rounded-full ${option === "pin" ? "bg-primary text-white" : ""}`}
-          onClick={() => selectOption("pin")}
-          title="Ajouter un marqueur"
-        >
-          <MapPin className="stroke-1" />
-        </div>
+        {canEdit && (
+          <div
+            className={`hover:text-white hover:bg-primary p-1 rounded-full ${option === "pin" ? "bg-primary text-white" : ""}`}
+            onClick={() => selectOption("pin")}
+            title="Ajouter un marqueur"
+          >
+            <MapPin className="stroke-1" />
+          </div>
+        )}
         {/* <div className={`hover:text-white hover:bg-primary p-1 rounded-full ${option === 'filter' ? 'bg-primary text-white' : ''}`} onClick={() => selectOption('filter')} title='Filtrer les marqueurs'>
           <ListFilter className="stroke-1"/>
         </div>

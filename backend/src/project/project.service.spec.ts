@@ -1,4 +1,8 @@
-import { NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ProjectService } from './project.service';
 
 describe('ProjectService', () => {
@@ -13,11 +17,16 @@ describe('ProjectService', () => {
       },
       projectCollaborator: {
         create: jest.fn(),
+        delete: jest.fn(),
         findFirst: jest.fn(),
+        update: jest.fn(),
       },
       projectInvitation: {
         findUnique: jest.fn(),
         update: jest.fn(),
+      },
+      notification: {
+        create: jest.fn(),
       },
       folder: {
         create: jest.fn(),
@@ -32,16 +41,21 @@ describe('ProjectService', () => {
     const mailService = {
       sendMail: jest.fn(),
     };
+    const realtimeService = {
+      emitToUser: jest.fn(),
+    };
 
     return {
       service: new ProjectService(
         prismaService as never,
         amazonS3Service as never,
         mailService as never,
+        realtimeService as never,
       ),
       prismaService,
       amazonS3Service,
       mailService,
+      realtimeService,
     };
   }
 
@@ -165,6 +179,100 @@ describe('ProjectService', () => {
       ),
     ).rejects.toBeInstanceOf(UnauthorizedException);
     expect(prismaService.project.update).not.toHaveBeenCalled();
+  });
+
+  it('returns viewer permissions for a collaborator with read-only access', async () => {
+    const { service, prismaService } = createService();
+    prismaService.project.findFirst.mockResolvedValue({
+      authorId: 12,
+      projectCollaborators: [{ role: 'VIEWER' }],
+    });
+
+    await expect(service.getProjectPermissions('project-1', 99)).resolves.toEqual({
+      role: 'VIEWER',
+      canView: true,
+      canEdit: false,
+    });
+  });
+
+  it('removes a collaborator when requested by the project owner', async () => {
+    const { service, prismaService } = createService();
+    prismaService.project.findUnique.mockResolvedValue({
+      id: 'project-1',
+      authorId: 12,
+    });
+    prismaService.projectCollaborator.findFirst.mockResolvedValue({
+      id: 'collaborator-1',
+      userId: 99,
+      role: 'EDITOR',
+    });
+
+    await expect(
+      service.removeCollaboratorFromProject('project-1', 99, 12),
+    ).resolves.toEqual({ success: true });
+
+    expect(prismaService.projectCollaborator.delete).toHaveBeenCalledWith({
+      where: { id: 'collaborator-1' },
+    });
+  });
+
+  it('does not allow a non-owner to remove a collaborator', async () => {
+    const { service, prismaService } = createService();
+    prismaService.project.findUnique.mockResolvedValue({
+      id: 'project-1',
+      authorId: 12,
+    });
+
+    await expect(
+      service.removeCollaboratorFromProject('project-1', 99, 33),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(prismaService.projectCollaborator.delete).not.toHaveBeenCalled();
+  });
+
+  it('does not allow the project owner to be removed', async () => {
+    const { service, prismaService } = createService();
+    prismaService.project.findUnique.mockResolvedValue({
+      id: 'project-1',
+      authorId: 12,
+    });
+
+    await expect(
+      service.removeCollaboratorFromProject('project-1', 12, 12),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('updates a collaborator role when requested by the project owner', async () => {
+    const { service, prismaService } = createService();
+    prismaService.project.findUnique.mockResolvedValue({
+      id: 'project-1',
+      authorId: 12,
+    });
+    prismaService.projectCollaborator.findFirst.mockResolvedValue({
+      id: 'collaborator-1',
+      userId: 99,
+      role: 'VIEWER',
+    });
+    prismaService.projectCollaborator.update.mockResolvedValue({
+      id: 'collaborator-1',
+      userId: 99,
+      role: 'EDITOR',
+    });
+
+    await expect(
+      service.updateCollaboratorRole('project-1', 99, 'EDITOR', 12),
+    ).resolves.toEqual({
+      success: true,
+      collaborator: {
+        id: 'collaborator-1',
+        userId: 99,
+        role: 'EDITOR',
+      },
+    });
+
+    expect(prismaService.projectCollaborator.update).toHaveBeenCalledWith({
+      where: { id: 'collaborator-1' },
+      data: { role: 'EDITOR' },
+    });
   });
 
   it('adds a collaborator from a valid invitation', async () => {

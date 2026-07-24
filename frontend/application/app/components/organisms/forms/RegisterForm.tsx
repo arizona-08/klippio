@@ -11,11 +11,19 @@ import CTA from "../../atoms/CTA";
 import { useUser } from "@/app/Context/AuthContext/AuthUserProvider";
 
 function RegisterForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const invitationEmail = searchParams.get("email") || "";
+  const redirectParam = searchParams.get("redirect");
+  const redirectPath =
+    redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//")
+      ? redirectParam
+      : "/auth/login";
   const [registerCredentials, setRegisterCredentials] =
     React.useState<RegisterDTO>({
       firstname: "",
       lastname: "",
-      email: "",
+      email: invitationEmail,
       password: "",
       confirmation: "",
     });
@@ -37,13 +45,6 @@ function RegisterForm() {
     string | null
   >(null);
 
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirectParam = searchParams.get("redirect");
-  const redirectPath =
-    redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//")
-      ? redirectParam
-      : "/auth/login";
   const { setUser } = useUser();
 
   function createErrorObject(errors: string[]) {
@@ -114,8 +115,13 @@ function RegisterForm() {
                   label="Prénom:"
                   name="firstname"
                   placeholder="John"
+                  value={registerCredentials.email}
                   onChange={setCredentialsInfo}
+                  disabled={Boolean(invitationEmail)}
                 />
+                {invitationEmail && (
+                  <p className="text-sm text-gray-500">L’adresse email est liée à votre invitation.</p>
+                )}
                 {errorMessages &&
                   errorMessages.firstname &&
                   errorMessages.firstname.length > 0 && (
@@ -224,7 +230,7 @@ function RegisterForm() {
           <p className="mt-4">
             Déja un compte ?{" "}
             <Link
-              href={`/auth/login?redirect=${encodeURIComponent(redirectPath)}`}
+              href={`/auth/login?redirect=${encodeURIComponent(redirectPath)}${invitationEmail ? `&email=${encodeURIComponent(invitationEmail)}` : ''}`}
               className="hover:underline hover:text-blue-500"
             >
               Me connecter

@@ -36,6 +36,7 @@ function appendMarkerPhotoMetadata(
 
 interface PlanLoaderProps {
   projectId: string;
+  canEdit: boolean;
   onPlanChange?: (plan: PlanType) => void; // Callback pour notifier le changement de plan
   
 }
@@ -93,7 +94,7 @@ function upsertMarker(markers: MarkerType[], markerToUpsert: MarkerType) {
   );
 }
 
-function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
+function PlanLoader({ projectId, canEdit, onPlanChange }: PlanLoaderProps) {
   const [markers, setMarkers] = React.useState<MarkerType[]>([]);
   const [remoteCursors, setRemoteCursors] = React.useState<Record<string, RemoteCursor>>({});
   const currentClickCoords = React.useRef({x: 0, y: 0})
@@ -292,11 +293,10 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
     setIsPdf(isPdfDocument);
     setCurrentFileUrl(temporaryAccessUrl);
     setCurrentPlan({ id: planId, name: planName, storageKey: storageKey, temporaryAccessUrl, isPdfDocument: isPdfDocument });
-    setMarkers([]);
   }, [setCurrentPlan]);
 
   function handlePlanClick(event: React.MouseEvent) {
-    if(option !== 'pin') return;
+    if(!canEdit || option !== 'pin') return;
     // Empêcher le clic de se déclencher si on est en train de "glisser/panner" le plan
     // ou si on clique sur un marqueur
     if (event.currentTarget.classList.contains('marker')) return;
@@ -333,6 +333,7 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
   }
 
   function chooseMarkerPic(event: React.ChangeEvent<HTMLInputElement>){
+    if (!canEdit) return;
 
     const files = event.target.files
     if(!files) return
@@ -367,6 +368,7 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
   }
 
   async function handleAddMarker(marker: MarkerType){
+    if (!canEdit) return;
     // Call API pour sauvegarder le marqueur dans la BDD et récupérer son ID généré
 
     const markerFormData = new FormData();
@@ -398,6 +400,7 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
   }
 
   async function updateMarkerPhoto(marker: MarkerType){
+    if (!canEdit) return;
     const updateMarkerFormData = new FormData();
 
     const existingPhotos = marker.photos.filter(photo => photo.id);
@@ -487,6 +490,7 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
   }
 
   async function handleDeleteMarker(marker: MarkerType){
+    if (!canEdit) return;
     // Appel API pour supprimer le marqueur de la BDD
     if(!marker.id) return;
     
@@ -894,7 +898,7 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
         onChange={chooseMarkerPic}
       />
 
-      {currentPlan && <VisualizerMenu option={option} selectOption={selectOption}/>}
+      {currentPlan && <VisualizerMenu option={option} selectOption={selectOption} canEdit={canEdit}/>}
       
 
       <PicModal
@@ -906,6 +910,7 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
         handleUpdateMarkerPhoto={updateMarkerPhoto}
         handleDeleteMarker={handleDeleteMarker}
         handleClose={handleCloseModal}
+        canEdit={canEdit}
       />
 
       <AddPlanModal
@@ -926,6 +931,7 @@ function PlanLoader({ projectId, onPlanChange }: PlanLoaderProps) {
         updateUIOnRenameNode={updateUIOnRenameNode}
         triggerNavigateToFolder={onNavigateToFolder}
         triggerLoadPlan={onLoadPlan}
+        canEdit={canEdit}
       />
     </div>
   )

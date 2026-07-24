@@ -69,7 +69,9 @@ function InvitePage() {
     if (!invitation) return;
 
     if (!user) {
-      router.push(`/auth/login?redirect=${encodeURIComponent(acceptPath)}`);
+      router.push(
+        `/auth/login?redirect=${encodeURIComponent(acceptPath)}&email=${encodeURIComponent(invitation.email)}`,
+      );
       return;
     }
 
