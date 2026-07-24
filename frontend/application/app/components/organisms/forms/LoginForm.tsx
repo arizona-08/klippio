@@ -23,6 +23,7 @@ function LoginForm() {
   const [errorMessage, setErrorMessage] = React.useState<string | null>();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const invitationEmail = searchParams.get('email');
   const redirectParam = searchParams.get('redirect');
   const redirectPath =
     redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//')
@@ -74,7 +75,7 @@ function LoginForm() {
           <CTA type='button' color='primary' text='Connexion' disabled={!isFormValid || isLoginLoading} isLoading={isLoginLoading} />
     
           <p className='mt-2'><Link href="/auth/forgot-password" className='hover:underline hover:text-primary'>Mot de passe oublié ?</Link></p>
-          <p className='mt-2'>Pas encore de compte ? <Link href={`/auth/register?redirect=${encodeURIComponent(redirectPath)}`} className='hover:underline hover:text-primary'>Me créer un compte</Link></p>
+          <p className='mt-2'>Pas encore de compte ? <Link href={`/auth/register?redirect=${encodeURIComponent(redirectPath)}${invitationEmail ? `&email=${encodeURIComponent(invitationEmail)}` : ''}`} className='hover:underline hover:text-primary'>Me créer un compte</Link></p>
         </form>
 
         <div className='relative'>

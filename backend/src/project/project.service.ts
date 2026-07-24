@@ -11,8 +11,8 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProjectDTO } from './dtos/create-project.dto';
 import { CreateFolderDto } from './dtos/create-folder.dto';
 import { AmazonS3Service } from 'src/amazon/amazon-s3.service';
-import { MailerOptionInterface } from 'src/mail/interfaces/MailerOptionInterface';
 import { MailService } from 'src/mail/mail.service';
+import { RealtimeService } from 'src/realtime/realtime.service';
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Unknown error';
@@ -29,7 +29,8 @@ export class ProjectService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly amazonS3Service: AmazonS3Service,
-    private readonly mailService: MailService
+    private readonly mailService: MailService,
+    private readonly realtimeService: RealtimeService,
   ) {}
 
   async createProject(
@@ -80,6 +81,39 @@ export class ProjectService {
       rethrowKnownHttpException(error);
       throw new InternalServerErrorException('Failed to get project');
     }
+  }
+
+  async getProjectPermissions(projectId: string, userId: number) {
+    const project = await this.prismaService.project.findFirst({
+      where: {
+        id: projectId,
+        OR: [
+          { authorId: userId },
+          { projectCollaborators: { some: { userId } } },
+        ],
+      },
+      select: {
+        authorId: true,
+        projectCollaborators: {
+          where: { userId },
+          select: { role: true },
+        },
+      },
+    });
+
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
+
+    const role = project.authorId === userId
+      ? 'OWNER'
+      : project.projectCollaborators[0]?.role;
+
+    return {
+      role,
+      canView: true,
+      canEdit: role === 'OWNER' || role === 'EDITOR',
+    };
   }
 
   async updateProject(
@@ -384,7 +418,7 @@ export class ProjectService {
     file: Express.Multer.File,
   ) {
     try {
-      const project = await this.findProjectWithAccess(projectId, userId);
+      const project = await this.findProjectWithEditAccess(projectId, userId);
 
       if (!project) {
         throw new NotFoundException('Project not found');
@@ -466,20 +500,32 @@ export class ProjectService {
       // Return the invitation link (you can customize the URL as needed)
       const invitationLink = `${process.env.FRONTEND_URL}/invite/${invitationToken}`;
 
-      const mail: MailerOptionInterface = {
-        from: process.env.SMTP_FROM as string,
+      const mail = this.mailService.invitationMailOptions({
         to: invitedEmail,
-        subject: "Invitation à collaborer sur le projet",
-        html: `
-          <p>Bonjour,</p>
-          <p>${project.author.firstname} ${project.author.lastname} vous a invité à collaborer sur le projet "${project.title}".</p>
-          <p>Veuillez cliquer sur le lien ci-dessous pour accepter l'invitation :</p>
-          <a href="${invitationLink}">Accepter l'invitation</a>
-          <p>Cordialement,<br/>Team Klippio</p>
-        `,
-      };
+        inviterName: `${project.author.firstname} ${project.author.lastname}`,
+        projectTitle: project.title,
+        invitationLink,
+      });
 
       await this.mailService.sendMail(mail);
+
+      const invitedUser = await this.prismaService.user.findUnique({
+        where: { email: invitedEmail },
+        select: { id: true },
+      });
+
+      if (invitedUser) {
+        this.realtimeService.emitToUser(invitedUser.id, 'notification:created', {
+          id: `invitation-${invitation.id}`,
+          type: 'INVITATION',
+          title: 'Nouvelle invitation',
+          message: `${project.author.firstname} ${project.author.lastname} vous invite à rejoindre « ${project.title} » en tant que ${invitedRole === 'EDITOR' ? 'éditeur' : 'lecteur'}.`,
+          projectId,
+          invitationToken,
+          createdAt: invitation.createdAt,
+          isRead: false,
+        });
+      }
 
       return {
         success: true,
@@ -490,6 +536,136 @@ export class ProjectService {
       rethrowKnownHttpException(error);
       throw new InternalServerErrorException(
         'Failed to generate invitation link',
+        getErrorMessage(error),
+      );
+    }
+  }
+
+  async removeCollaboratorFromProject(
+    projectId: string,
+    collaboratorId: number,
+    userId: number,
+  ) {
+    try {
+      if (!Number.isInteger(collaboratorId)) {
+        throw new NotFoundException('Collaborator not found');
+      }
+
+      const project = await this.prismaService.project.findUnique({
+        where: { id: projectId },
+      });
+
+      if (!project) {
+        throw new NotFoundException('Project not found');
+      }
+
+      if (project.authorId !== userId) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      if (collaboratorId === project.authorId) {
+        throw new BadRequestException('The project owner cannot be removed');
+      }
+
+      const collaborator = await this.prismaService.projectCollaborator.findFirst({
+        where: {
+          projectId,
+          userId: collaboratorId,
+        },
+      });
+
+      if (!collaborator) {
+        throw new NotFoundException('Collaborator not found');
+      }
+
+      if (collaborator.role === 'OWNER') {
+        throw new BadRequestException('The project owner cannot be removed');
+      }
+
+      const notification = await this.prismaService.notification.create({
+        data: {
+          userId: collaborator.userId,
+          type: 'ACCESS_REMOVED',
+          title: 'Accès au projet retiré',
+          message: `Votre accès au projet « ${project.title} » a été retiré.`,
+          projectId,
+        },
+      });
+      this.realtimeService.emitToUser(collaborator.userId, 'notification:created', notification);
+
+      await this.prismaService.projectCollaborator.delete({
+        where: { id: collaborator.id },
+      });
+
+      return { success: true };
+    } catch (error: unknown) {
+      rethrowKnownHttpException(error);
+      throw new InternalServerErrorException(
+        'Failed to remove collaborator from project',
+        getErrorMessage(error),
+      );
+    }
+  }
+
+  async updateCollaboratorRole(
+    projectId: string,
+    collaboratorId: number,
+    role: 'VIEWER' | 'EDITOR',
+    userId: number,
+  ) {
+    try {
+      if (!Number.isInteger(collaboratorId)) {
+        throw new NotFoundException('Collaborator not found');
+      }
+
+      const project = await this.prismaService.project.findUnique({
+        where: { id: projectId },
+      });
+
+      if (!project) {
+        throw new NotFoundException('Project not found');
+      }
+
+      if (project.authorId !== userId) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      const collaborator = await this.prismaService.projectCollaborator.findFirst({
+        where: {
+          projectId,
+          userId: collaboratorId,
+        },
+      });
+
+      if (!collaborator) {
+        throw new NotFoundException('Collaborator not found');
+      }
+
+      if (collaborator.role === 'OWNER') {
+        throw new BadRequestException('The project owner role cannot be changed');
+      }
+
+      const updatedCollaborator = await this.prismaService.projectCollaborator.update({
+        where: { id: collaborator.id },
+        data: { role },
+      });
+
+      const notification = await this.prismaService.notification.create({
+        data: {
+          userId: collaborator.userId,
+          type: 'ROLE_CHANGED',
+          title: 'Rôle mis à jour',
+          message: `Votre rôle sur le projet « ${project.title} » est désormais ${role === 'EDITOR' ? 'éditeur' : 'lecteur'}.`,
+          projectId,
+        },
+      });
+      this.realtimeService.emitToUser(collaborator.userId, 'notification:created', notification);
+
+      return { success: true, collaborator: updatedCollaborator };
+    } catch (error: unknown) {
+      rethrowKnownHttpException(error);
+      throw new InternalServerErrorException(
+        'Failed to update collaborator role',
         getErrorMessage(error),
       );
     }
@@ -624,8 +800,8 @@ export class ProjectService {
         throw new UnauthorizedException('Invitation has expired');
       }
 
-      if (invitation.status === 'DECLINED') {
-        throw new BadRequestException('Invitation has been declined');
+      if (invitation.status !== 'PENDING') {
+        throw new BadRequestException('Invitation is no longer valid');
       }
 
       const user = await this.prismaService.user.findUnique({
@@ -697,16 +873,12 @@ export class ProjectService {
   }) {
     try {
 
-      const mail: MailerOptionInterface = {
-        from: process.env.SMTP_FROM as string,
+      const mail = this.mailService.invitationDeclinedMailOptions({
         to: data.project.author.email,
-        subject: "Rejet de l'invitation à collaborer sur le projet",
-        html: `
-          <p>Bonjour ${data.project.author.firstname} ${data.project.author.lastname},</p>
-          <p>${data.email} à refusé l'invitation à collaborer sur le projet "${data.project.title}".</p>
-          <p>Cordialement,<br/>Team Klippio</p>
-        `,
-      };
+        ownerName: `${data.project.author.firstname} ${data.project.author.lastname}`,
+        inviteeEmail: data.email,
+        projectTitle: data.project.title,
+      });
 
       await this.mailService.sendMail(mail);
 
@@ -892,6 +1064,18 @@ export class ProjectService {
         OR: [
           { authorId: userId },
           { projectCollaborators: { some: { userId } } },
+        ],
+      },
+    });
+  }
+
+  private async findProjectWithEditAccess(projectId: string, userId: number) {
+    return this.prismaService.project.findFirst({
+      where: {
+        id: projectId,
+        OR: [
+          { authorId: userId },
+          { projectCollaborators: { some: { userId, role: 'EDITOR' } } },
         ],
       },
     });

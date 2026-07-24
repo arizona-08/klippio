@@ -13,7 +13,15 @@ export class RealtimeService {
     this.server?.to(this.getProjectRoom(projectId)).emit(event, payload);
   }
 
+  emitToUser(userId: number, event: string, payload: unknown) {
+    this.server?.to(this.getUserRoom(userId)).emit(event, payload);
+  }
+
   getProjectRoom(projectId: string) {
     return `project:${projectId}`;
+  }
+
+  getUserRoom(userId: number) {
+    return `user:${userId}`;
   }
 }

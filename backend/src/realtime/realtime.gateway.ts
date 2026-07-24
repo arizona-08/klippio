@@ -97,6 +97,7 @@ export class RealtimeGateway
     client.data.userId = userId;
     client.data.user = user;
     client.data.joinedProjects = new Set();
+    await client.join(this.realtimeService.getUserRoom(userId));
   }
 
   handleDisconnect(client: SessionSocket) {

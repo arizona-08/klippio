@@ -27,13 +27,32 @@ export type ProjectType = {
 export type CollaboratorType = {
   role: 'OWNER' | 'EDITOR' | 'VIEWER';
   user: {
-    id: string;
+    id: number;
     firstname: string;
     lastname: string;
     email: string;
     // invitationStatus?: 'pending' | 'accepted' | 'declined';
   }
 }
+
+export type ProjectPermissions = {
+  role: 'OWNER' | 'EDITOR' | 'VIEWER';
+  canView: boolean;
+  canEdit: boolean;
+};
+
+export type NotificationType = 'INVITATION' | 'ROLE_CHANGED' | 'ACCESS_REMOVED';
+
+export type NotificationItem = {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  projectId?: string | null;
+  invitationToken?: string;
+  createdAt: string;
+  isRead: boolean;
+};
 
 export type ProjectInvitationType = {
   role: 'OWNER' | 'EDITOR' | 'VIEWER';

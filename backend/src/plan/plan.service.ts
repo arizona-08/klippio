@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { AmazonS3Service } from 'src/amazon/amazon-s3.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class PlanService {
@@ -20,7 +21,7 @@ export class PlanService {
     userId: number,
     file: Express.Multer.File,
   ) {
-    await this.assertProjectAccess(projectId, userId);
+    await this.assertProjectAccess(projectId, userId, true);
     await this.assertFolderBelongsToProject(folderId, projectId);
 
     const { storageKey, temporaryAccessUrl } =
@@ -200,12 +201,7 @@ export class PlanService {
         where: {
           id: planId,
           projectId,
-          project: {
-            OR: [
-              { authorId: userId },
-              { projectCollaborators: { some: { userId } } },
-            ],
-          },
+          project: this.projectAccessWhere(userId, true),
         },
       });
 
@@ -231,14 +227,15 @@ export class PlanService {
     }
   }
 
-  private async assertProjectAccess(projectId: string, userId: number) {
+  private async assertProjectAccess(
+    projectId: string,
+    userId: number,
+    requiresEditor = false,
+  ) {
     const project = await this.prismaService.project.findFirst({
       where: {
         id: projectId,
-        OR: [
-          { authorId: userId },
-          { projectCollaborators: { some: { userId } } },
-        ],
+        ...this.projectAccessWhere(userId, requiresEditor),
       },
       select: { id: true },
     });
@@ -246,6 +243,22 @@ export class PlanService {
     if (!project) {
       throw new NotFoundException('Projet non trouvé');
     }
+  }
+
+  private projectAccessWhere(
+    userId: number,
+    requiresEditor = false,
+  ): Prisma.ProjectWhereInput {
+    return {
+      OR: [
+        { authorId: userId },
+        {
+          projectCollaborators: {
+            some: requiresEditor ? { userId, role: 'EDITOR' } : { userId },
+          },
+        },
+      ],
+    };
   }
 
   private async assertFolderBelongsToProject(
