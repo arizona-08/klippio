@@ -15,6 +15,10 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://app.klippio.sajed-engineering.com"),
   title: "Klippio App | Suivi de chantier sur plan",
   description: "Accédez à Klippio, l'application SAJED Engineering pour gérer les observations et photos de chantier directement sur plan.",
+  icons: {
+    icon: "/logos/logo_icon_green.svg",
+    shortcut: "/favicon-16x16.png",
+  },
   alternates: { canonical: "/" },
   robots: { index: true, follow: true },
 };
