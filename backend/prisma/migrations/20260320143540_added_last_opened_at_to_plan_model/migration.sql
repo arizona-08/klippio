@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "public"."Plan" ADD COLUMN     "lastOpenedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;

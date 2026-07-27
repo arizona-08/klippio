@@ -1,0 +1,212 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                          Int       @id @default(autoincrement())
+  email                       String    @unique
+  firstname                   String
+  lastname                    String
+  password                    String
+  forgotPasswordTokenSelector String?
+  forgotPasswordToken         String?
+  forgotPasswordTokenExpiry   DateTime?
+  role                        Role      @default(STANDARD)
+  createdAt                   DateTime  @default(now())
+  updatedAt                   DateTime  @updatedAt
+
+  projects       Project[]
+  userPictures   UserPictures[]
+  userActivities UsersActivity[]
+  collaborationProjects ProjectCollaborator[]
+  notifications Notification[]
+}
+
+enum Role {
+  ADMIN
+  STANDARD
+  PREMIUM
+}
+
+model UserPictures {
+  userId     Int
+  type       UserPictureType
+  storageKey String?
+  zoom       Float?
+  offsetX    Float?
+  offsetY    Float?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, type])
+}
+
+enum UserPictureType {
+  PROFILE
+  BANNER
+}
+
+model Session {
+  id        String   @id
+  sid       String   @unique
+  data      String
+  expiresAt DateTime
+}
+
+model Project {
+  id                  String   @id @default(uuid())
+  authorId            Int
+  title               String
+  address             String
+  zipcode             String
+  city                String
+  createdAt           DateTime @default(now())
+  lastOpenedAt        DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  isArchived          Boolean  @default(false)
+  thumbnailStorageKey String?
+
+  author  User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  plans   Plan[]
+  folders Folder[]
+  projectCollaborators ProjectCollaborator[]
+  projectInvitations ProjectInvitation[]
+}
+
+model ProjectInvitation {
+  id        String   @id @default(uuid())
+  projectId String
+  email     String
+  role      CollaboratorRole @default(VIEWER)
+  token     String   @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  status  ProjectInvitationStatus  @default(PENDING)
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+enum ProjectInvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+model ProjectCollaborator {
+  id        String   @id @default(uuid())
+  projectId String
+  userId    Int
+  role      CollaboratorRole @default(VIEWER)
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum CollaboratorRole {
+  VIEWER
+  EDITOR
+  OWNER
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    Int
+  type      NotificationType
+  title     String
+  message   String
+  projectId String?
+  createdAt DateTime         @default(now())
+  isRead    Boolean          @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+enum NotificationType {
+  ROLE_CHANGED
+  ACCESS_REMOVED
+}
+
+model Plan {
+  id                 String   @id @default(uuid())
+  name               String
+  documentStorageKey String
+  temporaryAccessUrl String?
+  lastOpenedAt       DateTime @default(now())
+  projectId          String
+  folderId           String
+
+  project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  markers Marker[]
+  folder  Folder   @relation("FolderToPlans", fields: [folderId], references: [id])
+}
+
+model Marker {
+  id        String   @id @default(uuid())
+  coordX    Float
+  coordY    Float
+  title     String
+  createdAt DateTime @default(now())
+
+  planId         String
+  planPageNumber Int
+
+  markerPhotos MarkerPhoto[]
+  plan         Plan          @relation(fields: [planId], references: [id], onDelete: Cascade)
+}
+
+model MarkerPhoto {
+  id                 String   @id @default(uuid())
+  photoStorageKey    String
+  photoLabel         String
+  comment            String?
+  temporaryAccessUrl String?
+  createdAt          DateTime @default(now())
+
+  markerId String
+  marker   Marker @relation(fields: [markerId], references: [id], onDelete: Cascade)
+}
+
+model Folder {
+  id             String   @id @default(uuid())
+  name           String
+  isRoot         Boolean  @default(false)
+  lastModifiedAt DateTime @default(now())
+  parentId       String?
+  projectId      String
+
+  parent     Folder?  @relation("FolderToSubfolders", fields: [parentId], references: [id], onDelete: Cascade)
+  subfolders Folder[] @relation("FolderToSubfolders")
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  plans      Plan[]   @relation("FolderToPlans")
+}
+
+model RecentActivity {
+  id          String   @id @default(uuid())
+  description String
+  createdAt   DateTime @default(now())
+
+  userActivities UsersActivity[]
+}
+
+model UsersActivity {
+  id         String @id @default(uuid())
+  userId     Int
+  activityId String
+
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activity RecentActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+}
