@@ -18,6 +18,7 @@ import { ChevronLeft, ChevronRight, FileUp, MapPinned, MousePointer2 } from 'luc
 import { updateProjectThumbnail } from '@/proxy/projects/project-functions'
 import Image from 'next/image'
 import { io, Socket } from 'socket.io-client'
+import CreateReportModal from './CreateReportModal'
 
 const Document = dynamic(() => import('react-pdf').then((mod) => mod.Document), { ssr: false });
 const Page = dynamic(() => import('react-pdf').then((mod) => mod.Page), { ssr: false });
@@ -973,7 +974,10 @@ function PlanLoader({ projectId, canEdit, onPlanChange }: PlanLoaderProps) {
         triggerNavigateToFolder={onNavigateToFolder}
         triggerLoadPlan={onLoadPlan}
         canEdit={canEdit}
+
       />
+
+      <CreateReportModal projectId={projectId} />
     </div>
   )
 }
