@@ -25,9 +25,15 @@ function CreateReportModal({ projectId }: CreateReportModalProps) {
   const [reportName, setReportName] = React.useState('Rapport d’observations');
 
   useEffect(() => {
+    if (!isOpen) return;
+
+    let isCurrentRequest = true;
+
     async function fetchDataForReport() {
       setIsSelectionLoading(true);
       const response = await getProjectDataForReport(projectId);
+
+      if (!isCurrentRequest) return;
 
       if (!response.ok) {
         console.error('Failed to fetch report data');
@@ -53,7 +59,11 @@ function CreateReportModal({ projectId }: CreateReportModalProps) {
     }
 
     fetchDataForReport();
-  }, [projectId]);
+
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [isOpen, projectId]);
 
   const togglePlan = (plan: ReportPlan) => {
     if (plan.totalMarkers === 0) return;
@@ -103,7 +113,7 @@ function CreateReportModal({ projectId }: CreateReportModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className={`max-h-[90vh] w-full max-w-7xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg ${triggerExport ? 'lg:flex lg:gap-6' : ''}`}>
+      <div className={`max-h-[90vh]  max-w-7xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg ${triggerExport ? 'w-full lg:flex lg:gap-6' : ''}`}>
         <section className={triggerExport ? 'lg:w-[28rem] lg:shrink-0' : ''}>
           <h2 className="mb-0.5 text-lg font-semibold">Choisissez les plans</h2>
           <p className="text-xs text-gray-600">Seules les pages contenant des marqueurs peuvent être ajoutées au rapport.</p>

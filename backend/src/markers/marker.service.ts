@@ -31,53 +31,73 @@ export class MarkerService {
     try {
       await this.assertPlanAccess(projectId, planId, userId, true);
 
-      const insertedMarker = await this.prismaService.marker.create({
-        data: {
-          title: markerData.title,
-          coordX: markerData.coordX,
-          coordY: markerData.coordY,
-          planId,
-          planPageNumber: pageNumber,
-        },
-      });
+        const createdMarker = await this.prismaService.$transaction(async (prisma) => {
+          const plan = await prisma.plan.update({
+          where: { id: planId },
+          data: {
+              nextMarkerNumber: {
+                  increment: 1,
+              },
+          },
+          select: {
+              nextMarkerNumber: true,
+          },
+        });
+        
+        const insertedMarker = await prisma.marker.create({
+          data: {
+            markerNumber: plan.nextMarkerNumber,
+            title: markerData.title,
+            coordX: markerData.coordX,
+            coordY: markerData.coordY,
+            planId,
+            planPageNumber: pageNumber,
+          },
+        });
 
-      const markerPhotosData = await Promise.all(
-        markerData.photosMetaData.map(async (photoMetaData, index) => {
-          const file = files[index];
-          const { storageKey, temporaryAccessUrl } =
-            await this.amazonS3Service.uploadImage({
-              type: 'MARKER_PICTURE',
-              file,
-              userId,
-              projectId,
-              markerId: insertedMarker.id,
-            });
+        const markerPhotosData = await Promise.all(
+          markerData.photosMetaData.map(async (photoMetaData, index) => {
+            const file = files[index];
+            const { storageKey, temporaryAccessUrl } =
+              await this.amazonS3Service.uploadImage({
+                type: 'MARKER_PICTURE',
+                file,
+                userId,
+                projectId,
+                markerId: insertedMarker.id,
+              });
 
-          return {
-            label: photoMetaData.label,
-            comment: photoMetaData.comment,
-            storageKey,
-            temporaryAccessUrl,
-          };
-        }),
-      );
+            return {
+              label: photoMetaData.label,
+              comment: photoMetaData.comment,
+              storageKey,
+              temporaryAccessUrl,
+            };
+          }),
+        );
 
-      await this.prismaService.markerPhoto.createMany({
-        data: markerPhotosData.map((photo) => ({
-          photoLabel: photo.label,
-          comment: photo.comment,
-          photoStorageKey: photo.storageKey,
-          temporaryAccessUrl: photo.temporaryAccessUrl,
-          markerId: insertedMarker.id,
-        })),
-      });
+        await prisma.markerPhoto.createMany({
+          data: markerPhotosData.map((photo) => ({
+            photoLabel: photo.label,
+            comment: photo.comment,
+            photoStorageKey: photo.storageKey,
+            temporaryAccessUrl: photo.temporaryAccessUrl,
+            markerId: insertedMarker.id,
+          })),
+        });
+
+        return {
+          ...insertedMarker,
+          coordX: insertedMarker.coordX,
+          coordY: insertedMarker.coordY,
+          photos: markerPhotosData,
+        };
+      })
 
       return {
-        ...insertedMarker,
-        coordX: insertedMarker.coordX,
-        coordY: insertedMarker.coordY,
-        photos: markerPhotosData,
-      };
+        ...createdMarker,
+      }
+      
     } catch (error: unknown) {
       if (error instanceof NotFoundException) {
         throw error;

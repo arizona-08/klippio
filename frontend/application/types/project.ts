@@ -114,6 +114,7 @@ export type FolderType = {
 
 export type MarkerType = {
   id?: string,
+  markerNumber?: number,
   coordX: number,
   coordY: number,
   planId?: string,

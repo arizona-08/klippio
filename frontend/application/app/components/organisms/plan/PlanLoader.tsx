@@ -89,7 +89,7 @@ function getCursorColor(identifier: string) {
 }
 
 function upsertMarker(markers: MarkerType[], markerToUpsert: MarkerType) {
-  if (!markerToUpsert.id) return [...markers, markerToUpsert];
+  if (!markerToUpsert?.id) return [...markers, markerToUpsert];
 
   const markerIndex = markers.findIndex((marker) => marker.id === markerToUpsert.id);
   if (markerIndex === -1) return [...markers, markerToUpsert];
@@ -887,7 +887,7 @@ function PlanLoader({ projectId, canEdit, onPlanChange }: PlanLoaderProps) {
                       style={{ left: `${marker.coordX}%`, top: `${marker.coordY}%` }}
                       onClick={(e) => handleMarkerClick(e, marker)}
                     >
-                      {index + 1}
+                      #{marker.markerNumber}
                     </div>
                   ))}
 

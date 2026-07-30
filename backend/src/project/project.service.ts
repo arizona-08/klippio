@@ -114,6 +114,7 @@ export class ProjectService {
         },
         select: {
           id: true,
+          markerNumber: true,
           title: true,
           planId: true,
           planPageNumber: true,
@@ -169,6 +170,7 @@ export class ProjectService {
           pages: { pageNumber: number; markersCount: number }[];
           markers: {
             id: string;
+            markerNumber: number | null;
             title: string;
             planId: string;
             planPageNumber: number;

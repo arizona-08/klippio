@@ -33,16 +33,14 @@ const styles = StyleSheet.create({
 type ReportRow = {
   marker: ReportMarker;
   photo?: ReportPhoto;
-  markerNumber: number;
 };
 
 function createRows(markers: ReportMarker[]): ReportRow[] {
-  return markers.flatMap((marker, markerIndex) => {
-    const markerNumber = markerIndex + 1;
+  return markers.flatMap((marker) => {
 
     return marker.photos.length
-      ? marker.photos.map((photo) => ({ marker, photo, markerNumber }))
-      : [{ marker, markerNumber }];
+      ? marker.photos.map((photo) => ({ marker, photo }))
+      : [{ marker }];
   });
 }
 
@@ -60,7 +58,7 @@ function ReportRows({ markers }: { markers: ReportMarker[] }) {
       {rows.map((row, index) => (
         <View key={`${row.marker.id}-${row.photo?.id ?? 'no-photo'}`} style={[styles.row, index === rows.length - 1 ? styles.rowLast : {}]} wrap={false}>
           <View style={[styles.pageCell, styles.cell]}><Text>{row.marker.planPageNumber}</Text></View>
-          <View style={[styles.numberCell, styles.cell]}><Text style={styles.markerNumber}>{row.markerNumber}</Text></View>
+          <View style={[styles.numberCell, styles.cell]}><Text style={styles.markerNumber}>{row.marker.markerNumber === null ? '—' : `#${row.marker.markerNumber}`}</Text></View>
           <View style={[styles.imageCell, styles.cell]}>
             {row.photo?.temporaryAccessUrl ? (
               // react-pdf's Image does not expose the HTML `alt` attribute.

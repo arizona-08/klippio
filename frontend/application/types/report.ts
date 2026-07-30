@@ -7,6 +7,7 @@ export type ReportPhoto = {
 
 export type ReportMarker = {
   id: string;
+  markerNumber: number | null;
   title: string;
   planId: string;
   planPageNumber: number;
