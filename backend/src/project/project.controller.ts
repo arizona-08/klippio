@@ -110,6 +110,14 @@ export class ProjectController {
     return this.projectService.getProjectPermissions(projectId, user.id);
   }
 
+  @Get(':projectId/report-data')
+  async getProjectDataForReport(
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.projectService.getProjectDataForReport(projectId, user.id);
+  }
+
   @Put(':projectId/update')
   async updateProject(
     @Param('projectId') projectId: string,

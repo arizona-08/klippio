@@ -1,9 +1,10 @@
 
 'use client';
+import { useCreateReportStore } from '@/stores/CreateReportStore';
 import { useCurrentProjectStore } from '@/stores/CurrentProjectStore';
 import { useProjectNodeStore } from '@/stores/ProjectNodesStore';
 import { PlanType, ProjectType } from '@/types/project';
-import { ArrowLeft, ChevronDown, FileText } from 'lucide-react'
+import { ArrowLeft, ChevronDown, EllipsisVertical, FileText, Share } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
 
@@ -16,20 +17,51 @@ function TopBar({ project, plan }: TopBarProps) {
   const openFolders = useProjectNodeStore((state) => state.open);
   const currentProjectTitle = useCurrentProjectStore((state) => state.currentProjectTitle);
 
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+
+  const openCreateReportModal = useCreateReportStore((state) => state.openCreateReportModal);
+
   return (
     <header className="flex w-full flex-col gap-3 border-b border-black/8 bg-white px-4 py-3 text-black shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-6">
-      <Link
-        href="/dashboard/projects"
-        className="group flex min-w-0 items-center gap-3 rounded-lg py-1 transition-colors hover:text-primary"
-      >
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 transition-colors group-hover:bg-primary/10">
-          <ArrowLeft className="h-4 w-4" />
-        </span>
-        <div className="min-w-0">
-          <p className="truncate text-base font-semibold">{(project?.title || currentProjectTitle) || "Projet sans titre"}</p>
-          <p className="mt-0.5 text-xs text-gray-500">Retour aux projets</p>
+      <div className="flex w-full items-center justify-between gap-3 sm:w-auto">
+        <Link
+          href="/dashboard/projects"
+          className="group flex min-w-0 items-center gap-3 rounded-lg py-1 transition-colors hover:text-primary"
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 transition-colors group-hover:bg-primary/10">
+            <ArrowLeft className="h-4 w-4" />
+          </span>
+          <div className="min-w-0">
+            <p className="truncate text-base font-semibold">{(project?.title || currentProjectTitle) || "Projet sans titre"}</p>
+            <p className="mt-0.5 text-xs text-gray-500">Retour aux projets</p>
+          </div>
+        </Link>
+
+        {/* actions menu */}
+        <div className="relative">
+          <div className="p-2 hover:bg-gray-100 rounded-full cursor-pointer transition-all" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            <EllipsisVertical className="h-5 w-5"/>
+          </div>
+
+          {/* menu */}
+          {isMenuOpen && (
+            <div className="absolute left-0 top-full z-40 mt-2 w-48 border border-gray-200 rounded-md bg-white shadow-lg">
+              <div>
+                <button className="flex gap-2 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100">
+                  <Share className="h-4 w-4" /> Partager
+                </button>
+                
+                <button
+                  className="flex gap-2 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  onClick={openCreateReportModal}
+                >
+                  <FileText className="h-4 w-4" /> Exporter
+                </button>
+              </div>
+            </div>
+          )}
         </div>
-      </Link>
+      </div>
       <button
         type="button"
         onClick={openFolders}
