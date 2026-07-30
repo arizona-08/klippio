@@ -148,6 +148,7 @@ model Plan {
   lastOpenedAt       DateTime @default(now())
   projectId          String
   folderId           String
+  nextMarkerNumber    Int      @default(0)
 
   project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   markers Marker[]
@@ -156,6 +157,7 @@ model Plan {
 
 model Marker {
   id        String   @id @default(uuid())
+  markerNumber Int?
   coordX    Float
   coordY    Float
   title     String
@@ -164,6 +166,7 @@ model Marker {
   planId         String
   planPageNumber Int
 
+  @@unique([planId, markerNumber])
   markerPhotos MarkerPhoto[]
   plan         Plan          @relation(fields: [planId], references: [id], onDelete: Cascade)
 }

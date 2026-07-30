@@ -13,6 +13,7 @@ import useViewportWidth from '@/app/hooks/useViewportWidth'
 import Logo from '../../atoms/Logo'
 import { getNotifications } from '@/proxy/notifications/notification-functions'
 import { io } from 'socket.io-client'
+import { getProfilePictureTransform } from '@/app/utils/profile-picture'
 
 function AppMenu() {
   useViewportWidth()
@@ -119,7 +120,7 @@ function AppMenu() {
                   className="absolute left-1/2 top-1/2 select-none"
                   unoptimized
                   style={{
-                    transform: `translate(-50%, -50%) translate(${user.profilePicture?.offsetX}px, ${user.profilePicture?.offsetY}px) scale(${user.profilePicture?. zoom})`
+                    transform: getProfilePictureTransform(user.profilePicture, 32)
                   }}
                   draggable={false}
                 />
@@ -214,7 +215,7 @@ function AppMenu() {
                   className="absolute left-1/2 top-1/2 select-none"
                   unoptimized
                   style={{
-                    transform: `translate(-50%, -50%) translate(${user.profilePicture?.offsetX}px, ${user.profilePicture?.offsetY}px) scale(${user.profilePicture?. zoom})`
+                    transform: getProfilePictureTransform(user.profilePicture, 48)
                   }}
                   draggable={false}
                 />

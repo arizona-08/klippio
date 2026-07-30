@@ -83,6 +83,147 @@ export class ProjectService {
     }
   }
 
+  async getProjectDataForReport(projectId: string, userId: number) {
+    try {
+      const isProjectCollaborator = await this.prismaService.projectCollaborator.findFirst({
+        where: {
+          projectId,
+          userId
+        }
+      });
+
+      if(!isProjectCollaborator) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      const groupedMarkers = await this.prismaService.marker.groupBy({
+        by: ['planId', 'planPageNumber'],
+        where: {
+          plan: {
+            projectId: projectId
+          }
+        },
+        _count: {
+          _all: true,
+        },
+      });
+
+      const markers = await this.prismaService.marker.findMany({
+        where: {
+          plan: { projectId },
+        },
+        select: {
+          id: true,
+          markerNumber: true,
+          title: true,
+          planId: true,
+          planPageNumber: true,
+          markerPhotos: {
+            select: {
+              id: true,
+              photoLabel: true,
+              comment: true,
+              photoStorageKey: true,
+            },
+          },
+        },
+        orderBy: [{ planPageNumber: 'asc' }, { createdAt: 'asc' }],
+      });
+
+      const reportMarkers = await Promise.all(
+        markers.map(async (marker) => ({
+          ...marker,
+          photos: await Promise.all(
+            marker.markerPhotos.map(async (photo) => ({
+              id: photo.id,
+              label: photo.photoLabel,
+              comment: photo.comment,
+              temporaryAccessUrl: await this.amazonS3Service.generatePresignedUrl(
+                photo.photoStorageKey,
+                3600,
+              ),
+            })),
+          ),
+        })),
+      );
+
+      const plans = await this.prismaService.plan.findMany({
+        where: {
+          projectId,
+        },
+
+        select: {
+          id: true,
+          name: true,
+        },
+        orderBy: {
+          name: 'asc',
+        },
+      });
+
+      const plansMap = new Map<
+        string,
+        {
+          id: string;
+          name: string;
+          totalMarkers: number;
+          pages: { pageNumber: number; markersCount: number }[];
+          markers: {
+            id: string;
+            markerNumber: number | null;
+            title: string;
+            planId: string;
+            planPageNumber: number;
+            photos: {
+              id: string;
+              label: string;
+              comment: string | null;
+              temporaryAccessUrl: string;
+            }[];
+          }[];
+        }
+      >(
+        plans.map((plan) => [
+          plan.id,
+          {
+            id: plan.id,
+            name: plan.name,
+            totalMarkers: 0,
+            pages: [],
+            markers: [],
+          },
+        ]),
+      );
+
+      for (const marker of groupedMarkers) {
+        const currentPlan = plansMap.get(marker.planId);
+
+        if (!currentPlan) continue;
+
+        currentPlan.totalMarkers += marker._count._all;
+        currentPlan.pages.push({
+          pageNumber: marker.planPageNumber,
+          markersCount: marker._count._all,
+        });
+      }
+
+      for (const marker of reportMarkers) {
+        const currentPlan = plansMap.get(marker.planId);
+        if (currentPlan) currentPlan.markers.push(marker);
+      }
+
+      const selectionnablePlans = [...plansMap.values()].map((plan) => ({
+        ...plan,
+        pages: plan.pages.sort((a, b) => a.pageNumber - b.pageNumber),
+      }));
+
+      return { selectionnablePlans };
+    } catch (error: unknown) {
+      rethrowKnownHttpException(error);
+      throw new InternalServerErrorException('Failed to get project data for report');
+    }
+  }
+
   async getProjectPermissions(projectId: string, userId: number) {
     const project = await this.prismaService.project.findFirst({
       where: {

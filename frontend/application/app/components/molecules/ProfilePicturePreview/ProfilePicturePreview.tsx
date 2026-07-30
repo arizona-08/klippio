@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import React, { useEffect, useMemo, useState } from 'react'
+import { getProfilePictureTransform } from '@/app/utils/profile-picture';
 
 interface PicturePreviewProps {
   type: 'PROFILE' | 'BANNER';
@@ -100,7 +101,7 @@ function PicturePreview({ type, file, isVisible, onClose, onConfirm }: PicturePr
                   sizes="100vw"
                   className="absolute left-1/2 top-1/2 select-none"
                   unoptimized
-                  style={{transform: `translate(-50%, -50%) translate(${offsetX}px, ${offsetY}px) scale(${zoom})` }}
+                  style={{ transform: getProfilePictureTransform({ zoom, offsetX, offsetY }, 240) }}
                   draggable={false}
                 />
               ) : (

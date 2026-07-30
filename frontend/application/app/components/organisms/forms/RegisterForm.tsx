@@ -115,13 +115,10 @@ function RegisterForm() {
                   label="Prénom:"
                   name="firstname"
                   placeholder="John"
-                  value={registerCredentials.email}
+                  value={registerCredentials.firstname}
                   onChange={setCredentialsInfo}
-                  disabled={Boolean(invitationEmail)}
                 />
-                {invitationEmail && (
-                  <p className="text-sm text-gray-500">L’adresse email est liée à votre invitation.</p>
-                )}
+                
                 {errorMessages &&
                   errorMessages.firstname &&
                   errorMessages.firstname.length > 0 && (
@@ -161,7 +158,11 @@ function RegisterForm() {
                   name="email"
                   placeholder="johndoe@gmail.com"
                   onChange={setCredentialsInfo}
+                  disabled={Boolean(invitationEmail)}
                 />
+                {invitationEmail && (
+                  <p className="text-sm text-gray-500">L’adresse email est liée à votre invitation.</p>
+                )}
                 {errorMessages &&
                   errorMessages.email &&
                   errorMessages.email.length > 0 && (
