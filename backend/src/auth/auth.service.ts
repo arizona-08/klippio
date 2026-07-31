@@ -198,10 +198,12 @@ export class AuthService {
       );
     }
 
+    const hashedNewPassword = await this.userService.hashPassword(newPassword);
+
     const updatedUser = await this.userService.updateUser(
       storedPasswordToken.value.userId,
       {
-        password: newPassword,
+        password: hashedNewPassword,
         forgotPasswordTokenSelector: null,
         forgotPasswordToken: null,
         forgotPasswordTokenExpiry: null,
