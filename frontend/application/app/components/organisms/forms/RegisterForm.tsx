@@ -27,10 +27,12 @@ function RegisterForm() {
       password: "",
       confirmation: "",
     });
+  const [hasAcceptedPrivacyPolicy, setHasAcceptedPrivacyPolicy] =
+    React.useState(false);
 
-  const isFormValid = Object.values(registerCredentials).every(
-    (value) => value.trim() !== "",
-  );
+  const isFormValid =
+    Object.values(registerCredentials).every((value) => value.trim() !== "") &&
+    hasAcceptedPrivacyPolicy;
 
   function setCredentialsInfo(e: React.ChangeEvent<HTMLInputElement>) {
     setRegisterCredentials({
@@ -63,6 +65,11 @@ function RegisterForm() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    if (!hasAcceptedPrivacyPolicy) {
+      return;
+    }
+
     setErrorMessages(null);
     setUnauthorizedError(null);
 
@@ -219,6 +226,31 @@ function RegisterForm() {
                   )}
               </div>
             </div>
+          </div>
+
+          <div className="flex items-start gap-3 pt-2">
+            <input
+              id="privacy-policy-consent"
+              name="privacy-policy-consent"
+              type="checkbox"
+              checked={hasAcceptedPrivacyPolicy}
+              onChange={(event) => setHasAcceptedPrivacyPolicy(event.target.checked)}
+              aria-label="Accepter la Politique de confidentialité"
+              aria-describedby="privacy-policy-consent-description"
+              className="mt-0.5 size-4 shrink-0 accent-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            />
+            <p id="privacy-policy-consent-description" className="text-sm leading-6 text-gray-600">
+              Je confirme avoir lu et accepte la{' '}
+              <a
+                href="/legal#politique-de-confidentialite"
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              >
+                Politique de confidentialité
+              </a>
+              .
+            </p>
           </div>
 
           <CTA
