@@ -79,6 +79,10 @@ export class AuthService {
       return err(new InvalidCredentialsError('Identifiants invalides'));
     }
 
+    if (user.value.isBanned) {
+      return err(new InvalidCredentialsError('Ce compte a été suspendu'));
+    }
+
     const isPasswordValid = await bcrypt.compare(
       userPassword,
       user.value.password,

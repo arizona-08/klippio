@@ -38,6 +38,60 @@ export class StatsService {
     }
   }
 
+  async getAdminStats() {
+    const lastThirtyDays = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const lastSevenDays = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    const [
+      totalUsers,
+      newUsersLastThirtyDays,
+      usersByRole,
+      totalProjects,
+      archivedProjects,
+      newProjectsLastThirtyDays,
+      totalPlans,
+      totalMarkers,
+      markersLastSevenDays,
+    ] = await Promise.all([
+      this.prismaService.user.count(),
+      this.prismaService.user.count({
+        where: { createdAt: { gte: lastThirtyDays } },
+      }),
+      this.prismaService.user.groupBy({ by: ['role'], _count: { _all: true } }),
+      this.prismaService.project.count(),
+      this.prismaService.project.count({ where: { isArchived: true } }),
+      this.prismaService.project.count({
+        where: { createdAt: { gte: lastThirtyDays } },
+      }),
+      this.prismaService.plan.count(),
+      this.prismaService.marker.count(),
+      this.prismaService.marker.count({
+        where: { createdAt: { gte: lastSevenDays } },
+      }),
+    ]);
+
+    const roleCounts = { ADMIN: 0, PREMIUM: 0, STANDARD: 0 };
+    usersByRole.forEach(({ role, _count }) => {
+      roleCounts[role] = _count._all;
+    });
+
+    return {
+      users: {
+        total: totalUsers,
+        newLastThirtyDays: newUsersLastThirtyDays,
+        byRole: roleCounts,
+      },
+      projects: {
+        total: totalProjects,
+        active: totalProjects - archivedProjects,
+        archived: archivedProjects,
+        newLastThirtyDays: newProjectsLastThirtyDays,
+      },
+      plans: { total: totalPlans },
+      markers: { total: totalMarkers, newLastSevenDays: markersLastSevenDays },
+    };
+  }
+
   async getMarkerStats(userId: number) {
     const totalMarkers = await this.prismaService.marker.count({
       where: {

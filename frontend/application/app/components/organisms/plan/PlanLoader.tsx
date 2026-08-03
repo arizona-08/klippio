@@ -521,6 +521,12 @@ function PlanLoader({ projectId, canEdit, onPlanChange }: PlanLoaderProps) {
     
   }
 
+  function handleSetPhotos(photos: MarkerPhotoType[]) {
+    setTemporaryModalMarker((marker) =>
+      marker ? { ...marker, photos } : marker,
+    );
+  }
+
   async function handleDeleteMarker(marker: MarkerType){
     if (!canEdit) return;
     // Appel API pour supprimer le marqueur de la BDD
@@ -948,6 +954,7 @@ function PlanLoader({ projectId, canEdit, onPlanChange }: PlanLoaderProps) {
         marker={temporaryModalMarker}
         handleSetTitle={handleSetTitle}
         handleSetPhotoText={handleSetPhotoText}
+        handleSetPhotos={handleSetPhotos}
         handleAddMarker={handleAddMarker}
         handleUpdateMarkerPhoto={updateMarkerPhoto}
         handleDeleteMarker={handleDeleteMarker}

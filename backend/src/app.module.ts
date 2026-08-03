@@ -15,6 +15,7 @@ import { StatsModule } from './stats/stats.module';
 import { MarkerModule } from './markers/marker.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { NotificationModule } from './notification/notification.module';
+import { PhotoReportModule } from './photo-report/photo-report.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { NotificationModule } from './notification/notification.module';
     StatsModule,
     RealtimeModule,
     NotificationModule,
+    PhotoReportModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -7,7 +7,7 @@ import { useUser } from '@/app/Context/AuthContext/AuthUserProvider'
 import AppMenuLink from '../../atoms/AppMenuLink'
 import Image from 'next/image'
 import { logout } from '@/proxy/auth/auth-functions'
-import { Archive, Bell, Book, Home, LogInIcon, LogOut, User } from 'lucide-react'
+import { Archive, Bell, Book, Flag, Home, LogInIcon, LogOut, ShieldCheck, User } from 'lucide-react'
 import { useSidebarStore } from '@/stores/SidebarStore'
 import useViewportWidth from '@/app/hooks/useViewportWidth'
 import Logo from '../../atoms/Logo'
@@ -44,7 +44,7 @@ function AppMenu() {
     };
   }, [user]);
 
-  const appMenuLinks = [
+  const standardMenuLinks = [
     {
       label: 'Accueil',
       href: '/dashboard',
@@ -71,6 +71,26 @@ function AppMenu() {
     //   icon: <Users className='text-white'/>
     // }
   ]
+
+  const appMenuLinks = user?.role === 'ADMIN'
+    ? [
+        {
+          label: 'Accueil',
+          href: '/dashboard/admin',
+          icon: <Home className='text-white'/>
+        },
+        {
+          label: 'Utilisateurs',
+          href: '/dashboard/admin/users',
+          icon: <ShieldCheck className='text-white'/>
+        },
+        {
+          label: 'Signalements',
+          href: '/dashboard/admin/reports',
+          icon: <Flag className='text-white'/>
+        },
+      ]
+    : standardMenuLinks
   
   const [burgerActive, setIsBurgerActive] = React.useState<boolean>(false);
   // const [isSidebarOpen, setIsSidebarOpen] = React.useState<boolean>(false);

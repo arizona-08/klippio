@@ -7,6 +7,7 @@ export interface User {
   email: string;
   password: string;
   role: $Enums.Role;
+  isBanned?: boolean;
   forgotPasswordTokenSelector?: string | null;
   forgotPasswordToken?: string | null;
   forgotPasswordTokenExpiry?: Date | null;
