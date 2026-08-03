@@ -1,4 +1,5 @@
 'use client'
+import { useUser } from '@/app/Context/AuthContext/AuthUserProvider';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React from 'react'
@@ -18,9 +19,11 @@ interface AppMenuLinkProps {
 function AppMenuLink({ menuLink, hideText, onClose }: AppMenuLinkProps) {
   const { label, href, icon } = menuLink;
   const pathname = usePathname();
+  const {user} = useUser();
+  const isAdmin = user?.role === 'ADMIN';
 
   const pathNameParts = pathname.split('/');
-  const isActive = pathNameParts[2] === href.split('/')[2]; // Compare the second segment of the path
+  const isActive = pathNameParts[isAdmin ? 3: 2] === href.split('/')[3]; // Compare the second segment of the path
 
   return (
     <li className={`relative overflow-hidden w-full shrink-0 hover:bg-white/10 p-1 rounded-md ${hideText ? 'flex justify-center' : ''} ${isActive ? 'bg-white/20 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-white' : ''}`}>

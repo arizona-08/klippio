@@ -7,7 +7,7 @@ import { useUser } from '@/app/Context/AuthContext/AuthUserProvider'
 import AppMenuLink from '../../atoms/AppMenuLink'
 import Image from 'next/image'
 import { logout } from '@/proxy/auth/auth-functions'
-import { Archive, Bell, Book, Flag, Home, LogInIcon, LogOut, ShieldCheck, User } from 'lucide-react'
+import { Archive, Bell, Book, CircleHelp, Flag, Home, LogInIcon, LogOut, ShieldCheck, User } from 'lucide-react'
 import { useSidebarStore } from '@/stores/SidebarStore'
 import useViewportWidth from '@/app/hooks/useViewportWidth'
 import Logo from '../../atoms/Logo'
@@ -65,6 +65,11 @@ function AppMenu() {
       href: '/dashboard/notifications',
       icon: <span className='relative'><Bell className='text-white'/>{unreadNotifications > 0 && <span className='absolute -right-2 -top-2 min-w-4 rounded-full bg-white px-1 text-center text-[10px] font-bold leading-4 text-primary'>{unreadNotifications > 9 ? '9+' : unreadNotifications}</span>}</span>
     },
+    {
+      label: 'Aide',
+      href: '/dashboard/help',
+      icon: <CircleHelp className='text-white'/>
+    },
     // {
     //   label: 'Mon Équipe',
     //   href: '/dashboard/teams',
@@ -88,6 +93,11 @@ function AppMenu() {
           label: 'Signalements',
           href: '/dashboard/admin/reports',
           icon: <Flag className='text-white'/>
+        },
+        {
+          label: 'Support',
+          href: '/dashboard/admin/support',
+          icon: <CircleHelp className='text-white'/>
         },
       ]
     : standardMenuLinks

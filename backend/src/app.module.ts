@@ -16,6 +16,7 @@ import { MarkerModule } from './markers/marker.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { NotificationModule } from './notification/notification.module';
 import { PhotoReportModule } from './photo-report/photo-report.module';
+import { SupportModule } from './support/support.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { PhotoReportModule } from './photo-report/photo-report.module';
     RealtimeModule,
     NotificationModule,
     PhotoReportModule,
+    SupportModule,
   ],
   controllers: [AppController],
   providers: [AppService],

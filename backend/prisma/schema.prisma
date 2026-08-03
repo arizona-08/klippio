@@ -35,6 +35,8 @@ model User {
   notifications Notification[]
   markerPhotosUploaded MarkerPhoto[] @relation("UploadedMarkerPhotos")
   photoReports PhotoReport[] @relation("PhotoReportAuthor")
+  supportTickets SupportTicket[] @relation("SupportTicketAuthor")
+  supportMessages SupportMessage[] @relation("SupportMessageAuthor")
 }
 
 enum Role {
@@ -205,6 +207,40 @@ model PhotoReport {
 
   @@unique([photoId, reporterId])
   @@index([createdAt])
+}
+
+model SupportTicket {
+  id String @id @default(uuid())
+  subject String
+  status SupportTicketStatus @default(OPEN)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  authorId Int
+
+  author User @relation("SupportTicketAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  messages SupportMessage[]
+
+  @@index([authorId, updatedAt])
+  @@index([status, updatedAt])
+}
+
+model SupportMessage {
+  id String @id @default(uuid())
+  content String
+  createdAt DateTime @default(now())
+  ticketId String
+  authorId Int
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author User @relation("SupportMessageAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt])
+}
+
+enum SupportTicketStatus {
+  OPEN
+  RESOLVED
+  CLOSED
 }
 
 model Folder {

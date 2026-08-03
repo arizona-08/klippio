@@ -27,14 +27,18 @@ type SessionSocket = Socket & {
       firstname: string;
       lastname: string;
       email: string;
+      role: string;
     };
     joinedProjects?: Set<string>;
+    joinedSupportTickets?: Set<string>;
   };
 };
 
 type JoinProjectPayload = {
   projectId?: string;
 };
+
+type JoinSupportTicketPayload = { ticketId?: string };
 
 type CursorMovePayload = {
   projectId?: string;
@@ -86,6 +90,7 @@ export class RealtimeGateway
         firstname: true,
         lastname: true,
         email: true,
+        role: true,
       },
     });
 
@@ -97,6 +102,7 @@ export class RealtimeGateway
     client.data.userId = userId;
     client.data.user = user;
     client.data.joinedProjects = new Set();
+    client.data.joinedSupportTickets = new Set();
     await client.join(this.realtimeService.getUserRoom(userId));
   }
 
@@ -122,6 +128,35 @@ export class RealtimeGateway
     await client.join(this.realtimeService.getProjectRoom(projectId));
     client.data.joinedProjects?.add(projectId);
     this.addClientToPresence(client, projectId);
+  }
+
+  @SubscribeMessage('support-ticket:join')
+  async joinSupportTicket(
+    @ConnectedSocket() client: SessionSocket,
+    @MessageBody() payload: JoinSupportTicketPayload,
+  ) {
+    const userId = client.data.userId;
+    const ticketId = payload.ticketId;
+    if (!userId || !ticketId) return;
+
+    const ticket = await this.prismaService.supportTicket.findFirst({
+      where: client.data.user?.role === 'ADMIN' ? { id: ticketId } : { id: ticketId, authorId: userId },
+      select: { id: true },
+    });
+    if (!ticket) return;
+
+    await client.join(this.realtimeService.getSupportTicketRoom(ticketId));
+    client.data.joinedSupportTickets?.add(ticketId);
+  }
+
+  @SubscribeMessage('support-ticket:leave')
+  async leaveSupportTicket(
+    @ConnectedSocket() client: SessionSocket,
+    @MessageBody() payload: JoinSupportTicketPayload,
+  ) {
+    if (!payload.ticketId) return;
+    await client.leave(this.realtimeService.getSupportTicketRoom(payload.ticketId));
+    client.data.joinedSupportTickets?.delete(payload.ticketId);
   }
 
   @SubscribeMessage('project:leave')
