@@ -30,6 +30,14 @@ export async function getMarkers(planId: string, pageNumber: number) {
   return response;
 }
 
+export async function getMarkerHistory(markerId: string, cursor?: string) {
+  return fetchFromClient(`/api/markers/${markerId}/history`, {
+    method: 'GET',
+    query: { limit: 50, ...(cursor ? { cursor } : {}) },
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
 export async function deleteMarker(markerId: string) {
   const response = await fetchFromClient(`/api/markers/${markerId}`, {
     method: "DELETE",

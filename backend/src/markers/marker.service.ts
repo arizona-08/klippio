@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { AmazonS3Service } from 'src/amazon/amazon-s3.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { MarkerHistoryAction, Prisma } from '@prisma/client';
 import { CreateMarkerDto } from './dtos/create-marker.dto';
 import { UpdateMarkerDto } from './dtos/update-marker.dto';
 
@@ -90,6 +90,18 @@ export class MarkerService {
             }),
           ),
         );
+
+        await prisma.markerHistory.createMany({
+          data: createdPhotos.map((photo) => ({
+            markerId: insertedMarker.id,
+            actorId: userId,
+            action: MarkerHistoryAction.PHOTO_ADDED,
+            photoId: photo.id,
+            photoStorageKey: photo.photoStorageKey,
+            newLabel: photo.photoLabel,
+            newComment: photo.comment,
+          })),
+        });
 
         return {
           ...insertedMarker,
@@ -177,15 +189,44 @@ export class MarkerService {
         },
       });
 
+      const historyEntries: Prisma.MarkerHistoryCreateManyInput[] = [];
       const updatedExistingPhotos = await Promise.all(
         (markerData.existingPhotosToUpdate ?? []).map(async (photo) => {
           const existingPhoto = await this.prismaService.markerPhoto.findFirst({
             where: { id: photo.identifier, markerId },
-            select: { id: true },
+            select: {
+              id: true,
+              photoLabel: true,
+              comment: true,
+              photoStorageKey: true,
+            },
           });
 
           if (!existingPhoto) {
             throw new NotFoundException('Photo non trouvée');
+          }
+
+          if (existingPhoto.photoLabel !== photo.label) {
+            historyEntries.push({
+              markerId,
+              actorId: userId,
+              action: MarkerHistoryAction.PHOTO_LABEL_UPDATED,
+              photoId: existingPhoto.id,
+              photoStorageKey: existingPhoto.photoStorageKey,
+              oldLabel: existingPhoto.photoLabel,
+              newLabel: photo.label,
+            });
+          }
+          if ((existingPhoto.comment ?? '') !== (photo.comment ?? '')) {
+            historyEntries.push({
+              markerId,
+              actorId: userId,
+              action: MarkerHistoryAction.PHOTO_COMMENT_UPDATED,
+              photoId: existingPhoto.id,
+              photoStorageKey: existingPhoto.photoStorageKey,
+              oldComment: existingPhoto.comment,
+              newComment: photo.comment,
+            });
           }
 
           const updatedPhoto = await this.prismaService.markerPhoto.update({
@@ -219,11 +260,20 @@ export class MarkerService {
           },
         });
 
-        await Promise.all(
-          photosToDelete.map((photo) =>
-            this.amazonS3Service.deleteImage(photo.photoStorageKey),
-          ),
+        historyEntries.push(
+          ...photosToDelete.map((photo) => ({
+            markerId,
+            actorId: userId,
+            action: MarkerHistoryAction.PHOTO_DELETED,
+            photoId: photo.id,
+            photoStorageKey: photo.photoStorageKey,
+            oldLabel: photo.photoLabel,
+            oldComment: photo.comment,
+          })),
         );
+
+        // L'image est conservée dans le stockage : l'historique doit pouvoir
+        // continuer à afficher sa miniature après la suppression de la photo.
 
         await this.prismaService.markerPhoto.deleteMany({
           where: {
@@ -258,6 +308,16 @@ export class MarkerService {
               },
             });
 
+            historyEntries.push({
+              markerId,
+              actorId: userId,
+              action: MarkerHistoryAction.PHOTO_ADDED,
+              photoId: insertedPhoto.id,
+              photoStorageKey: insertedPhoto.photoStorageKey,
+              newLabel: insertedPhoto.photoLabel,
+              newComment: insertedPhoto.comment,
+            });
+
             return {
               ...insertedPhoto,
               label: insertedPhoto.photoLabel,
@@ -265,6 +325,12 @@ export class MarkerService {
           },
         ),
       );
+
+      if (historyEntries.length) {
+        await this.prismaService.markerHistory.createMany({
+          data: historyEntries,
+        });
+      }
 
       return {
         success: true,
@@ -315,6 +381,33 @@ export class MarkerService {
         'Error when deleting marker and its photos : ' + getErrorMessage(error),
       );
     }
+  }
+
+  async getMarkerHistory(markerId: string, userId: number, take = 50, cursor?: string) {
+    await this.assertMarkerAccessByMarkerId(markerId, userId);
+
+    const entries = await this.prismaService.markerHistory.findMany({
+      where: { markerId },
+      include: {
+        actor: { select: { firstname: true, lastname: true } },
+      },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: take + 1,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    });
+    const hasMore = entries.length > take;
+    const page = hasMore ? entries.slice(0, take) : entries;
+
+    return {
+      history: await Promise.all(page.map(async (entry) => ({
+        ...entry,
+        temporaryAccessUrl: await this.amazonS3Service.generatePresignedUrl(
+          entry.photoStorageKey,
+          3600,
+        ),
+      }))),
+      nextCursor: hasMore ? page[page.length - 1]?.id : undefined,
+    };
   }
 
   private async assertPlanAccess(
