@@ -11,9 +11,9 @@ function ModalOverlay() {
 
   return (
     <>
-      <div className={`fixed inset-0 bg-black/25 z-40 backdrop-blur-sm ${isOverlayVisible ? 'block' : 'hidden'}`}></div>
+      <div className={`fixed inset-0 z-40 bg-black/25 backdrop-blur-sm ${isOverlayVisible || isShareProjectModalVisible ? 'block' : 'hidden'}`}></div>
 
-      <div className={`w-full max-w-125 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 ${isShareProjectModalVisible ? 'block' : 'hidden'}`}>
+      <div className={`fixed left-1/2 top-1/2 z-50 max-h-[calc(100vh-2rem)] w-[calc(100%-2rem)] max-w-125 -translate-x-1/2 -translate-y-1/2 overflow-y-auto ${isShareProjectModalVisible ? 'block' : 'hidden'}`}>
         <ShareProjectForm closeForm={() => useShareProjectModalStore.getState().closeShareProjectModal()}/>
       </div>
     </>

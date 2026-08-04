@@ -60,7 +60,12 @@ function ShareProjectForm({ closeForm }: ShareProjectFormProps) {
 
     const data = await response.json();
     console.log(data.message);
-    setInvitationsMasterList((prev) => [...prev, data.invitation]);
+    setInvitationsMasterList((prev) => [
+      ...prev.filter(
+        (invitation) => invitation.id !== data.replacedInvitationId,
+      ),
+      data.invitation,
+    ]);
   }
 
   async function handleRemoveCollaborator(collaborator: CollaboratorType) {
@@ -234,8 +239,8 @@ function ShareProjectForm({ closeForm }: ShareProjectFormProps) {
                 ) : (
                   <>
                     <ul className='space-y-4'>
-                      {invitationsMasterList.map((invitation, index) => (
-                        <li key={index} className='flex items-center justify-between'>
+                      {invitationsMasterList.map((invitation) => (
+                        <li key={invitation.id} className='flex items-center justify-between'>
                           <div className="flex items-center gap-3">
                             <div className="profile-pic-container w-8 h-8 bg-gray-200 rounded-full"></div>
 

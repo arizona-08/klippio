@@ -1,8 +1,11 @@
 
 'use client';
 import { useCreateReportStore } from '@/stores/CreateReportStore';
+import { useUser } from '@/app/Context/AuthContext/AuthUserProvider';
 import { useCurrentProjectStore } from '@/stores/CurrentProjectStore';
 import { useProjectNodeStore } from '@/stores/ProjectNodesStore';
+import { useOverlayStore } from '@/stores/OverlayStore';
+import { useShareProjectModalStore } from '@/stores/ShareProjectModalStore';
 import { PlanType, ProjectType } from '@/types/project';
 import { ArrowLeft, ChevronDown, EllipsisVertical, FileText, Share } from 'lucide-react'
 import Link from 'next/link'
@@ -14,12 +17,27 @@ interface TopBarProps {
 }
 
 function TopBar({ project, plan }: TopBarProps) {
+  const { user } = useUser();
   const openFolders = useProjectNodeStore((state) => state.open);
   const currentProjectTitle = useCurrentProjectStore((state) => state.currentProjectTitle);
 
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
   const openCreateReportModal = useCreateReportStore((state) => state.openCreateReportModal);
+  const openOverlay = useOverlayStore((state) => state.openOverlay);
+  const openShareProjectModal = useShareProjectModalStore(
+    (state) => state.openShareProjectModal,
+  );
+
+  const canShareProject = project?.authorId === user?.id;
+
+  function handleOpenShareProjectModal() {
+    if (!project || !canShareProject) return;
+
+    openShareProjectModal(project);
+    openOverlay();
+    setIsMenuOpen(false);
+  }
 
   return (
     <header className="flex w-full flex-col gap-3 border-b border-black/8 bg-white px-4 py-3 text-black shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-6">
@@ -47,13 +65,22 @@ function TopBar({ project, plan }: TopBarProps) {
           {isMenuOpen && (
             <div className="absolute left-0 top-full z-40 mt-2 w-48 border border-gray-200 rounded-md bg-white shadow-lg">
               <div>
-                <button className="flex gap-2 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100">
-                  <Share className="h-4 w-4" /> Partager
-                </button>
+                {canShareProject && (
+                  <button
+                    type="button"
+                    className="flex w-full gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                    onClick={handleOpenShareProjectModal}
+                  >
+                    <Share className="h-4 w-4" /> Partager
+                  </button>
+                )}
                 
                 <button
                   className="flex gap-2 w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                  onClick={openCreateReportModal}
+                  onClick={() => {
+                    openCreateReportModal();
+                    setIsMenuOpen(false);
+                  }}
                 >
                   <FileText className="h-4 w-4" /> Exporter
                 </button>

@@ -22,6 +22,9 @@ describe('ProjectService', () => {
         update: jest.fn(),
       },
       projectInvitation: {
+        create: jest.fn(),
+        delete: jest.fn(),
+        findFirst: jest.fn(),
         findUnique: jest.fn(),
         update: jest.fn(),
       },
@@ -39,6 +42,7 @@ describe('ProjectService', () => {
       generatePresignedUrl: jest.fn(),
     };
     const mailService = {
+      invitationMailOptions: jest.fn(),
       sendMail: jest.fn(),
     };
     const realtimeService = {
@@ -312,6 +316,49 @@ describe('ProjectService', () => {
       where: { token: 'token-1' },
       data: { status: 'ACCEPTED' },
     });
+  });
+
+  it('replaces the previous pending invitation when the owner reinvites the same email', async () => {
+    const { service, prismaService, mailService } = createService();
+    prismaService.project.findUnique.mockResolvedValue({
+      id: 'project-1',
+      title: 'Shared project',
+      authorId: 12,
+      author: {
+        firstname: 'Ada',
+        lastname: 'Lovelace',
+        email: 'ada@example.com',
+      },
+    });
+    prismaService.projectInvitation.findFirst.mockResolvedValue({
+      id: 'previous-invitation',
+    });
+    prismaService.projectInvitation.create.mockResolvedValue({
+      id: 'new-invitation',
+      createdAt: new Date(),
+    });
+    prismaService.user.findUnique.mockResolvedValue(null);
+    mailService.invitationMailOptions.mockReturnValue({});
+
+    await service.generateInvitationLink(
+      'project-1',
+      12,
+      'guest@example.com',
+      'EDITOR',
+    );
+
+    expect(prismaService.projectInvitation.delete).toHaveBeenCalledWith({
+      where: { id: 'previous-invitation' },
+    });
+    expect(prismaService.projectInvitation.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          projectId: 'project-1',
+          email: 'guest@example.com',
+          role: 'EDITOR',
+        }),
+      }),
+    );
   });
 
   it('rejects invitations used by a different email address', async () => {
