@@ -109,6 +109,23 @@ export class ProfileService {
     }
   }
 
+  async deleteAccount(userId: number) {
+    const user = await this.prismaService.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Utilisateur introuvable');
+    }
+
+    await this.prismaService.user.delete({
+      where: { id: userId },
+    });
+
+    return { message: 'Votre compte a été supprimé avec succès.' };
+  }
+
   async editUserPicture(
     userId: number,
     file: Express.Multer.File,
