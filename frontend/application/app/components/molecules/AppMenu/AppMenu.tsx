@@ -7,12 +7,14 @@ import { useUser } from '@/app/Context/AuthContext/AuthUserProvider'
 import AppMenuLink from '../../atoms/AppMenuLink'
 import Image from 'next/image'
 import { logout } from '@/proxy/auth/auth-functions'
-import { Archive, Bell, Book, Home, LogInIcon, LogOut, User } from 'lucide-react'
+import { Archive, Bell, Book, CircleHelp, Flag, Home, LogInIcon, LogOut, ShieldCheck, User } from 'lucide-react'
 import { useSidebarStore } from '@/stores/SidebarStore'
 import useViewportWidth from '@/app/hooks/useViewportWidth'
 import Logo from '../../atoms/Logo'
 import { getNotifications } from '@/proxy/notifications/notification-functions'
 import { io } from 'socket.io-client'
+import { getProfilePictureTransform } from '@/app/utils/profile-picture'
+import { isAdministrativeRole } from '@/app/utils/roles'
 
 function AppMenu() {
   useViewportWidth()
@@ -43,7 +45,7 @@ function AppMenu() {
     };
   }, [user]);
 
-  const appMenuLinks = [
+  const standardMenuLinks = [
     {
       label: 'Accueil',
       href: '/dashboard',
@@ -64,12 +66,42 @@ function AppMenu() {
       href: '/dashboard/notifications',
       icon: <span className='relative'><Bell className='text-white'/>{unreadNotifications > 0 && <span className='absolute -right-2 -top-2 min-w-4 rounded-full bg-white px-1 text-center text-[10px] font-bold leading-4 text-primary'>{unreadNotifications > 9 ? '9+' : unreadNotifications}</span>}</span>
     },
+    {
+      label: 'Aide',
+      href: '/dashboard/help',
+      icon: <CircleHelp className='text-white'/>
+    },
     // {
     //   label: 'Mon Équipe',
     //   href: '/dashboard/teams',
     //   icon: <Users className='text-white'/>
     // }
   ]
+
+  const appMenuLinks = isAdministrativeRole(user?.role)
+    ? [
+        {
+          label: 'Accueil',
+          href: '/dashboard',
+          icon: <Home className='text-white'/>
+        },
+        {
+          label: 'Utilisateurs',
+          href: '/dashboard/admin/users',
+          icon: <ShieldCheck className='text-white'/>
+        },
+        {
+          label: 'Signalements',
+          href: '/dashboard/admin/reports',
+          icon: <Flag className='text-white'/>
+        },
+        {
+          label: 'Support',
+          href: '/dashboard/admin/support',
+          icon: <CircleHelp className='text-white'/>
+        },
+      ]
+    : standardMenuLinks
   
   const [burgerActive, setIsBurgerActive] = React.useState<boolean>(false);
   // const [isSidebarOpen, setIsSidebarOpen] = React.useState<boolean>(false);
@@ -119,7 +151,7 @@ function AppMenu() {
                   className="absolute left-1/2 top-1/2 select-none"
                   unoptimized
                   style={{
-                    transform: `translate(-50%, -50%) translate(${user.profilePicture?.offsetX}px, ${user.profilePicture?.offsetY}px) scale(${user.profilePicture?. zoom})`
+                    transform: getProfilePictureTransform(user.profilePicture, 32)
                   }}
                   draggable={false}
                 />
@@ -214,7 +246,7 @@ function AppMenu() {
                   className="absolute left-1/2 top-1/2 select-none"
                   unoptimized
                   style={{
-                    transform: `translate(-50%, -50%) translate(${user.profilePicture?.offsetX}px, ${user.profilePicture?.offsetY}px) scale(${user.profilePicture?. zoom})`
+                    transform: getProfilePictureTransform(user.profilePicture, 48)
                   }}
                   draggable={false}
                 />

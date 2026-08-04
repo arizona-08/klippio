@@ -41,7 +41,7 @@ export type ProjectPermissions = {
   canEdit: boolean;
 };
 
-export type NotificationType = 'INVITATION' | 'ROLE_CHANGED' | 'ACCESS_REMOVED';
+export type NotificationType = 'INVITATION' | 'ROLE_CHANGED' | 'ACCESS_REMOVED' | 'CONTENT_MODERATION';
 
 export type NotificationItem = {
   id: string;
@@ -114,6 +114,7 @@ export type FolderType = {
 
 export type MarkerType = {
   id?: string,
+  markerNumber?: number,
   coordX: number,
   coordY: number,
   planId?: string,

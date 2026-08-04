@@ -14,6 +14,7 @@ import { logout } from "@/proxy/auth/auth-functions";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import CTA from "@/app/components/atoms/CTA";
+import { getProfilePictureTransform } from "@/app/utils/profile-picture";
 
 function ProfilePage() {
   const { user, setUser } = useUser();
@@ -372,7 +373,7 @@ function ProfilePage() {
 
           <div className="absolute -bottom-18 left-2 flex items-center gap-2">
             {/* Profile picture */}
-            <div className="w-24 h-24 rounded-full bg-gray-400 border-4 border-white overflow-hidden">
+            <div className="relative w-24 h-24 rounded-full bg-gray-400 border-4 border-white overflow-hidden">
               {resolvedProfileUrl && (
                 <Image
                   src={resolvedProfileUrl}
@@ -380,7 +381,10 @@ function ProfilePage() {
                   width={96}
                   height={96}
                   sizes="96px"
-                  className="h-full w-full object-cover"
+                  className="absolute left-1/2 top-1/2 select-none"
+                  style={{
+                    transform: getProfilePictureTransform(newProfilePicture, 96),
+                  }}
                   draggable={false}
                   unoptimized
                 />
@@ -567,11 +571,12 @@ function ProfilePage() {
                     <Image
                       src={profilePictureImageUrl}
                       alt="Aperçu de la photo de profil"
-                      fill
-                      sizes="100vw"
-                      className="select-none object-cover"
+                      width={128}
+                      height={128}
+                      sizes="128px"
+                      className="absolute left-1/2 top-1/2 select-none"
                       style={{
-                        transform: `translate(${newProfilePicture?.offsetX}px, ${newProfilePicture?.offsetY}px) scale(${newProfilePicture?.zoom})`,
+                        transform: getProfilePictureTransform(newProfilePicture, 128),
                       }}
                       unoptimized
                       draggable={false}

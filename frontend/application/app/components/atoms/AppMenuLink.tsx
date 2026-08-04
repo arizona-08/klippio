@@ -1,7 +1,9 @@
 'use client'
+import { useUser } from '@/app/Context/AuthContext/AuthUserProvider';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React from 'react'
+import { isAdministrativeRole } from '@/app/utils/roles';
 
 export type AppMenuLinkType = {
   label: string;
@@ -18,9 +20,12 @@ interface AppMenuLinkProps {
 function AppMenuLink({ menuLink, hideText, onClose }: AppMenuLinkProps) {
   const { label, href, icon } = menuLink;
   const pathname = usePathname();
+  // const {user} = useUser();
+  // const isAdmin = isAdministrativeRole(user?.role);
 
   const pathNameParts = pathname.split('/');
-  const isActive = pathNameParts[2] === href.split('/')[2]; // Compare the second segment of the path
+  const hrefParts = href.split('/');
+  const isActive = pathNameParts[pathNameParts.length - 1] === hrefParts[hrefParts.length - 1]; // Compare the last segment of the path
 
   return (
     <li className={`relative overflow-hidden w-full shrink-0 hover:bg-white/10 p-1 rounded-md ${hideText ? 'flex justify-center' : ''} ${isActive ? 'bg-white/20 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-white' : ''}`}>

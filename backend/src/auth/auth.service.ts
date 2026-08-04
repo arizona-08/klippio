@@ -16,12 +16,14 @@ import * as crypto from 'crypto';
 import { MailService } from 'src/mail/mail.service';
 import { MailNotSendedError } from 'src/Error/MailError';
 import { PublicUser, toPublicUser } from 'src/user/public-user';
+import { InvalidUserInvitationError, UserInvitationService } from 'src/user-invitation/user-invitation.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
     private mailService: MailService,
+    private userInvitationService: UserInvitationService,
   ) {}
 
   async register(
@@ -29,7 +31,7 @@ export class AuthService {
   ): Promise<
     Result<
       User,
-      PasswordDoNotMatchError | UserAlreadyExistsError | CouldNotCreateUserError
+      PasswordDoNotMatchError | UserAlreadyExistsError | CouldNotCreateUserError | InvalidUserInvitationError
     >
   > {
     if (registerDto.password !== registerDto.confirmation) {
@@ -52,22 +54,13 @@ export class AuthService {
       );
     }
 
-    const newUser = await this.userService.createUser({
-      firstname: registerDto.firstname,
-      lastname: registerDto.lastname,
-      email: registerDto.email,
-      password: registerDto.password,
-      role: 'STANDARD',
-    });
-    if (!newUser.ok) {
-      return err(
-        new CouldNotCreateUserError(
-          `Impossible de créer l'utilisateur: ${newUser.error.message}`,
-        ),
-      );
+    try {
+      const newUser = await this.userInvitationService.registerInvitedUser(registerDto);
+      return ok(newUser);
+    } catch (error) {
+      if (error instanceof InvalidUserInvitationError) return err(error);
+      return err(new CouldNotCreateUserError("Impossible de créer l'utilisateur."));
     }
-
-    return ok(newUser.value);
   }
 
   async login(
@@ -77,6 +70,10 @@ export class AuthService {
     const user = await this.userService.findOneBy('email', email);
     if (!user.ok) {
       return err(new InvalidCredentialsError('Identifiants invalides'));
+    }
+
+    if (user.value.isBanned) {
+      return err(new InvalidCredentialsError('Ce compte a été suspendu'));
     }
 
     const isPasswordValid = await bcrypt.compare(
@@ -198,10 +195,12 @@ export class AuthService {
       );
     }
 
+    const hashedNewPassword = await this.userService.hashPassword(newPassword);
+
     const updatedUser = await this.userService.updateUser(
       storedPasswordToken.value.userId,
       {
-        password: newPassword,
+        password: hashedNewPassword,
         forgotPasswordTokenSelector: null,
         forgotPasswordToken: null,
         forgotPasswordTokenExpiry: null,

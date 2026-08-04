@@ -18,6 +18,7 @@ import { ChevronLeft, ChevronRight, FileUp, MapPinned, MousePointer2 } from 'luc
 import { updateProjectThumbnail } from '@/proxy/projects/project-functions'
 import Image from 'next/image'
 import { io, Socket } from 'socket.io-client'
+import CreateReportModal from './CreateReportModal'
 
 const Document = dynamic(() => import('react-pdf').then((mod) => mod.Document), { ssr: false });
 const Page = dynamic(() => import('react-pdf').then((mod) => mod.Page), { ssr: false });
@@ -88,7 +89,7 @@ function getCursorColor(identifier: string) {
 }
 
 function upsertMarker(markers: MarkerType[], markerToUpsert: MarkerType) {
-  if (!markerToUpsert.id) return [...markers, markerToUpsert];
+  if (!markerToUpsert?.id) return [...markers, markerToUpsert];
 
   const markerIndex = markers.findIndex((marker) => marker.id === markerToUpsert.id);
   if (markerIndex === -1) return [...markers, markerToUpsert];
@@ -520,6 +521,12 @@ function PlanLoader({ projectId, canEdit, onPlanChange }: PlanLoaderProps) {
     
   }
 
+  function handleSetPhotos(photos: MarkerPhotoType[]) {
+    setTemporaryModalMarker((marker) =>
+      marker ? { ...marker, photos } : marker,
+    );
+  }
+
   async function handleDeleteMarker(marker: MarkerType){
     if (!canEdit) return;
     // Appel API pour supprimer le marqueur de la BDD
@@ -886,7 +893,7 @@ function PlanLoader({ projectId, canEdit, onPlanChange }: PlanLoaderProps) {
                       style={{ left: `${marker.coordX}%`, top: `${marker.coordY}%` }}
                       onClick={(e) => handleMarkerClick(e, marker)}
                     >
-                      {index + 1}
+                      #{marker.markerNumber}
                     </div>
                   ))}
 
@@ -947,6 +954,7 @@ function PlanLoader({ projectId, canEdit, onPlanChange }: PlanLoaderProps) {
         marker={temporaryModalMarker}
         handleSetTitle={handleSetTitle}
         handleSetPhotoText={handleSetPhotoText}
+        handleSetPhotos={handleSetPhotos}
         handleAddMarker={handleAddMarker}
         handleUpdateMarkerPhoto={updateMarkerPhoto}
         handleDeleteMarker={handleDeleteMarker}
@@ -973,7 +981,10 @@ function PlanLoader({ projectId, canEdit, onPlanChange }: PlanLoaderProps) {
         triggerNavigateToFolder={onNavigateToFolder}
         triggerLoadPlan={onLoadPlan}
         canEdit={canEdit}
+
       />
+
+      <CreateReportModal projectId={projectId} />
     </div>
   )
 }

@@ -215,6 +215,15 @@ export async function denyProjectInvitation(invitationToken: string) {
   return response;
 }
 
+export function getProjectDataForReport(projectId: string) {
+  return fetchFromClient(`/api/projects/${projectId}/report-data`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+}
+
 // ----- SERVER SIDE FUNCTIONS ------
 
 export async function getProjectsServerSide() {
