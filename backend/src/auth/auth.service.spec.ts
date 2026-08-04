@@ -26,6 +26,7 @@ describe('AuthService password reset', () => {
       findOneBy: jest.fn(),
       createUser: jest.fn(),
       updateUser: jest.fn(),
+      hashPassword: jest.fn(),
       getForgotPasswordToken: jest.fn(),
     };
 
@@ -37,7 +38,7 @@ describe('AuthService password reset', () => {
     };
 
     return {
-      service: new AuthService(userService as never, mailService as never),
+      service: new AuthService(userService as never, mailService as never, {} as never),
       userService,
       mailService,
     };
@@ -52,6 +53,7 @@ describe('AuthService password reset', () => {
 
     userService.findOneBy.mockResolvedValue(ok(user));
     userService.updateUser.mockResolvedValue(ok(user));
+    userService.hashPassword.mockResolvedValue('new-hashed-password');
     mailService.sendMail.mockResolvedValue(ok(true));
 
     const result = await service.forgetPassword(user.email);
@@ -87,6 +89,7 @@ describe('AuthService password reset', () => {
       }),
     );
     userService.updateUser.mockResolvedValue(ok(user));
+    userService.hashPassword.mockResolvedValue('new-hashed-password');
 
     const result = await service.resetPassword(
       `${tokenSelector}${token}`,
@@ -96,7 +99,7 @@ describe('AuthService password reset', () => {
 
     expect(result.ok).toBe(true);
     expect(userService.updateUser).toHaveBeenCalledWith(user.id, {
-      password: 'new-password',
+      password: 'new-hashed-password',
       forgotPasswordTokenSelector: null,
       forgotPasswordToken: null,
       forgotPasswordTokenExpiry: null,

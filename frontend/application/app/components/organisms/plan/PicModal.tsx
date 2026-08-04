@@ -3,7 +3,8 @@ import { MarkerPhotoType, MarkerType } from '@/types/project';
 import React from 'react'
 import Image from 'next/image';
 import MarkerPicsCarousel from './MarkerPicsCarousel';
-import { Camera, File, ImagePlus, Trash2, X } from 'lucide-react';
+import { Camera, File, Flag, ImagePlus, Trash2, X } from 'lucide-react';
+import { reportMarkerPhoto } from '@/proxy/markers/marker-functions';
 import { CameraCapture } from './CameraCapture';
 import CTA from '../../atoms/CTA';
 
@@ -13,13 +14,14 @@ interface PicModalInterface {
   handleClose: () => void;
   handleSetTitle: (e: React.ChangeEvent<HTMLInputElement>, marker: MarkerType) => void;
   handleSetPhotoText: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, markerPhoto: MarkerPhotoType, markerPhotoIndex: number) => void;
+  handleSetPhotos: (photos: MarkerPhotoType[]) => void;
   handleAddMarker: (marker: MarkerType) => void;
   handleUpdateMarkerPhoto: (marker: MarkerType) => void;
   handleDeleteMarker: (marker: MarkerType) => void;
   canEdit: boolean;
 }
 
-function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhotoText, handleAddMarker, handleUpdateMarkerPhoto, handleDeleteMarker, canEdit }: PicModalInterface) {
+function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhotoText, handleSetPhotos, handleAddMarker, handleUpdateMarkerPhoto, handleDeleteMarker, canEdit }: PicModalInterface) {
   const revokePreviewUrls = React.useCallback((photos: MarkerPhotoType[]) => {
     photos.forEach((photo) => {
       const previewUrl = photo.previewUrl as string | undefined;
@@ -34,6 +36,8 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
   const isLocalPhotosEmpty = localPhotos.length === 0;
   const isOnlyOneLocalPhoto = localPhotos.length === 1;
   const [isPhotoSelectorVisible, setIsPhotoSelectorVisible] = React.useState(false);
+  const [reportMessage, setReportMessage] = React.useState('');
+  const [isReporting, setIsReporting] = React.useState(false);
   const previousLocalPhotosRef = React.useRef<MarkerPhotoType[]>(localPhotos);
   const lastMarkerIdRef = React.useRef<string | undefined>(marker?.id);
 
@@ -41,6 +45,7 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
   React.useEffect(() => {
     if (marker?.photos) {
       setLocalPhotos([...marker.photos]);
+      setReportMessage('');
       if (marker.id !== lastMarkerIdRef.current) {
         setCurrentMarkerPhotoIndex(0);
         lastMarkerIdRef.current = marker.id;
@@ -80,22 +85,18 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
     const files = e.target.files;
     if (!files) return;
 
-    const file = files[0];
+    const newPhotos = Array.from(files).map((file) => ({
+      label: '',
+      comment: '',
+      previewUrl: URL.createObjectURL(file),
+      physicalFile: file,
+    }));
 
-    if (file) {
-      const previewUrl = URL.createObjectURL(file);
-      const newPhoto: MarkerPhotoType = {
-        label: '',
-        comment: '',
-        previewUrl,
-        physicalFile: file
-      };
-
-      setLocalPhotos(prev => {
-        const next = [...prev, newPhoto];
-        setCurrentMarkerPhotoIndex(next.length - 1);
-        return next;
-      });
+    if (newPhotos.length) {
+      const nextPhotos = [...localPhotos, ...newPhotos];
+      setLocalPhotos(nextPhotos);
+      handleSetPhotos(nextPhotos);
+      setCurrentMarkerPhotoIndex(nextPhotos.length - 1);
 
       if (!addMorePhotosInputRef.current) return;
       addMorePhotosInputRef.current.value = '';
@@ -108,6 +109,7 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
     
     // 2. On met à jour l'état LOCAL (le SAS)
     setLocalPhotos(updatedPhotos);
+    handleSetPhotos(updatedPhotos);
 
     // 3. Gestion de l'index du carrousel
     if (currentMarkerPhotoIndex >= updatedPhotos.length) {
@@ -143,11 +145,18 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
       physicalFile: file
     };
 
-    setLocalPhotos(prev => {
-      const next = [...prev, newPhoto];
-      setCurrentMarkerPhotoIndex(next.length - 1);
-      return next;
-    });
+    const nextPhotos = [...localPhotos, newPhoto];
+    setLocalPhotos(nextPhotos);
+    handleSetPhotos(nextPhotos);
+    setCurrentMarkerPhotoIndex(nextPhotos.length - 1);
+  }
+
+  async function handleReportPhoto() {
+    if (!currentPhoto?.id) return;
+    setIsReporting(true);
+    const response = await reportMarkerPhoto(currentPhoto.id);
+    setReportMessage(response.ok ? 'Photo signalée à l’administration.' : 'Cette photo a déjà été signalée ou une erreur est survenue.');
+    setIsReporting(false);
   }
 
   return (
@@ -190,7 +199,7 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
                     {localPhotos.length > 0 && <span className="absolute right-3 top-3 rounded-full bg-black/60 px-2.5 py-1 text-xs font-semibold text-white">{currentMarkerPhotoIndex + 1} / {localPhotos.length}</span>}
                   </div>
                   <div className="mt-3"><MarkerPicsCarousel markerPhotos={localPhotos} currentPhotoIndex={currentMarkerPhotoIndex} maxPhotoIndex={maxPhotoIndex} setIndex={setCurrentMarkerPhotoIndex} /></div>
-                  {canEdit && <div className="mt-3 flex justify-end"><button type="button" className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-red-500 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40" disabled={isLocalPhotosEmpty || isOnlyOneLocalPhoto} onClick={() => handleDeleteMarkerPhoto(currentMarkerPhotoIndex)}><Trash2 className="h-3.5 w-3.5" />Supprimer cette photo</button></div>}
+                  <div className="mt-3 flex items-center justify-between gap-3"><div>{currentPhoto?.id && <button type="button" onClick={handleReportPhoto} disabled={isReporting} className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50"><Flag className="h-3.5 w-3.5" />{isReporting ? 'Signalement…' : 'Signaler cette photo'}</button>}{reportMessage && <p className="mt-1 text-xs font-medium text-primary">{reportMessage}</p>}</div>{canEdit && <button type="button" className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-red-500 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40" disabled={isLocalPhotosEmpty || isOnlyOneLocalPhoto} onClick={() => handleDeleteMarkerPhoto(currentMarkerPhotoIndex)}><Trash2 className="h-3.5 w-3.5" />Supprimer cette photo</button>}</div>
                 </section>
 
                 <section className="space-y-5 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:p-6">
@@ -296,6 +305,7 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
             id="photo-upload"
             className="hidden"
             accept="image/*"
+            multiple
             capture="environment"
             ref={addMorePhotosInputRef}
             onChange={(e) => handleAddMorePhotos(e)}

@@ -17,11 +17,19 @@ export class RealtimeService {
     this.server?.to(this.getUserRoom(userId)).emit(event, payload);
   }
 
+  emitToSupportTicket(ticketId: string, event: string, payload: unknown) {
+    this.server?.to(this.getSupportTicketRoom(ticketId)).emit(event, payload);
+  }
+
   getProjectRoom(projectId: string) {
     return `project:${projectId}`;
   }
 
   getUserRoom(userId: number) {
     return `user:${userId}`;
+  }
+
+  getSupportTicketRoom(ticketId: string) {
+    return `support-ticket:${ticketId}`;
   }
 }

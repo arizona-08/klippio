@@ -52,6 +52,10 @@ export class AuthenticatedGuard implements CanActivate {
       throw new UnauthorizedException();
     }
 
+    if (user.value.isBanned) {
+      throw new UnauthorizedException('Ce compte a été suspendu.');
+    }
+
     // On attache l'utilisateur à la requête pour un accès facile plus tard
     request.user = user.value;
     // Le guard renvoie `true` si l'ID utilisateur est dans la session

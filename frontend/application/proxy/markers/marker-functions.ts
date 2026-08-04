@@ -57,3 +57,11 @@ export async function editMarker(
 
   return response;
 }
+
+export async function reportMarkerPhoto(photoId: string) {
+  return fetchFromClient('/api/photo-reports', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ photoId, reason: 'Contenu inapproprié' }),
+  });
+}

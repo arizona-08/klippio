@@ -22,3 +22,7 @@ export async function getThreeLastOpenedPlans(){
   });
   return response;
 }
+
+export async function getAdminStats() {
+  return fetchFromClient('/api/stats/admin', { method: 'GET' });
+}

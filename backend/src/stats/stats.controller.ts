@@ -1,5 +1,6 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
+import { AdminGuard } from 'src/auth/admin.guard';
 import { StatsService } from './stats.service';
 import type { User } from 'src/user/interfaces/user.interface';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
@@ -17,5 +18,11 @@ export class StatsController {
   @Get('three-last-opened-plans')
   async getThreeLastOpenedPlans(@CurrentUser() user: User) {
     return this.statsService.getThreeLastOpenedPlans(user.id);
+  }
+
+  @Get('admin')
+  @UseGuards(AdminGuard)
+  async getAdminStats() {
+    return this.statsService.getAdminStats();
   }
 }

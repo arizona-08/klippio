@@ -76,21 +76,29 @@ export class MarkerService {
           }),
         );
 
-        await prisma.markerPhoto.createMany({
-          data: markerPhotosData.map((photo) => ({
-            photoLabel: photo.label,
-            comment: photo.comment,
-            photoStorageKey: photo.storageKey,
-            temporaryAccessUrl: photo.temporaryAccessUrl,
-            markerId: insertedMarker.id,
-          })),
-        });
+        const createdPhotos = await Promise.all(
+          markerPhotosData.map((photo) =>
+            prisma.markerPhoto.create({
+              data: {
+                photoLabel: photo.label,
+                comment: photo.comment,
+                photoStorageKey: photo.storageKey,
+                temporaryAccessUrl: photo.temporaryAccessUrl,
+                markerId: insertedMarker.id,
+                uploadedById: userId,
+              },
+            }),
+          ),
+        );
 
         return {
           ...insertedMarker,
           coordX: insertedMarker.coordX,
           coordY: insertedMarker.coordY,
-          photos: markerPhotosData,
+          photos: createdPhotos.map((photo) => ({
+            ...photo,
+            label: photo.photoLabel,
+          })),
         };
       })
 
@@ -246,6 +254,7 @@ export class MarkerService {
                 photoStorageKey: storageKey,
                 temporaryAccessUrl: temporaryAccessUrl,
                 markerId,
+                uploadedById: userId,
               },
             });
 

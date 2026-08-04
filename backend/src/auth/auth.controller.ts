@@ -28,6 +28,7 @@ import { CurrentUser } from './decorators/current-user.decorator';
 import { MailNotSendedError } from 'src/Error/MailError';
 import type { User } from 'src/user/interfaces/user.interface';
 import { toPublicUser } from 'src/user/public-user';
+import { InvalidUserInvitationError } from 'src/user-invitation/user-invitation.service';
 
 type AuthSession = {
   userId?: number;
@@ -48,6 +49,8 @@ export class AuthController {
 
       if (error instanceof CouldNotCreateUserError) {
         throw new InternalServerErrorException(error.message);
+      } else if (error instanceof InvalidUserInvitationError) {
+        throw new BadRequestException(error.message);
       } else {
         throw new UnauthorizedException(error.message);
       }
