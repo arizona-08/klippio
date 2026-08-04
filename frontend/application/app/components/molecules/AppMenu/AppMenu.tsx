@@ -82,7 +82,7 @@ function AppMenu() {
     ? [
         {
           label: 'Accueil',
-          href: '/dashboard/',
+          href: '/dashboard',
           icon: <Home className='text-white'/>
         },
         {
