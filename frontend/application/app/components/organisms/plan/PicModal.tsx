@@ -1,12 +1,13 @@
 'use client'
-import { MarkerPhotoType, MarkerType } from '@/types/project';
+import { MarkerHistoryType, MarkerPhotoType, MarkerType } from '@/types/project';
 import React from 'react'
 import Image from 'next/image';
 import MarkerPicsCarousel from './MarkerPicsCarousel';
-import { Camera, File, Flag, ImagePlus, Trash2, X } from 'lucide-react';
-import { reportMarkerPhoto } from '@/proxy/markers/marker-functions';
+import { Camera, EllipsisVertical, File, Flag, History, ImagePlus, Trash2, X } from 'lucide-react';
+import { getMarkerHistory, reportMarkerPhoto } from '@/proxy/markers/marker-functions';
 import { CameraCapture } from './CameraCapture';
 import CTA from '../../atoms/CTA';
+import { formatDateTime } from '@/utils/date';
 
 interface PicModalInterface {
   isActive: boolean;
@@ -159,6 +160,41 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
     setIsReporting(false);
   }
 
+  const [isSeeHistoryVisible, setIsSeeHistoryVisible] = React.useState(false);
+  const [isHistoryPanelVisible, setIsHistoryPanelVisible] = React.useState(false);
+  const [history, setHistory] = React.useState<MarkerHistoryType[]>([]);
+  const [historyCursor, setHistoryCursor] = React.useState<string | undefined>();
+  const [isHistoryLoading, setIsHistoryLoading] = React.useState(false);
+  const [historyError, setHistoryError] = React.useState('');
+
+  const historyDescription = (action: MarkerHistoryType['action']) => ({
+    PHOTO_ADDED: 'a ajouté une photo',
+    PHOTO_DELETED: 'a supprimé une photo',
+    PHOTO_LABEL_UPDATED: 'a modifié le libellé',
+    PHOTO_COMMENT_UPDATED: 'a modifié le commentaire',
+  })[action];
+
+  const loadHistory = React.useCallback(async (cursor?: string) => {
+    if (!marker?.id) return;
+    setIsHistoryLoading(true);
+    setHistoryError('');
+    try {
+      const response = await getMarkerHistory(marker.id, cursor);
+      if (!response.ok) throw new Error();
+      const data = await response.json();
+      setHistory((previous) => cursor ? [...previous, ...data.history] : data.history);
+      setHistoryCursor(data.nextCursor);
+    } catch {
+      setHistoryError("L'historique n'a pas pu être chargé.");
+    } finally {
+      setIsHistoryLoading(false);
+    }
+  }, [marker?.id]);
+
+  React.useEffect(() => {
+    if (isHistoryPanelVisible) loadHistory();
+  }, [isHistoryPanelVisible, loadHistory]);
+
   return (
     <>
       <CameraCapture isVisible={isCameraCaptureVisible} onPhotoCaptured={handlePhotoCaptured} onClose={closeCameraCapture} />
@@ -170,22 +206,33 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
           <div className="relative flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
             
             {/* EN-TÊTE : flex-none pour empêcher l'écrasement, plus besoin de sticky */}
-            <div className="flex w-full flex-none items-center gap-4 border-b border-gray-100 bg-white px-5 py-4 sm:px-6">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><ImagePlus className="h-4 w-4" /></span>
-              <div className="min-w-0 flex-1">
-                <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wide text-gray-500">Observation</p>
-                <input
-                  id="marker-modal-title"
-                  type="text"
-                  name='pic-title'
-                  placeholder='Titre du marqueur...'
-                  value={marker?.title || ''} 
-                  onChange={(e) => handleSetTitle(e, marker as MarkerType)}
-                  readOnly={!canEdit}
-                  className='w-full truncate rounded-md border border-transparent bg-transparent py-1 text-lg font-semibold outline-none transition-colors hover:bg-gray-50 focus:border-primary/30 focus:bg-white focus:ring-2 focus:ring-primary/10'
-                />
+            <div className="relative flex w-full flex-none items-center gap-4 border-b border-gray-100 bg-white px-5 py-4 sm:px-6">
+              <div className="flex w-full items-center gap-4">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><ImagePlus className="h-4 w-4" /></span>
+                <div className="min-w-0 flex-1">
+                  <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wide text-gray-500">Observation</p>
+                  <input
+                    id="marker-modal-title"
+                    type="text"
+                    name='pic-title'
+                    placeholder='Titre du marqueur...'
+                    value={marker?.title || ''}
+                    onChange={(e) => handleSetTitle(e, marker as MarkerType)}
+                    readOnly={!canEdit}
+                    className='w-full truncate rounded-md border border-transparent bg-transparent py-1 text-lg font-semibold outline-none transition-colors hover:bg-gray-50 focus:border-primary/30 focus:bg-white focus:ring-2 focus:ring-primary/10'
+                  />
+                </div>
+                <button id="close-modal-btn" type="button" aria-label="Fermer la fiche" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900" onClick={handleClose}><X className="h-5 w-5" /></button>
               </div>
-              <button id="close-modal-btn" type="button" aria-label="Fermer la fiche" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900" onClick={handleClose}><X className="h-5 w-5" /></button>
+
+              <button type="button" aria-label="Actions du marqueur" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900" onClick={() => setIsSeeHistoryVisible(prev => !prev)}>
+                <EllipsisVertical className="h-5 w-5" />
+              </button>
+
+              {/* Bouton "Voir l'historique" */}
+              <button type="button" className={`absolute right-5 top-20 z-18 px-4 py-2 bg-white text-sm text-gray-500 hover:bg-gray-100 rounded-md border border-gray-100 shadow-xs cursor-pointer ${isSeeHistoryVisible ? 'block' : 'hidden'}`} onClick={() => { setIsSeeHistoryVisible(false); setIsHistoryPanelVisible(true); }}>
+                <span>Voir l'historique</span>
+              </button>
             </div>
 
             {/* ZONE DU MILIEU : flex-1 pour prendre l'espace libre, et overflow-y-auto pour le défilement */}
@@ -297,6 +344,28 @@ function PicModal({ isActive, marker, handleClose, handleSetTitle, handleSetPhot
                 />
               </div>}
             </div>
+
+            {isHistoryPanelVisible && <>
+              <button type="button" aria-label="Fermer l'historique" className="absolute inset-0 z-30 cursor-default bg-gray-900/35 transition-opacity" onClick={() => setIsHistoryPanelVisible(false)} />
+              <aside className="marker-history-panel absolute inset-y-0 right-0 z-40 flex w-full max-w-md flex-col bg-white shadow-2xl" aria-label="Historique des modifications">
+                <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+                  <div className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary"><History className="h-4 w-4" /></span><div><h3 className="font-semibold text-gray-900">Historique</h3><p className="text-xs text-gray-500">Modifications de l&apos;observation</p></div></div>
+                  <button type="button" aria-label="Fermer l'historique" className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-900" onClick={() => setIsHistoryPanelVisible(false)}><X className="h-5 w-5" /></button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4">
+                  {isHistoryLoading && history.length === 0 && <p className="py-8 text-center text-sm text-gray-500">Chargement de l&apos;historique…</p>}
+                  {historyError && <p className="py-8 text-center text-sm text-red-500">{historyError}</p>}
+                  {!isHistoryLoading && !historyError && history.length === 0 && <p className="py-8 text-center text-sm text-gray-500">Aucune modification enregistrée.</p>}
+                  <div className="space-y-3">
+                    {history.map((entry) => <article key={entry.id} className="flex gap-3 rounded-xl border border-gray-100 p-3">
+                      <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-gray-100">{entry.temporaryAccessUrl && <Image src={entry.temporaryAccessUrl} alt="Photo concernée" fill unoptimized className="object-cover" sizes="56px" />}</div>
+                      <div className="min-w-0"><p className="text-sm leading-5 text-gray-800"><span className="font-semibold">{entry.actor.firstname} {entry.actor.lastname}</span> {historyDescription(entry.action)}</p><p className="mt-1 text-xs text-gray-500">{formatDateTime(entry.createdAt)}</p></div>
+                    </article>)}
+                  </div>
+                  {historyCursor && <button type="button" disabled={isHistoryLoading} className="mt-4 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50" onClick={() => loadHistory(historyCursor)}>{isHistoryLoading ? 'Chargement…' : 'Charger plus'}</button>}
+                </div>
+              </aside>
+            </>}
           </div>
 
           <input 
