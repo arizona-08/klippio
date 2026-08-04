@@ -56,6 +56,34 @@ export class MailService {
     };
   }
 
+  userInvitationMailOptions(data: {
+    to: string;
+    registrationLink: string;
+    accessKey: string;
+    expiresAt: Date;
+  }): MailerOptionInterface {
+    const accessKey = this.escapeHtml(data.accessKey);
+    const expiration = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(data.expiresAt);
+    return {
+      from: process.env.SMTP_FROM as string,
+      to: data.to,
+      subject: 'Bienvenue sur Klippio — votre invitation',
+      html: this.renderEmail({
+        preheader: 'Votre accès à Klippio est prêt.',
+        eyebrow: 'INVITATION KLIPPIO',
+        title: 'Bienvenue sur Klippio',
+        content: `
+          <p>Bonjour,</p>
+          <p>Vous avez été invité(e) à rejoindre Klippio. Créez votre compte avec le bouton ci-dessous.</p>
+          <p>Lors de l’inscription, saisissez votre clé d’accès personnelle :</p>
+          <p style="margin: 18px 0; padding: 14px 16px; border-radius: 6px; background: #f3f6fa; color: #111827; font-family: monospace; font-size: 16px; font-weight: 700; letter-spacing: .4px; word-break: break-all;">${accessKey}</p>
+        `,
+        action: { label: 'Créer mon compte', url: data.registrationLink },
+        note: `Cette invitation et cette clé sont valables jusqu’au ${expiration}. Ne les partagez avec personne.`,
+      }),
+    };
+  }
+
   invitationDeclinedMailOptions(data: {
     to: string;
     ownerName: string;

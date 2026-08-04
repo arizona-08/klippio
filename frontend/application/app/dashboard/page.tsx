@@ -2,9 +2,20 @@ import React from 'react'
 import UserGreetings from '../components/molecules/UserGreetings'
 import Link from 'next/link'
 import DashboardStatsLoader from '../components/organisms/DashboardStats/DashboardStatsLoader'
+import { isAdministrativeRole } from '../utils/roles'
+import { fetchFromServer } from '@/proxy/serverApi'
+import AdminDashboardPage from '../components/organisms/AdminDashboardPage/AdminDashboardPage'
 
+export const dynamic = 'force-dynamic'
 
-function DashboardPage() {
+async function DashboardPage() {
+  const response = await fetchFromServer('/api/auth/me', { method: 'GET' })
+  const user = response.ok ? await response.json() as { role?: string } : undefined
+
+  if (isAdministrativeRole(user?.role)) {
+    return <AdminDashboardPage />
+  }
+
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <section className="relative overflow-hidden border-b border-gray-100 bg-white">

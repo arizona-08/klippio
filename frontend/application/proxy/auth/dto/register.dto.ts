@@ -4,4 +4,6 @@ export interface RegisterDTO {
   email: string;
   password: string;
   confirmation: string;
+  invitationToken: string;
+  accessKey: string;
 }

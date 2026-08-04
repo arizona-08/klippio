@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   NotFoundException,
   Param,
@@ -66,5 +67,16 @@ export class UserController {
       message: 'Utilisateur mis à jour avec succès.',
       user: toPublicUser(updatedUser.value),
     };
+  }
+
+  @Delete(':id')
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    const deletedUser = await this.userService.deleteUser(id);
+
+    if (!deletedUser.ok) {
+      throw new NotFoundException(deletedUser.error.message);
+    }
+
+    return { message: 'Utilisateur supprimé avec succès.' };
   }
 }

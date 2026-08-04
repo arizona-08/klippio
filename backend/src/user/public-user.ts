@@ -15,6 +15,7 @@ export function toPublicUser(user: User): PublicUser {
     lastname: user.lastname,
     email: user.email,
     role: user.role,
+    isBanned: user.isBanned,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
     profilePicture: user.profilePicture,

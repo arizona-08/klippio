@@ -17,7 +17,7 @@ export type User = {
     offsetX: number;
     offsetY: number;
   };
-  role: "STANDARD" | "PREMIUM" | "ADMIN";
+  role: "STANDARD" | "PREMIUM" | "ADMIN" | "SUPERADMIN";
 };
 
 export type AuthUserType = {
