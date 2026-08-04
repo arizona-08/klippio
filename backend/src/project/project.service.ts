@@ -70,13 +70,55 @@ export class ProjectService {
 
   async getProject(userId: number, projectId: string) {
     try {
-      const project = await this.findProjectWithAccess(projectId, userId);
+      const project = await this.prismaService.project.findFirst({
+        where: {
+          id: projectId,
+          OR: [
+            { authorId: userId },
+            { projectCollaborators: { some: { userId } } },
+          ],
+        },
+        include: {
+          projectCollaborators: {
+            select: {
+              role: true,
+              user: {
+                select: {
+                  id: true,
+                  firstname: true,
+                  lastname: true,
+                  email: true,
+                },
+              },
+            },
+          },
+          projectInvitations: {
+            select: {
+              id: true,
+              email: true,
+              role: true,
+              status: true,
+              createdAt: true,
+            },
+          },
+        },
+      });
 
       if (!project) {
         throw new NotFoundException('Project not found');
       }
 
-      return project;
+      const { projectCollaborators, projectInvitations, ...projectData } = project;
+      return {
+        ...projectData,
+        collaborators: projectCollaborators,
+        invitations:
+          project.authorId === userId
+            ? projectInvitations.filter((invitation) =>
+                ['PENDING', 'DECLINED'].includes(invitation.status),
+              )
+            : [],
+      };
     } catch (error: unknown) {
       rethrowKnownHttpException(error);
       throw new InternalServerErrorException('Failed to get project');
@@ -439,6 +481,7 @@ export class ProjectService {
           },
           projectInvitations: {
             select: {
+              id: true,
               email: true,
               role: true,
               status: true,
@@ -624,6 +667,23 @@ export class ProjectService {
         throw new UnauthorizedException('Unauthorized');
       }
 
+      // A resend replaces the previous pending invitation, so its link can no
+      // longer be used and the recipient only has one active invitation.
+      const previousInvitation = await this.prismaService.projectInvitation.findFirst({
+        where: {
+          projectId,
+          email: invitedEmail,
+          status: 'PENDING',
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      if (previousInvitation) {
+        await this.prismaService.projectInvitation.delete({
+          where: { id: previousInvitation.id },
+        });
+      }
+
       // Generate a unique invitation token (you can use a library like uuid)
       const invitationToken = crypto.randomUUID();
 
@@ -672,6 +732,7 @@ export class ProjectService {
         success: true,
         message: 'Invitation link generated successfully',
         invitation: invitation,
+        replacedInvitationId: previousInvitation?.id ?? null,
       };
     } catch (error: unknown) {
       rethrowKnownHttpException(error);

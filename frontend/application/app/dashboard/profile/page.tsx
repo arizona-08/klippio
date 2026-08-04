@@ -5,11 +5,12 @@ import {
   editPasswordInfo,
   editPersonalInfo,
   editUserPicture,
+  deleteAccount,
 } from "@/proxy/profile/profile-functions";
 import React, { useEffect } from "react";
 import Toast from "@/app/components/molecules/Toast/Toast";
 import PicturePreview from "@/app/components/molecules/ProfilePicturePreview/ProfilePicturePreview";
-import { LogOut } from "lucide-react";
+import { LogOut, Trash2 } from "lucide-react";
 import { logout } from "@/proxy/auth/auth-functions";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -326,6 +327,11 @@ function ProfilePage() {
   }
 
   const [isLogoutLoading, setIsLogoutLoading] = React.useState(false);
+  const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] =
+    React.useState(false);
+  const [isDeleteAccountLoading, setIsDeleteAccountLoading] =
+    React.useState(false);
+  const [deleteAccountError, setDeleteAccountError] = React.useState("");
   const router = useRouter();
 
   async function handleLogout(e?: React.MouseEvent) {
@@ -337,6 +343,31 @@ function ProfilePage() {
     if (response.ok) {
       setUser(undefined);
       router.push("/auth/login");
+    }
+  }
+
+  async function handleDeleteAccount() {
+    setIsDeleteAccountLoading(true);
+    setDeleteAccountError("");
+
+    try {
+      const response = await deleteAccount();
+      if (response.ok) {
+        setUser(undefined);
+        router.replace("/auth/login");
+        return;
+      }
+
+      const data = await response.json().catch(() => null);
+      setDeleteAccountError(
+        data?.message || "La suppression du compte a échoué. Réessayez plus tard.",
+      );
+    } catch {
+      setDeleteAccountError(
+        "La suppression du compte a échoué. Réessayez plus tard.",
+      );
+    } finally {
+      setIsDeleteAccountLoading(false);
     }
   }
 
@@ -686,9 +717,9 @@ function ProfilePage() {
           </div>
         </section>
 
-        {/* logout section */}
-        <section className="mt-12 flex flex-col items-end max-w-7xl mx-auto">
-          <div className="min-w-65 flex flex-col items-stretch">
+        {/* account actions */}
+        <section className="mt-12 flex max-w-7xl flex-col gap-8 mx-auto">
+          <div className="min-w-65 self-end flex flex-col items-stretch">
             <CTA
               color="danger"
               text="Me déconnecter"
@@ -699,8 +730,70 @@ function ProfilePage() {
               isLoading={isLogoutLoading}
             />
           </div>
+
+          <div className="rounded-md border border-red-200 bg-red-50 p-5">
+            <h2 className="font-medium text-red-950">Supprimer mon compte</h2>
+            <p className="mt-1 text-sm text-red-800">
+              Cette action est définitive. Vos données de compte seront supprimées.
+            </p>
+            <CTA
+              color="danger_reverse"
+              text="Supprimer mon compte"
+              type="button"
+              onClick={() => {
+                setDeleteAccountError("");
+                setIsDeleteAccountModalOpen(true);
+              }}
+              icon={<Trash2 className="w-5 h-5" />}
+              className="mt-4 w-fit"
+            />
+          </div>
         </section>
       </div>
+
+      {isDeleteAccountModalOpen && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-gray-950/40 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-account-title"
+        >
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="grid h-11 w-11 place-items-center rounded-xl bg-red-50 text-red-600">
+              <Trash2 size={20} />
+            </div>
+            <h2 id="delete-account-title" className="mt-4 text-xl font-semibold text-gray-950">
+              Supprimer votre compte ?
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-gray-600">
+              Cette action est irréversible. Vos données de compte seront définitivement supprimées.
+            </p>
+            {deleteAccountError && (
+              <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+                {deleteAccountError}
+              </p>
+            )}
+            <div className="mt-7 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setIsDeleteAccountModalOpen(false)}
+                disabled={isDeleteAccountLoading}
+                className="rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-100 disabled:opacity-60"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={isDeleteAccountLoading}
+                className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+              >
+                {isDeleteAccountLoading ? "Suppression…" : "Supprimer définitivement"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <input
         type="file"
