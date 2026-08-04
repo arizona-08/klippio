@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Patch,
   Put,
+  Session,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -16,6 +18,10 @@ import { EditPasswordDto } from './dtos/edit-password.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { EditUserPictureDto } from './dtos/edit-profile-picture.dto';
 import { validateUploadedFile } from 'src/uploads/validate-upload';
+
+type AuthSession = {
+  destroy: (callback?: (err?: Error) => void) => void;
+};
 
 @UseGuards(AuthenticatedGuard)
 @Controller('api/profile')
@@ -44,6 +50,16 @@ export class ProfileController {
       body,
     );
     return updatedUser;
+  }
+
+  @Delete('account')
+  async deleteAccount(
+    @CurrentUser() user: User,
+    @Session() session: AuthSession,
+  ) {
+    const result = await this.profileService.deleteAccount(user.id);
+    session.destroy();
+    return result;
   }
 
   @Patch('edit-user-picture')

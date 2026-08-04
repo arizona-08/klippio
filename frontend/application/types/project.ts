@@ -55,6 +55,7 @@ export type NotificationItem = {
 };
 
 export type ProjectInvitationType = {
+  id: string;
   role: 'OWNER' | 'EDITOR' | 'VIEWER';
   status: 'PENDING' | 'ACCEPTED' | 'DECLINED';
   email: string;

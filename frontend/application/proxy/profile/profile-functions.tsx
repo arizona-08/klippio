@@ -41,3 +41,9 @@ export async function editUserPicture(formData: FormData) {
 
   return response;
 }
+
+export async function deleteAccount() {
+  return fetchFromClient('/api/profile/account', {
+    method: 'DELETE',
+  });
+}
