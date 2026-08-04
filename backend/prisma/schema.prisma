@@ -34,6 +34,7 @@ model User {
   collaborationProjects ProjectCollaborator[]
   notifications Notification[]
   markerPhotosUploaded MarkerPhoto[] @relation("UploadedMarkerPhotos")
+  markerHistoryEntries MarkerHistory[] @relation("MarkerHistoryActor")
   photoReports PhotoReport[] @relation("PhotoReportAuthor")
   supportTickets SupportTicket[] @relation("SupportTicketAuthor")
   supportMessages SupportMessage[] @relation("SupportMessageAuthor")
@@ -192,7 +193,34 @@ model Marker {
 
   @@unique([planId, markerNumber])
   markerPhotos MarkerPhoto[]
+  history      MarkerHistory[]
   plan         Plan          @relation(fields: [planId], references: [id], onDelete: Cascade)
+}
+
+enum MarkerHistoryAction {
+  PHOTO_ADDED
+  PHOTO_DELETED
+  PHOTO_LABEL_UPDATED
+  PHOTO_COMMENT_UPDATED
+}
+
+model MarkerHistory {
+  id            String              @id @default(uuid())
+  markerId      String
+  actorId       Int
+  action        MarkerHistoryAction
+  photoId       String?
+  photoStorageKey String
+  oldLabel      String?
+  newLabel      String?
+  oldComment    String?
+  newComment    String?
+  createdAt     DateTime            @default(now())
+
+  marker Marker @relation(fields: [markerId], references: [id], onDelete: Cascade)
+  actor  User   @relation("MarkerHistoryActor", fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([markerId, createdAt])
 }
 
 model MarkerPhoto {

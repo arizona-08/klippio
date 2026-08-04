@@ -15,6 +15,15 @@ html {
   scroll-behavior: smooth;
 }
 
+@keyframes marker-history-panel-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.marker-history-panel {
+  animation: marker-history-panel-in 220ms ease-out;
+}
+
 .burger-icon-container{
   span.active:nth-child(1){
     top: 50%;

@@ -132,6 +132,22 @@ export type MarkerPhotoType = {
   temporaryAccessUrl?: string
 }
 
+export type MarkerHistoryType = {
+  id: string
+  action: 'PHOTO_ADDED' | 'PHOTO_DELETED' | 'PHOTO_LABEL_UPDATED' | 'PHOTO_COMMENT_UPDATED'
+  photoId?: string | null
+  oldLabel?: string | null
+  newLabel?: string | null
+  oldComment?: string | null
+  newComment?: string | null
+  createdAt: string
+  temporaryAccessUrl: string
+  actor: {
+    firstname: string
+    lastname: string
+  }
+}
+
 export type MyStatsType = {
   markerStats: {
     totalMarkers: number;

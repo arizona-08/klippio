@@ -97,6 +97,20 @@ export class MarkerController {
     return { markers };
   }
 
+  @Get(':markerId/history')
+  async getMarkerHistory(
+    @Param('markerId') markerId: string,
+    @Query('cursor') cursor: string | undefined,
+    @Query('limit') limit: string | undefined,
+    @CurrentUser() user: User,
+  ) {
+    const parsedLimit = Number(limit ?? 50);
+    const take = Number.isInteger(parsedLimit)
+      ? Math.min(Math.max(parsedLimit, 1), 100)
+      : 50;
+    return this.markerService.getMarkerHistory(markerId, user.id, take, cursor);
+  }
+
   @Put(':projectId/:planId/:markerId')
   @UseInterceptors(
     FilesInterceptor('newPhotos', 10, { limits: { fileSize: 5_000_000 } }),
