@@ -5,10 +5,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, BarChart3, FileStack, FolderKanban, ShieldCheck, Users } from 'lucide-react';
 import { useUser } from '@/app/Context/AuthContext/AuthUserProvider';
+import { isAdministrativeRole } from '@/app/utils/roles';
 import { getAdminStats } from '@/proxy/stats/stats-functions';
 
 type AdminStats = {
-  users: { total: number; newLastThirtyDays: number; byRole: { ADMIN: number; PREMIUM: number; STANDARD: number } };
+  users: { total: number; newLastThirtyDays: number; byRole: { SUPERADMIN: number; ADMIN: number; PREMIUM: number; STANDARD: number } };
   projects: { total: number; active: number; archived: number; newLastThirtyDays: number };
   plans: { total: number };
   markers: { total: number; newLastSevenDays: number };
@@ -21,18 +22,18 @@ export default function AdminDashboardPage() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (user && user.role !== 'ADMIN') router.replace('/dashboard');
+    if (user && !isAdministrativeRole(user.role)) router.replace('/dashboard');
   }, [router, user]);
 
   useEffect(() => {
-    if (user?.role !== 'ADMIN') return;
+    if (!isAdministrativeRole(user?.role)) return;
     getAdminStats().then(async (response) => {
       if (response.ok) setStats(await response.json());
       else setError(true);
     });
   }, [user]);
 
-  if (!user || user.role !== 'ADMIN') return null;
+  if (!isAdministrativeRole(user?.role)) return null;
 
   const roleTotal = stats?.users.total || 0;
   return <div className="min-h-full bg-[#fafcfb] px-4 py-6 sm:px-6 lg:px-10 lg:py-9">
@@ -51,7 +52,7 @@ export default function AdminDashboardPage() {
       </section>
 
       <section className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_.9fr]">
-        <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_8px_30px_rgba(19,41,31,0.04)]"><div className="flex items-center justify-between"><div><h2 className="font-semibold text-gray-950">Répartition des comptes</h2><p className="mt-1 text-sm text-gray-500">Par niveau d’accès</p></div><Users className="text-primary" size={22} /></div><div className="mt-7 space-y-5"><RoleRow label="Standard" value={stats?.users.byRole.STANDARD ?? 0} total={roleTotal} color="bg-gray-400" /><RoleRow label="Premium" value={stats?.users.byRole.PREMIUM ?? 0} total={roleTotal} color="bg-amber-400" /><RoleRow label="Administrateurs" value={stats?.users.byRole.ADMIN ?? 0} total={roleTotal} color="bg-primary" /></div></div>
+        <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_8px_30px_rgba(19,41,31,0.04)]"><div className="flex items-center justify-between"><div><h2 className="font-semibold text-gray-950">Répartition des comptes</h2><p className="mt-1 text-sm text-gray-500">Par niveau d’accès</p></div><Users className="text-primary" size={22} /></div><div className="mt-7 space-y-5"><RoleRow label="Standard" value={stats?.users.byRole.STANDARD ?? 0} total={roleTotal} color="bg-gray-400" /><RoleRow label="Premium" value={stats?.users.byRole.PREMIUM ?? 0} total={roleTotal} color="bg-amber-400" /><RoleRow label="Administrateurs" value={stats?.users.byRole.ADMIN ?? 0} total={roleTotal} color="bg-primary" /><RoleRow label="Super administrateurs" value={stats?.users.byRole.SUPERADMIN ?? 0} total={roleTotal} color="bg-violet-500" /></div></div>
         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_8px_30px_rgba(19,41,31,0.04)]"><h2 className="font-semibold text-gray-950">Gestion des utilisateurs</h2><p className="mt-1 text-sm leading-6 text-gray-500">Créez des comptes, attribuez les rôles et maintenez les accès à jour.</p><Link href="/dashboard/admin/users" className="mt-7 inline-flex items-center gap-2 rounded-xl bg-primary-light px-4 py-3 text-sm font-semibold text-primary transition hover:bg-emerald-100">Ouvrir les utilisateurs <ArrowRight size={17} /></Link></div>
       </section>
     </div>

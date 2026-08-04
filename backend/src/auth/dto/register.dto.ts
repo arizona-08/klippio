@@ -32,4 +32,13 @@ export class RegisterDTO {
   @IsNotEmpty()
   @MaxLength(128)
   confirmation: string;
+
+  @IsString()
+  @IsNotEmpty()
+  invitationToken: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(128)
+  accessKey: string;
 }

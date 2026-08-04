@@ -18,6 +18,12 @@ describe('AdminGuard', () => {
     ).toBe(true);
   });
 
+  it('allows superadmin users', () => {
+    expect(
+      guard.canActivate(createExecutionContext({ user: { role: 'SUPERADMIN' } })),
+    ).toBe(true);
+  });
+
   it('rejects non-admin users', () => {
     expect(() =>
       guard.canActivate(createExecutionContext({ user: { role: 'STANDARD' } })),

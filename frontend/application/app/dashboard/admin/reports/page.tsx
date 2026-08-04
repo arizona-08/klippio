@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Ban, BellRing, Flag, ImageOff, ShieldAlert, UserRound } from 'lucide-react';
 import { useUser } from '@/app/Context/AuthContext/AuthUserProvider';
+import { isAdministrativeRole } from '@/app/utils/roles';
 import { getPhotoReports, PhotoReport, removePhotoAndBanUploader, removePhotoAndWarnUploader } from '@/proxy/photo-reports/photo-report-functions';
 
 export default function AdminReportsPage() {
@@ -17,9 +18,9 @@ export default function AdminReportsPage() {
   const [action, setAction] = useState<'warn' | 'ban' | null>(null);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { if (user && user.role !== 'ADMIN') router.replace('/dashboard'); }, [router, user]);
+  useEffect(() => { if (user && !isAdministrativeRole(user.role)) router.replace('/dashboard'); }, [router, user]);
   useEffect(() => {
-    if (user?.role !== 'ADMIN') return;
+    if (!isAdministrativeRole(user?.role)) return;
     getPhotoReports().then(async (response) => {
       if (response.ok) setReports(await response.json());
       else setError('Impossible de charger les signalements.');
@@ -43,7 +44,7 @@ export default function AdminReportsPage() {
     setSaving(false);
   }
 
-  if (!user || user.role !== 'ADMIN') return null;
+  if (!isAdministrativeRole(user?.role)) return null;
   return <div className="min-h-full bg-[#fafcfb] px-4 py-6 sm:px-6 lg:px-10 lg:py-9"><div className="mx-auto max-w-6xl"><div className="mb-8"><div className="mb-3 flex items-center gap-2 text-sm font-medium text-primary"><ShieldAlert size={18} /> Modération</div><h1 className="text-3xl font-semibold tracking-tight text-gray-950">Signalements</h1><p className="mt-2 text-sm text-gray-600">Examinez les photos signalées par les utilisateurs et intervenez si nécessaire.</p></div>{error && <p className="mb-5 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}<div className="mb-5 flex items-center gap-3 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-800"><Flag size={18} /><span><strong>{reports.length}</strong> signalement{reports.length > 1 ? 's' : ''} à examiner.</span></div><section className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-[0_8px_30px_rgba(19,41,31,0.04)]">{loading ? <p className="px-5 py-14 text-center text-sm text-gray-500">Chargement des signalements…</p> : reports.length === 0 ? <div className="px-5 py-16 text-center"><span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-primary-light text-primary"><Flag size={22} /></span><h2 className="mt-4 font-semibold text-gray-900">Aucun signalement en attente</h2><p className="mt-1 text-sm text-gray-500">Les signalements de photos apparaîtront ici.</p></div> : <div className="divide-y divide-gray-100">{reports.map((report) => <ReportCard key={report.id} report={report} onDelete={() => { setError(''); setActionReport(report); setAction('warn'); }} onBan={() => { setError(''); setActionReport(report); setAction('ban'); }} />)}</div>}</section></div>{actionReport && action && <ActionModal report={actionReport} action={action} saving={saving} onClose={() => { setAction(null); setActionReport(null); }} onConfirm={confirmAction} />}</div>;
 }
 

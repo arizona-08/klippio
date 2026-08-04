@@ -17,6 +17,7 @@ import { RealtimeModule } from './realtime/realtime.module';
 import { NotificationModule } from './notification/notification.module';
 import { PhotoReportModule } from './photo-report/photo-report.module';
 import { SupportModule } from './support/support.module';
+import { UserInvitationModule } from './user-invitation/user-invitation.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { SupportModule } from './support/support.module';
     NotificationModule,
     PhotoReportModule,
     SupportModule,
+    UserInvitationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

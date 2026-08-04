@@ -140,7 +140,9 @@ export class RealtimeGateway
     if (!userId || !ticketId) return;
 
     const ticket = await this.prismaService.supportTicket.findFirst({
-      where: client.data.user?.role === 'ADMIN' ? { id: ticketId } : { id: ticketId, authorId: userId },
+      where: ['ADMIN', 'SUPERADMIN'].includes(client.data.user?.role ?? '')
+        ? { id: ticketId }
+        : { id: ticketId, authorId: userId },
       select: { id: true },
     });
     if (!ticket) return;

@@ -14,6 +14,7 @@ import Logo from '../../atoms/Logo'
 import { getNotifications } from '@/proxy/notifications/notification-functions'
 import { io } from 'socket.io-client'
 import { getProfilePictureTransform } from '@/app/utils/profile-picture'
+import { isAdministrativeRole } from '@/app/utils/roles'
 
 function AppMenu() {
   useViewportWidth()
@@ -77,11 +78,11 @@ function AppMenu() {
     // }
   ]
 
-  const appMenuLinks = user?.role === 'ADMIN'
+  const appMenuLinks = isAdministrativeRole(user?.role)
     ? [
         {
           label: 'Accueil',
-          href: '/dashboard/admin',
+          href: '/dashboard/',
           icon: <Home className='text-white'/>
         },
         {

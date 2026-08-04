@@ -37,12 +37,30 @@ model User {
   photoReports PhotoReport[] @relation("PhotoReportAuthor")
   supportTickets SupportTicket[] @relation("SupportTicketAuthor")
   supportMessages SupportMessage[] @relation("SupportMessageAuthor")
+  userInvitationsSent UserInvitation[] @relation("UserInvitationSender")
 }
 
 enum Role {
+  SUPERADMIN
   ADMIN
   STANDARD
   PREMIUM
+}
+
+model UserInvitation {
+  id            String   @id @default(uuid())
+  email         String
+  token         String   @unique
+  accessKeyHash String
+  expiresAt     DateTime
+  usedAt        DateTime?
+  invitedById   Int
+  createdAt     DateTime @default(now())
+
+  invitedBy User @relation("UserInvitationSender", fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([expiresAt])
 }
 
 model UserPictures {

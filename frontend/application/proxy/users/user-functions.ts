@@ -1,6 +1,6 @@
 import { fetchFromClient } from '../api';
 
-export type UserRole = 'STANDARD' | 'PREMIUM' | 'ADMIN';
+export type UserRole = 'STANDARD' | 'PREMIUM' | 'ADMIN' | 'SUPERADMIN';
 
 export type ManagedUser = {
   id: number;
@@ -42,4 +42,17 @@ export function updateUser(id: number, data: UserPayload) {
 
 export function deleteUser(id: number) {
   return fetchFromClient(`/api/users/${id}`, { method: 'DELETE' });
+}
+
+export type UserInvitationResult = {
+  sent: string[];
+  failed: { email: string; reason: string }[];
+};
+
+export function createUserInvitations(emails: string[]) {
+  return fetchFromClient('/api/user-invitations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ emails }),
+  });
 }

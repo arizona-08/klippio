@@ -3,6 +3,7 @@ import { useUser } from '@/app/Context/AuthContext/AuthUserProvider';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React from 'react'
+import { isAdministrativeRole } from '@/app/utils/roles';
 
 export type AppMenuLinkType = {
   label: string;
@@ -20,7 +21,7 @@ function AppMenuLink({ menuLink, hideText, onClose }: AppMenuLinkProps) {
   const { label, href, icon } = menuLink;
   const pathname = usePathname();
   const {user} = useUser();
-  const isAdmin = user?.role === 'ADMIN';
+  const isAdmin = isAdministrativeRole(user?.role);
 
   const pathNameParts = pathname.split('/');
   const isActive = pathNameParts[isAdmin ? 3: 2] === href.split('/')[3]; // Compare the second segment of the path

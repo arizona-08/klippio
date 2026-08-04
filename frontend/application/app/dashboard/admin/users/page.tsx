@@ -4,9 +4,12 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Check, Pencil, Plus, Search, ShieldCheck, Trash2, UserRound, Users, X } from 'lucide-react';
 import { useUser } from '@/app/Context/AuthContext/AuthUserProvider';
+import { isAdministrativeRole } from '@/app/utils/roles';
 import { createUser, deleteUser, getUsers, ManagedUser, updateUser, UserPayload, UserRole } from '@/proxy/users/user-functions';
+import { UserInvitationForm } from '@/app/components/organisms/UserInvitationForm';
 
 const roleLabels: Record<UserRole, string> = {
+  SUPERADMIN: 'Super administrateur',
   ADMIN: 'Administrateur',
   PREMIUM: 'Premium',
   STANDARD: 'Standard',
@@ -45,10 +48,10 @@ export default function AdminUsersPage() {
   }
 
   useEffect(() => {
-    if (currentUser && currentUser.role !== 'ADMIN') router.replace('/dashboard');
+    if (currentUser && !isAdministrativeRole(currentUser.role)) router.replace('/dashboard');
   }, [currentUser, router]);
 
-  useEffect(() => { if (currentUser?.role === 'ADMIN') loadUsers(); }, [currentUser]);
+  useEffect(() => { if (isAdministrativeRole(currentUser?.role)) loadUsers(); }, [currentUser]);
 
   const filteredUsers = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -112,7 +115,7 @@ export default function AdminUsersPage() {
     setIsSaving(false);
   }
 
-  if (!currentUser || currentUser.role !== 'ADMIN') return null;
+  if (!isAdministrativeRole(currentUser?.role)) return null;
 
   return (
     <div className="min-h-full bg-[#fafcfb] px-4 py-6 sm:px-6 lg:px-10 lg:py-9">
@@ -129,6 +132,7 @@ export default function AdminUsersPage() {
         {notice && <div className="mb-5 flex items-center justify-between rounded-xl border border-emerald-100 bg-primary-light px-4 py-3 text-sm font-medium text-emerald-800"><span className="flex items-center gap-2"><Check size={17} />{notice}</span><button onClick={() => setNotice('')} aria-label="Fermer"><X size={17} /></button></div>}
         {error && !isModalOpen && <div className="mb-5 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 
+        <UserInvitationForm />
         <section className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-[0_8px_30px_rgba(19,41,31,0.04)]">
           <div className="flex flex-col gap-4 border-b border-gray-100 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-primary-light text-primary"><Users size={20} /></span><div><h2 className="font-semibold text-gray-900">Tous les utilisateurs</h2><p className="text-sm text-gray-500">{users.length} compte{users.length > 1 ? 's' : ''} au total</p></div></div>

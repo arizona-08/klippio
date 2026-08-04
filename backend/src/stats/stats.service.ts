@@ -70,7 +70,7 @@ export class StatsService {
       }),
     ]);
 
-    const roleCounts = { ADMIN: 0, PREMIUM: 0, STANDARD: 0 };
+    const roleCounts = { SUPERADMIN: 0, ADMIN: 0, PREMIUM: 0, STANDARD: 0 };
     usersByRole.forEach(({ role, _count }) => {
       roleCounts[role] = _count._all;
     });

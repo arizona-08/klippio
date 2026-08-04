@@ -39,7 +39,11 @@ export class SupportController {
 
   @Get('tickets/:id')
   findOne(@Param('id') id: string, @CurrentUser() user: User) {
-    return this.supportService.findTicket(id, user.id, user.role === 'ADMIN');
+    return this.supportService.findTicket(
+      id,
+      user.id,
+      ['ADMIN', 'SUPERADMIN'].includes(user.role),
+    );
   }
 
   @Post('tickets/:id/messages')
@@ -51,7 +55,7 @@ export class SupportController {
     return this.supportService.addMessage(
       id,
       user.id,
-      user.role === 'ADMIN',
+      ['ADMIN', 'SUPERADMIN'].includes(user.role),
       dto.content,
     );
   }

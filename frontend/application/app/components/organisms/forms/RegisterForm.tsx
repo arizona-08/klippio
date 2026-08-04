@@ -14,6 +14,7 @@ function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const invitationEmail = searchParams.get("email") || "";
+  const invitationToken = searchParams.get("invitation") || "";
   const redirectParam = searchParams.get("redirect");
   const redirectPath =
     redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//")
@@ -26,6 +27,8 @@ function RegisterForm() {
       email: invitationEmail,
       password: "",
       confirmation: "",
+      invitationToken,
+      accessKey: "",
     });
   const [hasAcceptedPrivacyPolicy, setHasAcceptedPrivacyPolicy] =
     React.useState(false);
@@ -77,8 +80,8 @@ function RegisterForm() {
     const result = await response.json();
     console.log(result);
     if (result.statusCode === 400) {
-      const errorObj = createErrorObject(result.errors);
-      setErrorMessages(errorObj);
+      if (Array.isArray(result.errors)) setErrorMessages(createErrorObject(result.errors));
+      else setUnauthorizedError(result.message || 'Les informations fournies sont invalides.');
     }
 
     if (result.statusCode === 401) {
@@ -144,6 +147,7 @@ function RegisterForm() {
                   label="Nom:"
                   name="lastname"
                   placeholder="Doe"
+                  value={registerCredentials.lastname}
                   onChange={setCredentialsInfo}
                 />
                 {errorMessages &&
@@ -164,10 +168,11 @@ function RegisterForm() {
                   label="Email:"
                   name="email"
                   placeholder="johndoe@gmail.com"
+                  value={registerCredentials.email}
                   onChange={setCredentialsInfo}
                   disabled={Boolean(invitationEmail)}
                 />
-                {invitationEmail && (
+                {invitationEmail && invitationToken && (
                   <p className="text-sm text-gray-500">L’adresse email est liée à votre invitation.</p>
                 )}
                 {errorMessages &&
@@ -191,6 +196,7 @@ function RegisterForm() {
                   label="Mot de passe:"
                   name="password"
                   placeholder="Entrez votre mot de passe"
+                  value={registerCredentials.password}
                   onChange={setCredentialsInfo}
                 />
                 {errorMessages &&
@@ -211,6 +217,7 @@ function RegisterForm() {
                   label="Confirmation du mot de passe:"
                   name="confirmation"
                   placeholder="Confirmez votre mot de passe"
+                  value={registerCredentials.confirmation}
                   onChange={setCredentialsInfo}
                 />
                 {errorMessages &&
@@ -224,6 +231,19 @@ function RegisterForm() {
                       ))}
                     </>
                   )}
+              </div>
+              <div className="access-key-block">
+                <Input
+                  type="text"
+                  label="Clé d’accès reçue par email:"
+                  name="accessKey"
+                  placeholder="Collez votre clé d’accès"
+                  value={registerCredentials.accessKey}
+                  onChange={setCredentialsInfo}
+                />
+                {!invitationEmail || !invitationToken ? (
+                  <p className="mt-2 text-sm text-red-500">Utilisez le lien d’invitation reçu par email pour créer votre compte.</p>
+                ) : null}
               </div>
             </div>
           </div>
